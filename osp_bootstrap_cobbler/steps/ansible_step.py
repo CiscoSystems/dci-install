@@ -1,6 +1,7 @@
 __author__ = 'brdemers'
 
 import step
+import os
 import ansible.runner
 import ansible.inventory
 import ansible.constants
@@ -18,6 +19,10 @@ class AnsibleStep(step.Step):
         # ansible.constants.DEFAULT_HOST_LIST = hosts
         ansible.constants.HOST_KEY_CHECKING = False
 
+        # load plugins, this will change in ansible 2
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        callback_dir = os.path.join(module_dir, '..', 'ansible_callback_plugins')
+        ansible.constants.DEFAULT_CALLBACK_PLUGIN_PATH = os.path.abspath(callback_dir)
 
         inventory = ansible.inventory.Inventory(hosts)
 
@@ -28,10 +33,6 @@ class AnsibleStep(step.Step):
 
         extra_vars = {}
         extra_vars.update(kargs)
-        # extra_vars["proxy_env"] = { "ftp_proxy": kargs["ftp_proxy"],
-        #                             "http_proxy": kargs["http_proxy"],  # added to support BXB, not tested in SJ
-        #                             "https_proxy": kargs["https_proxy"]  # added to support BXB, not tested in SJ
-        #                           }
 
         pb = ansible.playbook.PlayBook(
             playbook="ansible/osp-director.yml",
@@ -45,6 +46,3 @@ class AnsibleStep(step.Step):
 
         result = pb.run()
         print result
-
-
-        

@@ -8,13 +8,13 @@ class Config(object):
 
     logger = logging.getLogger("config")
 
-    def __init__(self, config_file, location='sj'):
-        self.config = self._read_config(config_file, location)
+    def __init__(self, config_file, location='sj', override_args={}):
+        self.config = self._read_config(config_file, location, override_args)
 
     def get(self, key):
         return self.config.get(key)
 
-    def _read_config(self, config_file, location):
+    def _read_config(self, config_file, location, override_args):
 
         module_dir = os.path.dirname(os.path.abspath(__file__))
         common_conf_dir = os.path.join(module_dir, 'conf_common')
@@ -30,19 +30,31 @@ class Config(object):
 
         for section in config_parser.sections():
             options = config_parser.options(section)
+
             section_dict = {}
             for option in options:
                 value = config_parser.get(section, option).strip()
-                if value == "True":
+                section_dict[option] = value
+
+            # for each section look look for override args
+            for key, value in override_args.iteritems():
+                if key.startswith(section+'.'):
+                    new_key = key.replace(section+'.', '', 1)
+                    section_dict[new_key] = value
+
+            # now parse bools, and maps from args
+            for key, value in section_dict.iteritems():
+                if value in ["True", "true", "yes"]:
                     value = True
-                elif value == "False":
+                elif value in ["False", "false", "no"]:
                     value = False
                 elif value.isdigit():
                     value = int(value)
                 elif value.startswith('[') or value.startswith('{'):
                     value = eval(value)
 
-                section_dict[option] = value
+                section_dict[key] = value
+
             config[section] = section_dict
 
         self.logger.debug("config: {}".format(config))

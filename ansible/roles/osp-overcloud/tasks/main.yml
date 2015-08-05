@@ -1,0 +1,98 @@
+---
+
+- name: Download images
+  sudo_user: stack
+  environment: proxy_env
+  get_url:
+    url: "{{ item.url }}"
+    dest: /home/stack/{{ item.name }}
+    timeout: 120
+  with_items: "{{ disk_images }}"
+  register: images_downloaded
+
+- name: Unpack images
+  sudo_user: stack
+  unarchive:
+    src: /home/stack/{{ item.name }}
+    dest: /home/stack
+    copy: no
+  with_items: "{{ disk_images }}"
+  when: images_downloaded|success
+
+- name: Remove old overcloud-full
+  file: path=/home/stack/overcloud-full.qcow2 state=absent
+  when: override_qcow
+
+- name: Install libguestfs-tools
+  yum: name=libguestfs-tools
+
+- name: Patch overcloud-full.qcow2
+  sudo_user: stack
+  environment: proxy_env
+  script: "{{ role_path }}/scripts/build-disk-image.sh /home/stack/overcloud-full.qcow2"
+  when: override_qcow
+
+
+#- name: Override overcloud-full.qcow2
+#  sudo_user: stack
+#  environment: proxy_env
+#  get_url:
+#    url: "{{ overcloud_full_override_url }}"
+#    dest: "/home/stack/overcloud-full.qcow2"
+#    sha256sum: "{{ overcloud_full_override_sha256sum }}"
+#  when: override_qcow
+
+- name: Upload disk images
+  sudo_user: stack
+  shell: cd /home/stack && source /home/stack/stackrc && openstack overcloud image upload
+  when: images_downloaded|success
+
+- name:  Write instackenv.json
+  template: src=nodes.json dest=/home/stack/instackenv.json owner=stack group=stack
+
+- name: import nodes
+  sudo_user: stack
+  shell: source /home/stack/stackrc &&  openstack baremetal import --json /home/stack/instackenv.json
+
+- name: configure boot kernals
+  sudo_user: stack
+  shell: source /home/stack/stackrc && openstack baremetal configure boot
+
+- name: discover nodes
+  sudo_user: stack
+  shell: source /home/stack/stackrc &&  openstack baremetal introspection bulk start
+  when: node_discovery
+
+- name: Check for flavor
+  sudo_user: stack
+  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q baremetal
+  ignore_errors: true
+  register: flavors_check
+
+- name: Setup flavors
+  sudo_user: stack
+  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 baremetal
+  when: flavors_check|failed
+  register: flavors_create
+
+- name: Configure flavors
+  sudo_user: stack
+  shell: source /home/stack/stackrc && openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
+  when: not flavors_create|skipped
+
+- name: Install overcloud
+  sudo_user: stack
+  shell: >
+        source /home/stack/stackrc &&
+        openstack overcloud deploy --plan overcloud
+        --control-scale {{ overcloud_control_scale }}
+        --compute-scale {{ overcloud_compute_scale }}
+        --ceph-storage-scale {{ overcloud_ceph_storage_scale }}
+        --block-storage-scale {{ overcloud_block_storage_scale }}
+        --swift-storage-scale {{ overcloud_swift_storage_scale }}
+        --network-cidr {{ overcloud_network_cidr }}
+        --floating-ip-cidr {{ overcloud_floating_ip_cidr }}
+        --floating-ip-start {{ overcloud_floating_ip_start }}
+        --floating-ip-end {{ overcloud_floating_ip_end }}
+        --bm-network-gateway {{ overcloud_bm_network_gateway }}
+  when: deploy_overcloud

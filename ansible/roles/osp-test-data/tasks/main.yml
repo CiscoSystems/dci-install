@@ -1,0 +1,57 @@
+---
+
+- name: Create test-project
+  sudo_user: stack
+  shell: source /home/stack/overcloudrc && openstack project list | grep -q test-project || openstack project create --description 'Test Project' test-project
+
+- name: Create test-user
+  sudo_user: stack
+  shell: source /home/stack/overcloudrc && openstack user list | grep -q test-user || openstack user create --project test-project --password password test-user
+
+- name: Assign test-user to test-project
+  sudo_user: stack
+  shell: source /home/stack/overcloudrc && openstack project list | grep -q test-project || openstack project create --description 'Test Project' test-project
+
+- name: Upload test-user pub key
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        nova --os-tenant-name test-project
+        --os-user-name test-user
+        --os-password password keypair-list |
+        grep -q default_key ||
+        nova --os-tenant-name test-project
+        --os-user-name test-user
+        --os-password password keypair-add
+        --pub_key /home/stack/.ssh/id_rsa.pub default_key
+
+- name:
+  sudo_user: stack
+  get_url:
+      url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+      dest: /home/stack/irros-0.3.4-x86_64-disk.img
+  register: cirros_image_downloaded
+
+- name: Upload cirros disk image
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        glance image-create --name='cirros 0.3.4'
+        --is-public=true
+        --container-format=bare
+        --disk-format=qcow2 < /home/stack/cirros-0.3.4-x86_64-disk.img
+  when: cirros_image_downloaded|success
+
+- name: Create Test VM
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        default_net=$(neutron net-list --quote minimal --format csv -c id -c name | grep default-net | sed 's_,.*__') &&
+        nova --os-tenant-name test-project
+        --os-user-name test-user
+        --os-password password boot cirros-test
+        --flavor m1.tiny
+        --image 'cirros 0.3.4'
+        --security-groups default
+        --nic net-id=$default_net
+        --key_name default_key

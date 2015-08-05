@@ -52,6 +52,12 @@
 - name: yum update (the world)
   yum: name=* state=latest update_cache=yes
 
+#- name: Install chrony
+#  yum: name=chrony
+#
+#- name: Enable chronyd service
+#  service: name=chronyd state=started enabled=yes
+
 - name: Install python-rdomanager-oscplugin
   yum: name=python-rdomanager-oscplugin
 
@@ -108,104 +114,3 @@
 - name: Restart HTTPD
   service: name=httpd state=restarted
   when: update_allowed_hosts|changed
-
-- name: Download images
-  sudo_user: stack
-  environment: proxy_env
-  get_url:
-    url: "{{ item.url }}"
-    dest: /home/stack/{{ item.name }}
-    timeout: 120
-  with_items: "{{ disk_images }}"
-  register: images_downloaded
-
-- name: Unpack images
-  sudo_user: stack
-  unarchive:
-    src: /home/stack/{{ item.name }}
-    dest: /home/stack
-    copy: no
-  with_items: "{{ disk_images }}"
-  when: images_downloaded|success
-
-- name: Remove old overcloud-full
-  file: path=/home/stack/overcloud-full.qcow2 state=absent
-  when: override_qcow
-
-- name: Override overcloud-full.qcow2
-  sudo_user: stack
-  environment: proxy_env
-  get_url:
-    url: "http://memory.cisco.com/osp7/images/overcloud-full.qcow2"
-    dest: "/home/stack/overcloud-full.qcow2"
-    sha256sum: "5714466de1a36819ef5ee263e68c2d7e9e4af64246ca541904529163e6ec750a"
-  when: override_qcow
-
-- name: Upload disk mages
-  sudo_user: stack
-  shell: cd /home/stack && source /home/stack/stackrc && openstack overcloud image upload
-  when: images_downloaded|success
-
-- name:  Write instackenv.json
-  template: src=nodes.json dest=/home/stack/instackenv.json owner=stack group=stack
-
-- name: import nodes
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack baremetal import --json /home/stack/instackenv.json
-
-- name: configure boot kernals
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack baremetal configure boot
-
-- name: discover nodes
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack baremetal introspection bulk start
-  when: node_discovery
-
-- name: Check for flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q baremetal
-  ignore_errors: true
-  register: flavors_check
-
-- name: Setup flavors
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 baremetal
-  when: flavors_check|failed
-  register: flavors_create
-
-- name: Configure flavors
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
-  when: not flavors_create|skipped
-
-
-  #TODO set subnet DNS ?
-
-
-- name: Install overcloud
-  sudo_user: stack
-  shell: >
-        source /home/stack/stackrc &&
-        openstack overcloud deploy --plan overcloud
-        --control-scale {{ overcloud_control_scale }}
-        --compute-scale {{ overcloud_compute_scale }}
-        --ceph-storage-scale {{ overcloud_ceph_storage_scale }}
-        --block-storage-scale {{ overcloud_block_storage_scale }}
-        --swift-storage-scale {{ overcloud_swift_storage_scale }}
-        --network-cidr {{ overcloud_network_cidr }}
-        --floating-ip-cidr {{ overcloud_floating_ip_cidr }}
-        --floating-ip-start {{ overcloud_floating_ip_start }}
-        --floating-ip-end {{ overcloud_floating_ip_end }}
-        --bm-network-gateway {{ overcloud_bm_network_gateway }}
-  when: deploy_overcloud
-
-#  #TODO add other networking bits
-#  #
-#  #  --network-cidr "10.86.7.64/26" \
-#  #  --floating-ip-cidr "10.86.7.64/26" \
-#  #  --floating-ip-start "10.86.7.91" \
-#  #  --floating-ip-end "10.86.7.116" \
-#  #  --bm-network-gateway "10.86.7.65"
-#
-

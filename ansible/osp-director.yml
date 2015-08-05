@@ -4,3 +4,5 @@
   roles:
     - etc-hosts
     - osp-director
+    - osp-overcloud
+    - osp-test-data

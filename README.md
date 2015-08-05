@@ -33,10 +33,10 @@ director_node_ssh_ip = 172.29.74.444
 # requires ssh key on above node
 director_node_ssh_username = root
 
-[CobblerOSInstallStep]
+[cobbler]
 osp_directory_node = system-name-in-cobbler
 
-[AnsibleStep]
+[ansible]
 
 # undercloud
 undercloud_local_ip = 10.30.11.196/27
@@ -90,7 +90,7 @@ Currently this assumes RHEL, so it will try to register your server.
 Add the following config properties to any config file, it is suggested you put them in `~/.osp7-installer/osp7.conf`
 
 ```
-[AnsibleStep]
+[ansible]
 rhel_pool = <pool>
 rhel_username = <username>
 rhel_password = <password>
