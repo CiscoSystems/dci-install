@@ -3,3 +3,6 @@ dist/
 .eggs/
 .venv/
 osp7_installer.egg-info/
+bootstrap.conf
+bxb-conf/
+scripts/

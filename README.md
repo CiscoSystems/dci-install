@@ -24,6 +24,10 @@ Config example
 
 By default bootstrap.conf is loaded from the current working directory (override with `--config_file <config_file>` )
 
+See bootstrap-example.conf (which is my actual config so do NOT use these IPs)
+
+Other default config can be found in `osp_bootstrap_cobbler/conf_common`
+
 ```
 [DEFAULT]
 
@@ -95,3 +99,14 @@ rhel_pool = <pool>
 rhel_username = <username>
 rhel_password = <password>
 ```
+
+
+
+TODO
+-----
+
+Create example that stores config outside this repo, other then an example config, the default lap configs are still here.
+Ideas:
+  * move lab default configs to different project, and include that as a pip dependency,
+  * move actual config to a different git repo, which basically just holds the config and a shell python project, to
+include this project and the default lab config project.
