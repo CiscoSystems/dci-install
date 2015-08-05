@@ -29,7 +29,7 @@
   sudo_user: stack
   get_url:
       url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
-      dest: /home/stack/irros-0.3.4-x86_64-disk.img
+      dest: /home/stack/cirros-0.3.4-x86_64-disk.img
   register: cirros_image_downloaded
 
 - name: Upload cirros disk image
