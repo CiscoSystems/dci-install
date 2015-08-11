@@ -1,11 +1,15 @@
 ---
 
+- name: Make images dir
+  sudo_user: stack
+  file: path=/home/stack/images state=directory mode=0755
+
 - name: Download images
   sudo_user: stack
   environment: proxy_env
   get_url:
     url: "{{ item.url }}"
-    dest: /home/stack/{{ item.name }}
+    dest: /home/stack/images/{{ item.name }}
     timeout: 120
   with_items: "{{ disk_images }}"
   register: images_downloaded
@@ -13,15 +17,30 @@
 - name: Unpack images
   sudo_user: stack
   unarchive:
-    src: /home/stack/{{ item.name }}
-    dest: /home/stack
+    src: /home/stack/images/{{ item.name }}
+    dest: /home/stack/images
     copy: no
   with_items: "{{ disk_images }}"
   when: images_downloaded|success
 
-- name: Remove old overcloud-full
-  file: path=/home/stack/overcloud-full.qcow2 state=absent
-  when: override_qcow
+
+#- name: Download RHEL Guest Image
+#  sudo_user: stack
+#  get_url: url=http://memory.cisco.com/osp7/rh-images/rhel-guest-image-7.1-20150224.0.x86_64.qcow2 dest=/home/stack/rhel-guest-image-7.1-20150224.0.x86_64.qcow2
+#  register: images_downloaded
+#
+#- name: Build images
+#  sudo_user: stack
+#  environment:
+#    NODE_DIST: rhel7
+#    DIB_LOCAL_IMAGE: rhel-guest-image-7.1-20150224.0.x86_64.qcow2
+#    REG_METHOD: portal
+#    REG_USER: "{{ rhel_username }}"
+#    REG_PASSWORD: "{{ rhel_password }}"
+#    REG_POOL_ID: "{{ rhel_pool }}"
+#    REG_REPOS: "rhel-7-server-rpms rhel-7-server-extras-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-optional-rpms rhel-7-server-openstack-7.0-rpms"
+#  shell: source /home/stack/stackrc && openstack overcloud image build --all
+#  when: images_downloaded|success
 
 - name: Install libguestfs-tools
   yum: name=libguestfs-tools
@@ -29,7 +48,7 @@
 - name: Patch overcloud-full.qcow2
   sudo_user: stack
   environment: proxy_env
-  script: "{{ role_path }}/scripts/build-disk-image.sh /home/stack/overcloud-full.qcow2"
+  script: "{{ role_path }}/scripts/build-disk-image.sh /home/stack/images/overcloud-full.qcow2"
   when: override_qcow
 
 
@@ -42,10 +61,19 @@
 #    sha256sum: "{{ overcloud_full_override_sha256sum }}"
 #  when: override_qcow
 
+# TODO: this isn't truly idempotent, because we downloading the images if they do not exist, but we do NOT upload them
+# if they are already in glance, not sure this matters though.
+- name: Check for images in glance
+  sudo_user: stack
+  shell: source /home/stack/stackrc && glance image-list | grep -q overcloud-full
+  ignore_errors: true
+  register: image_check
+
 - name: Upload disk images
   sudo_user: stack
-  shell: cd /home/stack && source /home/stack/stackrc && openstack overcloud image upload
-  when: images_downloaded|success
+  shell: cd /home/stack/images && source /home/stack/stackrc && openstack overcloud image upload
+  when: images_downloaded|success and image_check|failed
+  # successfully downloaded images, and they do NOT exist in glance
 
 - name:  Write instackenv.json
   template: src=nodes.json dest=/home/stack/instackenv.json owner=stack group=stack
@@ -63,36 +91,164 @@
   shell: source /home/stack/stackrc &&  openstack baremetal introspection bulk start
   when: node_discovery
 
-- name: Check for flavor
+
+- name: Check for baremetal flavor
   sudo_user: stack
   shell: source /home/stack/stackrc &&  openstack flavor list | grep -q baremetal
   ignore_errors: true
-  register: flavors_check
+  register: flavor_baremetal_check
 
-- name: Setup flavors
+- name: Setup baremetal flavor
   sudo_user: stack
   shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 baremetal
-  when: flavors_check|failed
-  register: flavors_create
+  when: flavor_baremetal_check|failed
+  register: flavor_baremetal_create
 
-- name: Configure flavors
+- name: Configure baremetal flavor
   sudo_user: stack
   shell: source /home/stack/stackrc && openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
-  when: not flavors_create|skipped
+  when: not flavor_baremetal_create|skipped
+
+
+- name: Check for control flavor
+  sudo_user: stack
+  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q control
+  ignore_errors: true
+  register: flavor_control_check
+
+- name: Setup control flavor
+  sudo_user: stack
+  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 control
+  when: flavor_control_check|failed
+
+
+- name: Check for compute flavor
+  sudo_user: stack
+  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q compute
+  ignore_errors: true
+  register: flavor_compute_check
+
+- name: Setup compute flavor
+  sudo_user: stack
+  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 compute
+  when: flavor_compute_check|failed
+
+
+- name: Make templates dir
+  sudo_user: stack
+  file: path=/home/stack/templates state=directory mode=0755
+
+- name: Check existing heat templates
+  stat: path=/home/stack/templates/nic-configs
+  register: nic_templates
+
+- name: Copy default heat templates
+  sudo_user: stack
+  shell: cp -r /usr/share/openstack-tripleo-heat-templates/network/config/single-nic-vlans /home/stack/templates/nic-configs
+  when: nic_templates.stat.isdir is not defined
+
+- name:  Write {{ item.template_file }}
+  template: src={{ item.template_file }} dest=/home/stack/templates/nic-configs/{{ item.template_file }} owner=stack group=stack
+  with_items:
+    - { template_file: 'controller.yaml' }
+    - { template_file: 'compute.yaml' }
+
+- name:  Write {{ item.template_file }}
+  template: src={{ item.template_file }} dest=/home/stack/templates/{{ item.template_file }} owner=stack group=stack
+  with_items:
+    - { template_file: 'network-environment.yaml' }
+    - { template_file: 'networking-cisco-environment.yaml' }
+
+###
+# Heat Review
+###
+- name: Check if heat review checked out
+  stat: path=/home/stack/heat-review
+  register: heat_review
+
+- name: Checkout heat review
+  sudo_user: stack
+  shell: >
+        mkdir /home/stack/heat-review &&
+        cd /home/stack/heat-review &&
+        git init &&
+        git fetch https://review.openstack.org/openstack/tripleo-heat-templates refs/changes/54/198754/5 &&
+        git checkout FETCH_HEAD
+  when: heat_review.stat.isdir is not defined
+
+- name: Create heat-review.patch
+  sudo_user: stack
+  shell: cd /home/stack/heat-review && git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/heat-review.patch
+
+- name: Check for heat backup
+  stat: path=/usr/share/openstack-tripleo-heat-templates.bak
+  register: heat_backup
+
+- name: Backup heat templates
+  shell: cp -R /usr/share/openstack-tripleo-heat-templates /usr/share/openstack-tripleo-heat-templates.bak
+  register: template_backup
+  when: heat_backup.stat.isdir is not defined
+
+- name: Patch heat templates
+  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/heat-review.patch
+  when: not template_backup|skipped
+
+###
+# Deploy Overcloud
+###
+
+- name: Check for existing overcloude
+  sudo_user: stack
+  shell: source /home/stack/stackrc &&  heat stack-list | grep -q overcloud
+  ignore_errors: true
+  register: exiting_cloud_check
 
 - name: Install overcloud
   sudo_user: stack
   shell: >
         source /home/stack/stackrc &&
+        cd /home/stack/ &&
         openstack overcloud deploy --plan overcloud
         --control-scale {{ overcloud_control_scale }}
         --compute-scale {{ overcloud_compute_scale }}
         --ceph-storage-scale {{ overcloud_ceph_storage_scale }}
         --block-storage-scale {{ overcloud_block_storage_scale }}
         --swift-storage-scale {{ overcloud_swift_storage_scale }}
-        --network-cidr {{ overcloud_network_cidr }}
-        --floating-ip-cidr {{ overcloud_floating_ip_cidr }}
-        --floating-ip-start {{ overcloud_floating_ip_start }}
-        --floating-ip-end {{ overcloud_floating_ip_end }}
-        --bm-network-gateway {{ overcloud_bm_network_gateway }}
-  when: deploy_overcloud
+        --neutron-network-type vlan
+        --neutron-disable-tunneling
+        --control-flavor control
+        --compute-flavor compute
+        --neutron-public-interface {{ neutron_public_nic }}
+        --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }}
+        -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml
+        -e /home/stack/templates/networking-cisco-environment.yaml
+  # up to 2 hours poll every minute
+  async: 7200
+  poll: 60
+  when: deploy_overcloud and exiting_cloud_check|failed
+
+
+  # I failed to get the following to work,
+#- name: Install overcloud
+#  sudo_user: stack
+#  shell: >
+#        source /home/stack/stackrc &&
+#        cd /home/stack/ &&
+#        openstack overcloud deploy --plan overcloud
+#        --control-scale {{ overcloud_control_scale }}
+#        --compute-scale {{ overcloud_compute_scale }}
+#        --ceph-storage-scale {{ overcloud_ceph_storage_scale }}
+#        --block-storage-scale {{ overcloud_block_storage_scale }}
+#        --swift-storage-scale {{ overcloud_swift_storage_scale }}
+#        --neutron-network-type vlan
+#        --neutron-disable-tunneling
+#        --extra-template /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml
+#        --extra-template /home/stack/templates/network-environment.yaml
+#        --control-flavor control
+#        --compute-flavor compute
+#        --neutron-public-interface {{ neutron_public_nic }}
+#        --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }}
+#  # up to 4 hours poll every minute
+#  async: 14400
+#  poll: 60
+#  when: deploy_overcloud and exiting_cloud_check|failed

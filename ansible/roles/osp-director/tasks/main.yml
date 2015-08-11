@@ -1,45 +1,15 @@
 ---
 
-- name: Set rhsm proxy host
-  lineinfile: dest=/etc/rhsm/rhsm.conf regexp="^proxy_hostname " insertafter="^\[server\] " line="proxy_hostname = {{ proxy_host }}"
-  when: use_yum_proxy
-
-- name: Set rhsm proxy port
-  lineinfile: dest=/etc/rhsm/rhsm.conf regexp="^proxy_port " insertafter="^\[server\] " line="proxy_port = {{ proxy_port }}"
-  when: use_yum_proxy
-
-- name: Registering RHEL
-#  environment: proxy_env
-  redhat_subscription: username={{ rhel_username }}
-                       pool={{ rhel_pool }}
-                       password={{ rhel_password }}
-
-- name: Check if attached to pool
-#  environment: proxy_env
-  shell: 'subscription-manager list --consumed | grep {{ rhel_pool }} || subscription-manager attach --pool={{ rhel_pool }}'
-  ignore_errors: true
-  register: rhel_pool_check
-
-- name: RHEL attach pool
-#  environment: proxy_env
-  shell: subscription-manager attach --pool={{ rhel_pool }}
-  when: rhel_pool_check|failed
-
 - name: Set RHEL Channels
-#  environment: proxy_env
-  shell: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms
+  shell: subscription-manager repos --enable=rhel-7-server-openstack-7.0-director-rpms --enable=rhel-7-server-openstack-7.0-rpms
+  # rhel-server-rhscl-7-rpms
+  when: not osp_use_partner_repo
 
-#- name: debug
-#  environment: proxy_env
-#  shell: curl -o /etc/yum.repos.d/{{ item.name }} {{ item.url }}
-#  with_items: "{{ yum_repos }}"
-
-# doesn't look like get_url is correctly using the proxy for ftp all the time (though some times it is)
-
-- name: Setup Yum Repos
+- name: Setup Yum Partner Repos
   environment: proxy_env
   get_url: url={{ item.url }} dest=/etc/yum.repos.d/{{ item.name }} force=true
   with_items: "{{ yum_repos }}"
+  when: osp_use_partner_repo
 
 # set proxy via kickstart
 - name: Set yum proxy
@@ -78,8 +48,7 @@
 
 - name: Add stack user to sudo
   copy:
-    content: |
-      stack ALL=(root) NOPASSWD:ALL
+    content: stack ALL=(root) NOPASSWD:ALL
     dest: /etc/sudoers.d/stack
     mode: 0440
 
@@ -102,8 +71,8 @@
   sudo_user: stack
   environment: proxy_env
   shell: cd /home/stack && openstack undercloud install
-  # up to 4 hours poll every minute
-  async: 14400
+  # up to 2 hours poll every minute
+  async: 7200
   poll: 60
   when: deploy_undercloud
 
@@ -114,3 +83,23 @@
 - name: Restart HTTPD
   service: name=httpd state=restarted
   when: update_allowed_hosts|changed
+
+# lets make debugging a little easier
+- name: Add 'source stackrc' to .bash_profile
+  lineinfile:
+    dest: /home/stack/.bash_profile
+    line: "source ~/stackrc"
+    insertafter: EOF
+
+- name: Add openstack complete to .bash_profile
+  lineinfile:
+    dest: /home/stack/.bash_profile
+    line: "source <(openstack complete)"
+    insertafter: EOF
+
+- name: Alias ironic-discoverd reset
+  lineinfile:
+    dest: /home/stack/.bash_profile
+    line: "alias ironic-reset='sudo rm /var/lib/ironic-discoverd/discoverd.sqlite && sudo systemctl restart openstack-ironic-discoverd'"
+    insertafter: EOF
+
