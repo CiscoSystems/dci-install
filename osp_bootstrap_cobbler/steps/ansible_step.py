@@ -62,4 +62,7 @@ class AnsibleStep(step.Step):
             if method is not None:
                 method(plugin)
 
-        return result
+        # check for failure
+        for host, host_result in result.iteritems():
+            if host_result['unreachable'] > 0 or host_result['failures']:
+                raise Exception("Ansible step failure.")
