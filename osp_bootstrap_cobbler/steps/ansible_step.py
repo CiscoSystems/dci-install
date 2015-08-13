@@ -8,6 +8,7 @@ import ansible.constants
 from ansible.playbook import PlayBook
 from ansible import callbacks
 from ansible import utils
+from ansible.utils import plugins
 
 class AnsibleStep(step.Step):
 
@@ -21,8 +22,15 @@ class AnsibleStep(step.Step):
 
         # load plugins, this will change in ansible 2
         module_dir = os.path.dirname(os.path.abspath(__file__))
-        callback_dir = os.path.join(module_dir, '..', 'ansible_callback_plugins')
+        callback_dir = os.path.join(module_dir, '..', 'ansible_plugins')
         ansible.constants.DEFAULT_CALLBACK_PLUGIN_PATH = os.path.abspath(callback_dir)
+
+        plugins.callback_loader = plugins.PluginLoader(
+            'CallbackModule',
+            'ansible.callback_plugins',
+            callback_dir,
+            'callback_plugins'
+        )
 
         inventory = ansible.inventory.Inventory(hosts)
 
@@ -46,3 +54,12 @@ class AnsibleStep(step.Step):
 
         result = pb.run()
         print result
+        print
+
+        # plugins.callback_loader.
+        for plugin in ansible.callbacks.callback_plugins:
+            method = getattr(plugin, "playbook_on_stats", None)
+            if method is not None:
+                method(plugin)
+
+        return result

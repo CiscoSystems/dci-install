@@ -47,7 +47,9 @@ class CallbackModule(object):
         )
 
         # Just keep the top 10
-        results = results[:10]
+        results = results[:20]
+
+        print "Stats:"
 
         # Print the timings
         for name, elapsed in results:
