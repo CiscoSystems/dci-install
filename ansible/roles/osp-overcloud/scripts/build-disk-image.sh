@@ -20,7 +20,7 @@ if [ ! -d "puppet-neutron" ]; then
 fi
 
 cd puppet-neutron
-git fetch https://review.openstack.org/openstack/puppet-neutron refs/changes/81/197181/15 && git checkout FETCH_HEAD
+git fetch https://review.openstack.org/openstack/puppet-neutron refs/changes/81/197181/16 && git checkout FETCH_HEAD
 cd ..
 
 
