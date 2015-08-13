@@ -3,6 +3,7 @@
   connection: ssh
   roles:
     - etc-hosts
+    - rhel-register
     - osp-director
     - osp-overcloud
     - osp-test-data
