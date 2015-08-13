@@ -172,7 +172,7 @@
         mkdir /home/stack/heat-review &&
         cd /home/stack/heat-review &&
         git init &&
-        git fetch https://review.openstack.org/openstack/tripleo-heat-templates refs/changes/54/198754/5 &&
+        git fetch https://review.openstack.org/openstack/tripleo-heat-templates refs/changes/54/198754/7 &&
         git checkout FETCH_HEAD
   when: heat_review.stat.isdir is not defined
 
