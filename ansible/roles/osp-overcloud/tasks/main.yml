@@ -208,7 +208,7 @@
   shell: >
         source /home/stack/stackrc &&
         cd /home/stack/ &&
-        openstack overcloud deploy --plan overcloud
+        openstack overcloud deploy --templates
         --control-scale {{ overcloud_control_scale }}
         --compute-scale {{ overcloud_compute_scale }}
         --ceph-storage-scale {{ overcloud_ceph_storage_scale }}
@@ -221,6 +221,7 @@
         --neutron-public-interface {{ neutron_public_nic }}
         --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }}
         -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml
+        -e /usr/share/openstack-tripleo-heat-templates/environments/network-cisco-plugin.yaml
         -e /home/stack/templates/networking-cisco-environment.yaml
   # up to 2 hours poll every minute
   async: 7200
@@ -228,7 +229,7 @@
   when: deploy_overcloud and exiting_cloud_check|failed
 
 
-  # I failed to get the following to work,
+#  # I failed to get the following to work,
 #- name: Install overcloud
 #  sudo_user: stack
 #  shell: >
@@ -248,7 +249,7 @@
 #        --compute-flavor compute
 #        --neutron-public-interface {{ neutron_public_nic }}
 #        --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }}
-#  # up to 4 hours poll every minute
-#  async: 14400
+#  # up to 2 hours poll every minute
+#  async: 7200
 #  poll: 60
 #  when: deploy_overcloud and exiting_cloud_check|failed

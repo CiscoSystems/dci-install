@@ -103,3 +103,19 @@
     line: "alias ironic-reset='sudo rm /var/lib/ironic-discoverd/discoverd.sqlite && sudo systemctl restart openstack-ironic-discoverd'"
     insertafter: EOF
 
+- name: Check if default subnet name is set
+  sudo_user: stack
+  shell: source /home/stack/stackrc && neutron subnet-list --format csv --quote minimal --column id --column name | grep -q default-subnet
+  ignore_errors: true
+  register: default_subnet_has_name
+
+- name: Update default subnet name
+  sudo_user: stack
+  shell: source /home/stack/stackrc && neutron subnet-update $(neutron subnet-list --format csv --quote minimal --column id | sed -n 2p) --name default-subnet
+  when: default_subnet_has_name|failed
+
+# this isn't very idempotent
+- name: Set DNS Server
+  sudo_user: stack
+  shell: source /home/stack/stackrc && neutron subnet-update default-subnet --dns-nameserver {{ dns_server_1 }}
+  when: default_subnet_has_name|failed

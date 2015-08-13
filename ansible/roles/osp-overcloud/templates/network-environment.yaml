@@ -7,7 +7,15 @@ resource_registry:
 
 parameters:
   # Set to "br-ex" if using floating IPs on native VLAN on bridge br-ex
-  Controller-1::NeutronExternalNetworkBridge: "''"
+  Controller-1::NeutronExternalNetworkBridge: br-ex
+
+parameter_defaults:
+  ExternalNetCidr: {{ undercloud_network_cidr }}
+  ExternalAllocationPools: [{'start': '{{ undercloud_dhcp_start }}', 'end': '{{ undercloud_dhcp_end }}'}]
+  ExternalNetworkVlanID: {{ undercloud_vlan }}
+  ExternalInterfaceDefaultRoute: {{ undercloud_network_gateway }}
+
+
 
 #parameter_defaults:
 #  ExternalNetCidr: {{ overcloud_floating_ip_cidr }}

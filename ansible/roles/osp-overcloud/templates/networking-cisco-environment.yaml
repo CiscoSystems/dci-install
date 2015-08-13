@@ -2,30 +2,22 @@ resource_registry:
   OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/network-cisco.yaml
 
 parameter_defaults:
-#  NetworkEnableCiscoUCSMPlugin: 'false'
-#  NetworkUCSMIp: '127.0.0.1'
-#  NetworkUCSMUsername: 'admin'
-#  NetworkUCSMPassword: 'password'
-#  NetworkUCSMHhostList: 'host1:profile1, host2:profile2'
-  NetworkEnableCiscoNexusPlugin: 'true'
-#  NetworkNexusConfig: {
-#    "10.86.1.100" : {
-#    "username": "admin",
-#    "ssh_port": 22,
-#    "password": "lab",
-#    "servers": {
-#      "control01": "portchannel:10"
-#      }
-#    }
-#  }
-#  NetworkNexusManagedPhysicalNetwork:
-#  NetworkNexusVlanNamePrefix: 'q-'
-#  NetworkNexusSviRoundRobin: 'false'
-#  NetworkNexusProviderVlanNamePrefix: 'p-'
-#  NetworkNexusPersistentSwitchConfig: 'false'
-#  NetworkNexusSwitchHeartbeatTime: 0
-#  NetworkNexusSwitchReplayCount: 3
-#  NetworkNexusProviderVlanAutoCreate: 'true'
-#  NetworkNexusProviderVlanAutoTrunk: 'true'
-#  NetworkNexusVxlanGlobalConfig: 'true'
-#  NetworkNexusHostKeyChecks: 'false'
+  NetworkEnableCiscoUCSMPlugin: '{{ NetworkEnableCiscoUCSMPlugin }}'
+  NetworkUCSMIp: '{{ NetworkUCSMIp }}'
+  NetworkUCSMUsername: '{{ NetworkUCSMUsername }}'
+  NetworkUCSMPassword: '{{ NetworkUCSMPassword }}'
+  NetworkUCSMHhostList: '{{ NetworkUCSMHhostList }}'
+  NetworkEnableCiscoNexusPlugin: '{{ NetworkEnableCiscoNexusPlugin }}'
+  NetworkNexusConfig: {{ NetworkNexusConfig|to_nice_json }}
+
+  NetworkNexusManagedPhysicalNetwork: {{ NetworkNexusManagedPhysicalNetwork }}
+  NetworkNexusVlanNamePrefix: '{{ NetworkNexusVlanNamePrefix }}'
+  NetworkNexusSviRoundRobin: '{{ NetworkNexusSviRoundRobin }}'
+  NetworkNexusProviderVlanNamePrefix: '{{ NetworkNexusProviderVlanNamePrefix }}'
+  NetworkNexusPersistentSwitchConfig: '{{  }}'
+  NetworkNexusSwitchHeartbeatTime: {{ NetworkNexusPersistentSwitchConfig }}
+  NetworkNexusSwitchReplayCount: {{ NetworkNexusSwitchReplayCount }}
+  NetworkNexusProviderVlanAutoCreate: '{{ NetworkNexusProviderVlanAutoCreate }}'
+  NetworkNexusProviderVlanAutoTrunk: '{{  NetworkNexusProviderVlanAutoTrunk}}'
+  NetworkNexusVxlanGlobalConfig: '{{ NetworkNexusVxlanGlobalConfig }}'
+  NetworkNexusHostKeyChecks: '{{ NetworkNexusHostKeyChecks }}'
