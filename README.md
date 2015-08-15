@@ -26,7 +26,7 @@ By default bootstrap.conf is loaded from the current working directory (override
 
 See bootstrap-example.conf (which is my actual config so do NOT use these IPs)
 
-Other default config can be found in `osp_bootstrap_cobbler/conf_common`
+Other default config can be found in `osp7_installer/conf_common`
 
 ```
 [DEFAULT]

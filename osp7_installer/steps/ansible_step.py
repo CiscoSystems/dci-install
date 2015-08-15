@@ -25,6 +25,8 @@ class AnsibleStep(step.Step):
         callback_dir = os.path.join(module_dir, '..', 'ansible_plugins')
         ansible.constants.DEFAULT_CALLBACK_PLUGIN_PATH = os.path.abspath(callback_dir)
 
+        ansible_playbook = os.path.abspath(os.path.join(module_dir, '..', 'ansible', 'osp-director.yml'))
+
         plugins.callback_loader = plugins.PluginLoader(
             'CallbackModule',
             'ansible.callback_plugins',
@@ -43,7 +45,8 @@ class AnsibleStep(step.Step):
         extra_vars.update(kargs)
 
         pb = ansible.playbook.PlayBook(
-            playbook="ansible/osp-director.yml",
+            playbook=ansible_playbook,
+            # playbook="ansible/osp-director.yml",
             remote_user=kargs["director_node_ssh_username"],
             stats=stats,
             callbacks=playbook_cb,
