@@ -5,5 +5,6 @@
     - etc-hosts
     - rhel-register
     - osp-director
+    - osp-prep-for-overcloud
     - osp-overcloud
-    - osp-test-data
+#    - osp-test-data

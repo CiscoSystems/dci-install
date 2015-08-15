@@ -4,10 +4,12 @@ set -e
 set -x
 
 DISK_IMAGE=$(realpath ${1:-./overcloud-full.qcow2})
+PUPPET_REF=${2:-{{ puppet_neutron_ref }}}
 
-CISCO_RPM_URL="http://memory.cisco.com/osp7/rpms/python-networking-cisco-2015.1.1-dev10.fc21.noarch.rpm"
+CISCO_RPM_URL=${3:-{{ networking_cisco_rpm_url }}}
 
 echo "Updating image: $DISK_IMAGE"
+echo "Using Puppet Neutron ref: ${PUPPET_REF}"
 
 mkdir -p /tmp/update-osp-image
 cd /tmp/update-osp-image
@@ -20,7 +22,7 @@ if [ ! -d "puppet-neutron" ]; then
 fi
 
 cd puppet-neutron
-git fetch https://review.openstack.org/openstack/puppet-neutron refs/changes/81/197181/16 && git checkout FETCH_HEAD
+git fetch https://review.openstack.org/openstack/puppet-neutron ${PUPPET_REF}  && git checkout FETCH_HEAD
 cd ..
 
 

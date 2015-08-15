@@ -2,22 +2,22 @@ resource_registry:
   OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/network-cisco.yaml
 
 parameter_defaults:
-  NetworkEnableCiscoUCSMPlugin: '{{ network_enable_cisco_ucsm_plugin }}'
+  NetworkEnableCiscoUCSMPlugin: '{{ network_enable_cisco_ucsm_plugin|to_json }}'
   NetworkUCSMIp: '{{ network_ucsm_ip }}'
   NetworkUCSMUsername: '{{ network_ucsm_username }}'
   NetworkUCSMPassword: '{{ network_ucsm_password }}'
   NetworkUCSMHhostList: '{{ network_ucsm_host_list }}'
-  NetworkEnableCiscoNexusPlugin: '{{ network_enable_cisco_nexus_plugin }}'
+  NetworkEnableCiscoNexusPlugin: '{{ network_enable_cisco_nexus_plugin|to_json }}'
   NetworkNexusConfig: {{ network_nexus_config|to_nice_json }}
 
   NetworkNexusManagedPhysicalNetwork: {{ network_nexus_managed_physical_network }}
   NetworkNexusVlanNamePrefix: '{{ network_nexus_vlan_name_prefix }}'
-  NetworkNexusSviRoundRobin: '{{ network_nexus_svi_round_robin }}'
+  NetworkNexusSviRoundRobin: '{{ network_nexus_svi_round_robin|to_json }}'
   NetworkNexusProviderVlanNamePrefix: '{{ network_nexus_provider_vlan_name_prefix }}'
-  NetworkNexusPersistentSwitchConfig: '{{ network_nexus_persistent_switch_config }}'
+  NetworkNexusPersistentSwitchConfig: '{{ network_nexus_persistent_switch_config|to_json }}'
   NetworkNexusSwitchHeartbeatTime: {{ network_nexus_switch_heartbeat_time }}
   NetworkNexusSwitchReplayCount: {{ network_nexus_switch_replay_count }}
-  NetworkNexusProviderVlanAutoCreate: '{{ network_nexus_provider_vlan_auto_create }}'
-  NetworkNexusProviderVlanAutoTrunk: '{{ network_nexus_rovider_vlan_auto_trunk}}'
-  NetworkNexusVxlanGlobalConfig: '{{ network_nexus_vxlan_global_config }}'
-  NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks }}'
+  NetworkNexusProviderVlanAutoCreate: '{{ network_nexus_provider_vlan_auto_create|to_json }}'
+  NetworkNexusProviderVlanAutoTrunk: '{{ network_nexus_rovider_vlan_auto_trunk|to_json }}'
+  NetworkNexusVxlanGlobalConfig: '{{ network_nexus_vxlan_global_config|to_json }}'
+  NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'

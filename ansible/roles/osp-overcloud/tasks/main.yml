@@ -1,139 +1,5 @@
 ---
 
-- name: Make images dir
-  sudo_user: stack
-  file: path=/home/stack/images state=directory mode=0755
-
-- name: Download images
-  sudo_user: stack
-  environment: proxy_env
-  get_url:
-    url: "{{ item.url }}"
-    dest: /home/stack/images/{{ item.name }}
-    timeout: 120
-  with_items: "{{ disk_images }}"
-  register: images_downloaded
-
-- name: Unpack images
-  sudo_user: stack
-  unarchive:
-    src: /home/stack/images/{{ item.name }}
-    dest: /home/stack/images
-    copy: no
-  with_items: "{{ disk_images }}"
-  when: images_downloaded|success
-
-
-#- name: Download RHEL Guest Image
-#  sudo_user: stack
-#  get_url: url=http://memory.cisco.com/osp7/rh-images/rhel-guest-image-7.1-20150224.0.x86_64.qcow2 dest=/home/stack/rhel-guest-image-7.1-20150224.0.x86_64.qcow2
-#  register: images_downloaded
-#
-#- name: Build images
-#  sudo_user: stack
-#  environment:
-#    NODE_DIST: rhel7
-#    DIB_LOCAL_IMAGE: rhel-guest-image-7.1-20150224.0.x86_64.qcow2
-#    REG_METHOD: portal
-#    REG_USER: "{{ rhel_username }}"
-#    REG_PASSWORD: "{{ rhel_password }}"
-#    REG_POOL_ID: "{{ rhel_pool }}"
-#    REG_REPOS: "rhel-7-server-rpms rhel-7-server-extras-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-optional-rpms rhel-7-server-openstack-7.0-rpms"
-#  shell: source /home/stack/stackrc && openstack overcloud image build --all
-#  when: images_downloaded|success
-
-- name: Install libguestfs-tools
-  yum: name=libguestfs-tools
-
-- name: Patch overcloud-full.qcow2
-  sudo_user: stack
-  environment: proxy_env
-  script: "{{ role_path }}/scripts/build-disk-image.sh /home/stack/images/overcloud-full.qcow2"
-  when: override_qcow
-
-
-#- name: Override overcloud-full.qcow2
-#  sudo_user: stack
-#  environment: proxy_env
-#  get_url:
-#    url: "{{ overcloud_full_override_url }}"
-#    dest: "/home/stack/overcloud-full.qcow2"
-#    sha256sum: "{{ overcloud_full_override_sha256sum }}"
-#  when: override_qcow
-
-# TODO: this isn't truly idempotent, because we downloading the images if they do not exist, but we do NOT upload them
-# if they are already in glance, not sure this matters though.
-- name: Check for images in glance
-  sudo_user: stack
-  shell: source /home/stack/stackrc && glance image-list | grep -q overcloud-full
-  ignore_errors: true
-  register: image_check
-
-- name: Upload disk images
-  sudo_user: stack
-  shell: cd /home/stack/images && source /home/stack/stackrc && openstack overcloud image upload
-  when: images_downloaded|success and image_check|failed
-  # successfully downloaded images, and they do NOT exist in glance
-
-- name:  Write instackenv.json
-  template: src=nodes.json dest=/home/stack/instackenv.json owner=stack group=stack
-
-- name: import nodes
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack baremetal import --json /home/stack/instackenv.json
-
-- name: configure boot kernals
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack baremetal configure boot
-
-- name: discover nodes
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack baremetal introspection bulk start
-  when: node_discovery
-
-
-- name: Check for baremetal flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q baremetal
-  ignore_errors: true
-  register: flavor_baremetal_check
-
-- name: Setup baremetal flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 baremetal
-  when: flavor_baremetal_check|failed
-  register: flavor_baremetal_create
-
-- name: Configure baremetal flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
-  when: not flavor_baremetal_create|skipped
-
-
-- name: Check for control flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q control
-  ignore_errors: true
-  register: flavor_control_check
-
-- name: Setup control flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 control
-  when: flavor_control_check|failed
-
-
-- name: Check for compute flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q compute
-  ignore_errors: true
-  register: flavor_compute_check
-
-- name: Setup compute flavor
-  sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 compute
-  when: flavor_compute_check|failed
-
-
 - name: Make templates dir
   sudo_user: stack
   file: path=/home/stack/templates state=directory mode=0755
@@ -172,7 +38,7 @@
         mkdir /home/stack/heat-review &&
         cd /home/stack/heat-review &&
         git init &&
-        git fetch https://review.openstack.org/openstack/tripleo-heat-templates refs/changes/54/198754/7 &&
+        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ heat_templates_ref }} &&
         git checkout FETCH_HEAD
   when: heat_review.stat.isdir is not defined
 
@@ -192,6 +58,7 @@
 - name: Patch heat templates
   shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/heat-review.patch
   when: not template_backup|skipped
+
 
 ###
 # Deploy Overcloud
