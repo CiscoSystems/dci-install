@@ -59,7 +59,7 @@
 - name: Patch overcloud-full.qcow2
   sudo_user: stack
   environment: proxy_env
-  shell: "/home/stack/bin/build-disk-image.sh /home/stack/images/overcloud-full.qcow2 '{{ puppet_neutron_ref }}' '{{ networking_cisco_rpm_url }}'"
+  shell: "/home/stack/bin/build-disk-image.sh /home/stack/images/overcloud-full.qcow2"
   when: override_qcow
 
 

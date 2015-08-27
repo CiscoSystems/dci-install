@@ -19,6 +19,8 @@ class CobblerOSInstallStep(step.Step):
         server = xmlrpclib.Server(kargs["cobbler_api_url"])
         token = server.login(kargs["cobbler_username"],kargs["cobbler_password"])
 
+        self.logger.info("Reboot/install: "+ director_node)
+
         # enable PXE Boot
         system_handle = server.get_system_handle(director_node, token)
         server.modify_system(system_handle, "netboot_enabled", True, token)

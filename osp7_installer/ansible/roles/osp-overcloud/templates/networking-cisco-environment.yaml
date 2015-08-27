@@ -1,13 +1,12 @@
 resource_registry:
   OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/network-cisco.yaml
+  #OS::TripleO::AllNodesExtraConfig: /usr/share/openstack-tripleo-heat-templates/extraconfig/all_nodes/mac_hostname.yaml
 
 parameter_defaults:
-  NetworkEnableCiscoUCSMPlugin: '{{ network_enable_cisco_ucsm_plugin|to_json }}'
   NetworkUCSMIp: '{{ network_ucsm_ip }}'
   NetworkUCSMUsername: '{{ network_ucsm_username }}'
   NetworkUCSMPassword: '{{ network_ucsm_password }}'
   NetworkUCSMHhostList: '{{ network_ucsm_host_list }}'
-  NetworkEnableCiscoNexusPlugin: '{{ network_enable_cisco_nexus_plugin|to_json }}'
   NetworkNexusConfig: {{ network_nexus_config|to_nice_json }}
 
   NetworkNexusManagedPhysicalNetwork: {{ network_nexus_managed_physical_network }}
@@ -21,3 +20,12 @@ parameter_defaults:
   NetworkNexusProviderVlanAutoTrunk: '{{ network_nexus_rovider_vlan_auto_trunk|to_json }}'
   NetworkNexusVxlanGlobalConfig: '{{ network_nexus_vxlan_global_config|to_json }}'
   NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'
+
+  NeutronMechanismDrivers: '{{ neutron_mechanism_drivers }}'
+  NetworkNexusVxlanVniRanges: '0:0'
+  NetworkNexusVxlanMcastRanges: '0.0.0.0:0.0.0.0'
+
+  #  NetworkNexusPortMappings: {
+  #    "84:b8:02:5c:00:7b": "1/30",
+  #    "84:b8:02:5c:14:03": "1/31"
+  #  }

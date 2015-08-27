@@ -32,19 +32,30 @@
   stat: path=/home/stack/heat-review
   register: heat_review
 
-- name: Checkout heat review
+- name: Checkout heat review 1
   sudo_user: stack
   shell: >
-        mkdir /home/stack/heat-review &&
-        cd /home/stack/heat-review &&
+        mkdir -p /home/stack/heat-review &&
+        mkdir /home/stack/heat-review/1 &&
+        cd /home/stack/heat-review/1 &&
         git init &&
-        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ heat_templates_ref }} &&
-        git checkout FETCH_HEAD
+        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ heat_templates_ref_1 }} &&
+        git checkout FETCH_HEAD &&
+        git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/heat-review-1.patch
   when: heat_review.stat.isdir is not defined
 
-- name: Create heat-review.patch
+# just copying and pasting, this should be very short lived, though if we have a thrid, then we need to use a with_items
+- name: Checkout heat review 2
   sudo_user: stack
-  shell: cd /home/stack/heat-review && git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/heat-review.patch
+  shell: >
+        mkdir -p /home/stack/heat-review &&
+        mkdir /home/stack/heat-review/2 &&
+        cd /home/stack/heat-review/2 &&
+        git init &&
+        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ heat_templates_ref_2 }} &&
+        git checkout FETCH_HEAD &&
+        git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/heat-review-2.patch
+  when: heat_review.stat.isdir is not defined
 
 - name: Check for heat backup
   stat: path=/usr/share/openstack-tripleo-heat-templates.bak
@@ -56,7 +67,10 @@
   when: heat_backup.stat.isdir is not defined
 
 - name: Patch heat templates
-  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/heat-review.patch
+  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/{{ item.patch_file }}
+  with_items:
+    - { patch_file: 'heat-review-1.patch' }
+    - { patch_file: 'heat-review-2.patch' }
   when: not template_backup|skipped
 
 
@@ -88,7 +102,6 @@
         --neutron-public-interface {{ neutron_public_nic }}
         --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }}
         -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml
-        -e /usr/share/openstack-tripleo-heat-templates/environments/network-cisco-plugin.yaml
         -e /home/stack/templates/networking-cisco-environment.yaml
   # up to 2 hours poll every minute
   async: 7200
