@@ -36,6 +36,16 @@ git fetch https://review.openstack.org/openstack/tripleo-puppet-elements ${PUPPE
 cd ..
 
 
+add_rpm_from_url () {
+  rpm_url=$1
+  file_name=${rpm_url##*/}
+  curl -o "${file_name}" "${rpm_url}"
+  virt-customize -a overcloud-full.qcow2 --upload ${file_name}:/tmp/${file_name}
+  virt-customize -a overcloud-full.qcow2 --run-command "rpm -Uvh /tmp/${file_name}"
+  virt-customize -a overcloud-full.qcow2 --run-command "rm /tmp/${file_name}"
+
+}
+
 # install virt-customize
 # sudo yum install -y libguestfs-tools
 
@@ -46,23 +56,32 @@ curl -o python-networking-cisco.noarch.rpm "${NET_CISCO_RPM_URL}"
 virt-customize -a overcloud-full.qcow2 --root-password password:***REMOVED***
 
 # install python-UcsSdk
-virt-customize -a overcloud-full.qcow2 --upload python-UcsSdk.noarch.rpm:/tmp/
-virt-customize -a overcloud-full.qcow2 --run-command 'rpm -Uvh /tmp/python-UcsSdk.noarch.rpm'
-virt-customize -a overcloud-full.qcow2 --run-command 'rm /tmp/python-UcsSdk.noarch.rpm'
+#virt-customize -a overcloud-full.qcow2 --upload python-UcsSdk.noarch.rpm:/tmp/
+#virt-customize -a overcloud-full.qcow2 --run-command 'rpm -Uvh /tmp/python-UcsSdk.noarch.rpm'
+#virt-customize -a overcloud-full.qcow2 --run-command 'rm /tmp/python-UcsSdk.noarch.rpm'
+add_rpm_from_url "http://memory.cisco.com/osp7/rpms/rh/python-UcsSdk-0.8.2.5-1.el7ost.noarch.rpm"
 
 # install python-networking-cisco
-virt-customize -a overcloud-full.qcow2 --upload python-networking-cisco.noarch.rpm:/tmp/
-virt-customize -a overcloud-full.qcow2 --run-command 'rpm -Uvh /tmp/python-networking-cisco.noarch.rpm'
-virt-customize -a overcloud-full.qcow2 --run-command 'rm /tmp/python-networking-cisco.noarch.rpm'
-
+#virt-customize -a overcloud-full.qcow2 --upload python-networking-cisco.noarch.rpm:/tmp/
+#virt-customize -a overcloud-full.qcow2 --run-command 'rpm -Uvh /tmp/python-networking-cisco.noarch.rpm'
+#virt-customize -a overcloud-full.qcow2 --run-command 'rm /tmp/python-networking-cisco.noarch.rpm'
+add_rpm_from_url "http://memory.cisco.com/osp7/rpms/rh/python-networking-cisco-2015.1.0-2.el7ost.noarch.rpm"
+#good
 # not sure if this is needed, but cleanup any SElinux problems caused by the image patching
 virt-customize -a overcloud-full.qcow2 --run-command 'chcon -Rv --reference=/usr/lib/python2.7/site-packages/neutron /usr/lib/python2.7/site-packages/networking_cisco*'
+
+#lxml
+add_rpm_from_url "http://memory.cisco.com/osp7/rpms/rh/python-lxml-3.2.1-5.el7_1.x86_64.rpm"
+
 
 # update neutron-puppet
 virt-copy-in -a overcloud-full.qcow2 puppet-neutron/* /usr/share/openstack-puppet/modules/neutron
 virt-customize -a overcloud-full.qcow2 --run-command 'chcon -Rv --reference=/usr/share/openstack-puppet/modules/nova /usr/share/openstack-puppet/modules/neutron'
+#add_rpm_from_url "http://memory.cisco.com/osp7/rpms/rh/openstack-puppet-modules-2015.1.8-12.el7ost.noarch.rpm"
+
 
 # update 40-hiera-datafiles
 virt-customize -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
+#add_rpm_from_url "http://memory.cisco.com/osp7/rpms/rh/openstack-tripleo-puppet-elements-0.0.1-5.el7ost.noarch.rpm"
 
 mv overcloud-full.qcow2 "${DISK_IMAGE}"
