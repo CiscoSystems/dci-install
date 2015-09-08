@@ -1,7 +1,9 @@
 ansible==1.9.2
 ecdsa==0.13
 Jinja2==2.7.3
+lxml==3.4.4
 MarkupSafe==0.23
+ncclient==0.4.3
 paramiko==1.15.2
 passlib==1.6.2
 pbr==1.3.0

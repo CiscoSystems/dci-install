@@ -1,0 +1,35 @@
+diff --git a/puppet/manifests/overcloud_controller.pp b/puppet/manifests/overcloud_controller.pp
+index ce929eb..362a493 100644
+--- puppet/manifests/overcloud_controller.pp
++++ puppet/manifests/overcloud_controller.pp
+@@ -248,6 +248,13 @@ if hiera('step') >= 3 {
+   if 'cisco_nexus' in hiera('neutron_mechanism_drivers') {
+     include ::neutron::plugins::ml2::cisco::nexus
+     include ::neutron::plugins::ml2::cisco::type_nexus_vxlan
++
++    exec { "ml2_cisco_nexus_conf_hack":
++        path => "/usr/bin:/bin",
++        command => "cat /etc/neutron/conf.d/neutron-server/ml2_mech_cisco_nexus.ini >> /etc/neutron/plugin.ini",
++        subscribe => File["nexus_config"],
++    } ~> Service['neutron-server']
++
+   }
+
+   Service['neutron-server'] -> Service['neutron-dhcp-service']
+diff --git a/puppet/manifests/overcloud_controller_pacemaker.pp b/puppet/manifests/overcloud_controller_pacemaker.pp
+index 9fc456d..bff1ddd 100644
+--- puppet/manifests/overcloud_controller_pacemaker.pp
++++ puppet/manifests/overcloud_controller_pacemaker.pp
+@@ -610,6 +610,12 @@ if hiera('step') >= 3 {
+   if 'cisco_nexus' in hiera('neutron_mechanism_drivers') {
+     include ::neutron::plugins::ml2::cisco::nexus
+     include ::neutron::plugins::ml2::cisco::type_nexus_vxlan
++
++    exec { "ml2_cisco_nexus_conf_hack":
++        path => "/usr/bin:/bin",
++        command => "cat /etc/neutron/conf.d/neutron-server/ml2_mech_cisco_nexus.ini >> /etc/neutron/plugin.ini",
++        subscribe => File["nexus_config"],
++    } ~> Service['neutron-server']
+   }
+
+   include ::cinder

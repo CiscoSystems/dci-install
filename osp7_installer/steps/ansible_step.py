@@ -25,7 +25,7 @@ class AnsibleStep(step.Step):
         callback_dir = os.path.join(module_dir, '..', 'ansible_plugins')
         ansible.constants.DEFAULT_CALLBACK_PLUGIN_PATH = os.path.abspath(callback_dir)
 
-        ansible_playbook = os.path.abspath(os.path.join(module_dir, '..', 'ansible', 'osp-director.yml'))
+        ansible_playbook = os.path.abspath(os.path.join(module_dir, '..', 'ansible', kargs["playbook"]))
 
         plugins.callback_loader = plugins.PluginLoader(
             'CallbackModule',

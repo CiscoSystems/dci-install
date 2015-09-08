@@ -121,6 +121,7 @@
   when: not flavor_baremetal_create|skipped
 
 
+# TODO: remove the to end of file
 - name: Check for control flavor
   sudo_user: stack
   shell: source /home/stack/stackrc &&  openstack flavor list | grep -q control
