@@ -30,7 +30,15 @@ class OspBoostrapCobbler(object):
 
         if not kargs['skip']:
             self.logger.info("Executing step " + step_name)
-            klass().execute(kargs)
+
+            if kargs['ignore_errors']:
+                try:
+                    klass().execute(kargs)
+                except Exception as e:
+                    print "Ignoring step failure: ", e
+            else:
+                klass().execute(kargs)
+
         else:
             self.logger.info("Skipping step " + step_name)
 
