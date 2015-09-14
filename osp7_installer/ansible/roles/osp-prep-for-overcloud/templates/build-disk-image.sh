@@ -32,9 +32,15 @@ add_rpm_from_url () {
   file_name=${rpm_url##*/}
   curl -o "${file_name}" "${rpm_url}"
   virt-customize -a overcloud-full.qcow2 --upload ${file_name}:/tmp/${file_name}
-  virt-customize -a overcloud-full.qcow2 --run-command "rpm -Uvh /tmp/${file_name}"
+  virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "rpm -Uvh /tmp/${file_name}"
   virt-customize -a overcloud-full.qcow2 --run-command "rm /tmp/${file_name}"
 
+}
+
+correct_selinux_context () {
+    ref_dir=$1
+    target_dir=$2
+    virt-customize -a overcloud-full.qcow2 --run-command "chcon -Rv --reference=${ref_dir} ${target_dir}"
 }
 
 # install virt-customize
@@ -49,10 +55,12 @@ do
   add_rpm_from_url "${rpm_url}"
 done
 
-# not sure if this is needed, but cleanup any SElinux problems caused by the image patching
-virt-customize -a overcloud-full.qcow2 --run-command 'chcon -Rv --reference=/usr/lib/python2.7/site-packages/neutron /usr/lib/python2.7/site-packages/networking_cisco*'
+# correct SELinux security context
+correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/networking_cisco*'
+correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib64/python2.7/site-packages/lxml*'
+correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/UcsSdk*'
 
 # update 40-hiera-datafiles
-virt-customize -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
+virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
 
 mv overcloud-full.qcow2 "${DISK_IMAGE}"
