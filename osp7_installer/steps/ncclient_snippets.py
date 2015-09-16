@@ -37,6 +37,15 @@ cmd_port_trunk = """
                     </native>
                   </trunk>
                 </switchport>
+                <switchport>
+                  <trunk>
+                    <allowed>
+                      <vlan>
+                        <value>1,{native_vlan}</value>
+                      </vlan>
+                    </allowed>
+                  </trunk>
+                </switchport>
               </__XML__MODE_if-ethernet-switch>
             </{type}>
           </interface>
