@@ -55,10 +55,21 @@ do
   add_rpm_from_url "${rpm_url}"
 done
 
+## first udpate all the openstack RPMs
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager register --user={{ rhel_username }} --password={{ rhel_password }}'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager attach --pool={{ rhel_pool }}'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager repos --disable=*'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager repos --enable=rhel-7-server-openstack-7.0-rpms'
+#virt-customize -a overcloud-full.qcow2 --run-command 'yum makecache'
+#virt-customize -a overcloud-full.qcow2 --run-command 'yum update -y'
+#virt-customize -a overcloud-full.qcow2 --run-command 'yum clean all'
+
+
 # correct SELinux security context
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/networking_cisco*'
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib64/python2.7/site-packages/lxml*'
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/UcsSdk*'
+correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/share/openstack-puppet'
 
 # update 40-hiera-datafiles
 virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d

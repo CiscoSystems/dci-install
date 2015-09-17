@@ -25,7 +25,7 @@
         --os-password password keypair-add
         --pub_key /home/stack/.ssh/id_rsa.pub default_key
 
-- name:
+- name: Download Cirros image
   sudo_user: stack
   get_url:
       url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
@@ -42,17 +42,40 @@
         --disk-format=qcow2 < /home/stack/cirros-0.3.4-x86_64-disk.img
   when: cirros_image_downloaded|success
 
-# default-net is no longer created
-#- name: Create Test VM
-#  sudo_user: stack
-#  shell: >
-#        source /home/stack/overcloudrc &&
-#        default_net=$(neutron net-list --quote minimal --format csv -c id -c name | grep default-net | sed 's_,.*__') &&
-#        nova --os-tenant-name test-project
-#        --os-user-name test-user
-#        --os-password password boot cirros-test
-#        --flavor m1.tiny
-#        --image 'cirros 0.3.4'
-#        --security-groups default
-#        --nic net-id=$default_net
-#        --key_name default_key
+- name: Create ext-net
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron net-list |
+        grep -q ext-net ||
+        neutron net-create ext-net
+        --router:external=True
+        --provider:physical_network datacentre
+        --provider:network_type vlan
+        --provider:segmentation_id {{ overcloud_vlan }}
+
+- name: Create ext-subnet
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron subnet-list |
+        grep -q ext-subnet ||
+        neutron subnet-create
+        --name ext-subnet
+        --allocation-pool start={{ overcloud_floating_ip_start }},end={{ overcloud_floating_ip_end }}
+        --gateway={{ overcloud_bm_network_gateway }}
+        ext-net {{ overcloud_floating_ip_cidr }}
+
+- name: Create Test VM
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        default_net=$(neutron net-list --quote minimal --format csv -c id -c name | grep ext-net | sed 's_,.*__') &&
+        nova --os-tenant-name test-project
+        --os-user-name test-user
+        --os-password password boot cirros-test
+        --flavor m1.tiny
+        --image 'cirros 0.3.4'
+        --security-groups default
+        --nic net-id=$default_net
+        --key_name default_key

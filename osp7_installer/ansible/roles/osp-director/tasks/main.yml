@@ -106,6 +106,12 @@
     line: "alias ironic-reset='sudo rm /var/lib/ironic-discoverd/discoverd.sqlite && sudo systemctl restart openstack-ironic-discoverd'"
     insertafter: EOF
 
+- name: Add alias for heat-resources
+  lineinfile:
+    dest: /home/stack/.bash_profile
+    line: "alias heat-resources='heat resource-list overcloud | grep -v COMPLETE'"
+    insertafter: EOF
+
 - name: Check if default subnet name is set
   sudo_user: stack
   shell: source /home/stack/stackrc && neutron subnet-list --format csv --quote minimal --column id --column name | grep -q default-subnet
