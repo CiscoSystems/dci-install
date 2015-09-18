@@ -6,7 +6,7 @@ parameter_defaults:
   NetworkUCSMIp: '{{ network_ucsm_ip }}'
   NetworkUCSMUsername: '{{ network_ucsm_username }}'
   NetworkUCSMPassword: '{{ network_ucsm_password }}'
-  NetworkUCSMHhostList: '{{ network_ucsm_host_list }}'
+  NetworkUCSMHostList: '{{ network_ucsm_host_list }}'
   NetworkNexusConfig: {{ network_nexus_config|to_nice_json }}
 
   NetworkNexusManagedPhysicalNetwork: {{ network_nexus_managed_physical_network }}
