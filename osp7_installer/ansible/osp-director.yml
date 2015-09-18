@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: "{{ director_node_ssh_ip }}"
   connection: ssh
   roles:
     - etc-hosts
@@ -8,3 +8,9 @@
     - osp-prep-for-overcloud
     - osp-overcloud
     - osp-test-data
+#    - add-overcloud-host
+#
+#- hosts: overcloud_controller
+#  remote_user: root
+#  roles:
+#  - rhel-register

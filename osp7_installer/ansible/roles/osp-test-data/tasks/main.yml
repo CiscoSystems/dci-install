@@ -36,35 +36,12 @@
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
+        glance image-list | grep -q "cirros 0.3.4" ||
         glance image-create --name='cirros 0.3.4'
         --is-public=true
         --container-format=bare
         --disk-format=qcow2 < /home/stack/cirros-0.3.4-x86_64-disk.img
   when: cirros_image_downloaded|success
-
-- name: Create ext-net
-  sudo_user: stack
-  shell: >
-        source /home/stack/overcloudrc &&
-        neutron net-list |
-        grep -q ext-net ||
-        neutron net-create ext-net
-        --router:external=True
-        --provider:physical_network datacentre
-        --provider:network_type vlan
-        --provider:segmentation_id {{ overcloud_vlan }}
-
-- name: Create ext-subnet
-  sudo_user: stack
-  shell: >
-        source /home/stack/overcloudrc &&
-        neutron subnet-list |
-        grep -q ext-subnet ||
-        neutron subnet-create
-        --name ext-subnet
-        --allocation-pool start={{ overcloud_floating_ip_start }},end={{ overcloud_floating_ip_end }}
-        --gateway={{ overcloud_bm_network_gateway }}
-        ext-net {{ overcloud_floating_ip_cidr }}
 
 - name: Create Test VM
   sudo_user: stack

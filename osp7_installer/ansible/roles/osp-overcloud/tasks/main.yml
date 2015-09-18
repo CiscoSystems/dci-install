@@ -104,28 +104,28 @@
   poll: 60
   when: deploy_overcloud and exiting_cloud_check|failed
 
+# Create external network
 
-#  # I failed to get the following to work,
-#- name: Install overcloud
-#  sudo_user: stack
-#  shell: >
-#        source /home/stack/stackrc &&
-#        cd /home/stack/ &&
-#        openstack overcloud deploy --plan overcloud
-#        --control-scale {{ overcloud_control_scale }}
-#        --compute-scale {{ overcloud_compute_scale }}
-#        --ceph-storage-scale {{ overcloud_ceph_storage_scale }}
-#        --block-storage-scale {{ overcloud_block_storage_scale }}
-#        --swift-storage-scale {{ overcloud_swift_storage_scale }}
-#        --neutron-network-type vlan
-#        --neutron-disable-tunneling
-#        --extra-template /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml
-#        --extra-template /home/stack/templates/network-environment.yaml
-#        --control-flavor control
-#        --compute-flavor compute
-#        --neutron-public-interface {{ neutron_public_nic }}
-#        --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }}
-#  # up to 2 hours poll every minute
-#  async: 7200
-#  poll: 60
-#  when: deploy_overcloud and exiting_cloud_check|failed
+- name: Create ext-net
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron net-list |
+        grep -q ext-net ||
+        neutron net-create ext-net
+        --router:external=True
+        --provider:physical_network datacentre
+        --provider:network_type vlan
+        --provider:segmentation_id {{ overcloud_vlan }}
+
+- name: Create ext-subnet
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron subnet-list |
+        grep -q ext-subnet ||
+        neutron subnet-create
+        --name ext-subnet
+        --allocation-pool start={{ overcloud_floating_ip_start }},end={{ overcloud_floating_ip_end }}
+        --gateway={{ overcloud_bm_network_gateway }}
+        ext-net {{ overcloud_floating_ip_cidr }}
