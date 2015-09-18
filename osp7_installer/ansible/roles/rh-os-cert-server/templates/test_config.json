@@ -1,0 +1,11 @@
+{
+
+  "keystone_auth_url" : "{{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}",
+  "admin_username": "admin ",
+  "admin_password": "{{ hostvars[director_node_ssh_ip]['overcloud_os_admin_password'] }}",
+  "admin_tenant_name": "admin",
+
+  "plugin_type": "networking",
+  "supported_apis_and_extensions": ["networks"]
+
+}

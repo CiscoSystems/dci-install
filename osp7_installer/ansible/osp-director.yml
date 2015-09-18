@@ -8,9 +8,11 @@
     - osp-prep-for-overcloud
     - osp-overcloud
     - osp-test-data
-#    - add-overcloud-host
-#
-#- hosts: overcloud_controller
-#  remote_user: root
-#  roles:
-#  - rhel-register
+    - add-overcloud-host
+
+- hosts: overcloud_controller
+  remote_user: root
+  roles:
+  - rhel-register
+  - rh-os-cert-server
+  - rh-os-cert-client

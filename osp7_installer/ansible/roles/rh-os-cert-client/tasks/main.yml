@@ -1,0 +1,17 @@
+---
+
+#- name: Set RHEL Cert Repos
+#  shell: subscription-manager repos --enable=rhel-7-server-cert-rpms --enable=rhel-7-server-openstack-7.0-rpms
+#
+#- name: install certification rpms
+#  yum: name={{ item.name }}
+#  with_items:
+#    - { name: "redhat-certification" }
+#    - { name: "redhat-certification-openstack" }
+
+
+- name: rhcert-backend init.d script
+  template: src=rhcert-backend dest=/etc/init.d/rhcert-backend mode=755
+
+- name: Start rhcert-backend
+  service: name=rhcert-backend state=started
