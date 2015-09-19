@@ -31,8 +31,8 @@
 - name: Install python-rdomanager-oscplugin
   yum: name=python-rdomanager-oscplugin
 
-- name: openstack-tripleo-heat-templates rpm
-  shell: rpm -Uvh --force {{ tripleo_heat_rpm_url }}
+#- name: openstack-tripleo-heat-templates rpm
+#  shell: rpm -Uvh --force {{ tripleo_heat_rpm_url }}
 
 - name: Create Stack user
   # password=password
