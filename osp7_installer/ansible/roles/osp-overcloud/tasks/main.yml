@@ -102,6 +102,7 @@
         -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml
         -e /home/stack/templates/networking-cisco-environment.yaml
         --neutron-tunnel-type vlan
+        --neutron-network-vlan-ranges {{ network_nexus_vlan_range }}
   # up to 2 hours poll every minute
   async: 7200
   poll: 60

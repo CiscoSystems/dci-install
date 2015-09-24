@@ -20,7 +20,7 @@ parameter_defaults:
   NetworkNexusProviderVlanAutoTrunk: '{{ network_nexus_rovider_vlan_auto_trunk|to_json }}'
   NetworkNexusVxlanGlobalConfig: '{{ network_nexus_vxlan_global_config|to_json }}'
   NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'
-  NeutronNetworkVLANRanges: 'datacentre:2000:2500'
+  NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
 
   NeutronMechanismDrivers: '{{ neutron_mechanism_drivers }}'
   NetworkNexusVxlanVniRanges: '0:0'
