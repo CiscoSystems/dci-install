@@ -62,6 +62,21 @@
   shell: "/home/stack/bin/build-disk-image.sh /home/stack/images/overcloud-full.qcow2"
   when: override_qcow
 
+- name: Set root password in overcloud-full.qcow2
+  sudo_user: stack
+  shell: "virt-customize -a /home/stack/images/overcloud-full.qcow2 --root-password password:***REMOVED***"
+  when: not override_qcow and images_downloaded|success
+
+- name: Set root password in overcloud-full.qcow2
+  sudo_user: stack
+  shell: >
+        virt-customize --selinux-relabel
+        -a /home/stack/images/overcloud-full.qcow2
+        --run-command "sed -i 's/.*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config" &&
+        virt-customize --selinux-relabel
+        -a /home/stack/images/overcloud-full.qcow2
+        --run-command "sed -i 's/PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
+  when: not override_qcow and images_downloaded|success
 
 #- name: Override overcloud-full.qcow2
 #  sudo_user: stack

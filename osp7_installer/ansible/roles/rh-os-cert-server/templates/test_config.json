@@ -6,6 +6,17 @@
   "admin_tenant_name": "admin",
 
   "plugin_type": "networking",
-  "supported_apis_and_extensions": ["networks"]
+  "supported_apis_and_extensions": [
+    "routers",
+    "ports",
+    "networks",
+    "subnets",
+    "floating_ips",
+    "allowed_address_pair",
+    "agent_management",
+    "dhcp_agent_scheduler",
+    "provider_networks",
+    "l3_agent_scheduler"
+  ]
 
 }
