@@ -56,3 +56,7 @@
         --security-groups default
         --nic net-id=$default_net
         --key_name default_key
+
+- name: Add Member Role to Keystone
+  sudo_user: stack
+  shell: source /home/stack/overcloudrc && keystone role-list | grep -q Member || keystone role-create --name=Member

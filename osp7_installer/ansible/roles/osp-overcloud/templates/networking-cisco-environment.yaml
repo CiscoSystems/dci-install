@@ -25,3 +25,9 @@ parameter_defaults:
   NeutronMechanismDrivers: '{{ neutron_mechanism_drivers }}'
   NetworkNexusVxlanVniRanges: '0:0'
   NetworkNexusVxlanMcastRanges: '0.0.0.0:0.0.0.0'
+
+parameters:
+  controllerExtraConfig:
+    neutron::server::api_workers: 0
+    neutron::agents::metadata::metadata_workers: 0
+    neutron::server::rpc_workers: 0

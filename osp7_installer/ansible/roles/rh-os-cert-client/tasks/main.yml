@@ -15,3 +15,6 @@
 
 - name: Start rhcert-backend
   service: name=rhcert-backend state=started
+
+# now run something like:
+# python -c 'from  rhcert.suites.openstack.openstack import *; run("/tmp/bdemers")'
