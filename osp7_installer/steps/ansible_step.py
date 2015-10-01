@@ -37,7 +37,8 @@ class AnsibleStep(step.Step):
         inventory = ansible.inventory.Inventory(hosts)
 
         stats = callbacks.AggregateStats()
-        # utils.VERBOSITY = 3
+        if "debug" in kargs and kargs["debug"] is True:
+            utils.VERBOSITY = 3
         playbook_cb = callbacks.PlaybookCallbacks(verbose=utils.VERBOSITY)
         runner_cb = callbacks.PlaybookRunnerCallbacks(stats, verbose=utils.VERBOSITY)
 
