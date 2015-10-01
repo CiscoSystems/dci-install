@@ -42,13 +42,13 @@ class OspBoostrapCobbler(object):
         else:
             self.logger.info("Skipping step " + step_name)
 
-    def bootstrap(self, config_file, lab_location, properties):
+    def bootstrap(self, config_file, lab_location, properties, action="default"):
 
         config = Config(config_file, lab_location, properties)
 
         steps = self.all_steps()
 
-        for step in bootstrap_steps:
+        for step in bootstrap_steps[action]:
             if isinstance(step, basestring):
                 self.execute_step(step, steps[step], config.get(step))
             else:
@@ -68,6 +68,10 @@ def main():
                         help='Location of testbed. [sj, bxb]',
                         default='sj')
     parser.add_argument('-p', '--property', action='append', default=[])
+
+    parser.add_argument('--action',
+                        help='Action [default, redeploy]',
+                        default='default')
 
     args = parser.parse_args()
 
