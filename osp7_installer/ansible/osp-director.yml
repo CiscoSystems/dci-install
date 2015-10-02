@@ -5,6 +5,8 @@
     - etc-hosts
     - rhel-register
     - osp-director
+    - nfs-shares
+    - geerlingguy.nfs
     - osp-prep-for-overcloud
     - osp-overcloud
     - osp-test-data
@@ -14,5 +16,4 @@
   remote_user: root
   roles:
   - rhel-register
-  - rh-os-cert-server
-  - rh-os-cert-client
+  - rh-os-cert

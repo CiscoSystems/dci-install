@@ -67,7 +67,7 @@
   shell: "virt-customize -a /home/stack/images/overcloud-full.qcow2 --root-password password:***REMOVED***"
   when: not override_qcow and images_downloaded|success
 
-- name: Set root password in overcloud-full.qcow2
+- name: Allow password ssh in overcloud-full.qcow2
   sudo_user: stack
   shell: >
         virt-customize --selinux-relabel

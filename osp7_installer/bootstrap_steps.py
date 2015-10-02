@@ -3,7 +3,7 @@ __author__ = 'brdemers'
 
 bootstrap_steps = {
 
-    "default": [
+    "deploy": [
         # { "ExampleStep": 'example' },
         { "AnsibleStep": 'rhel_unregister' },
         { "SwitchConfigStep": 'switch_config' },
@@ -11,8 +11,8 @@ bootstrap_steps = {
         {"AnsibleStep": "ansible"},
     ],
     "redeploy": [
-        # TODO: create overcloud delete step
-        { "SwitchConfigStep": 'switch_config' },
-        {"AnsibleStep": "ansible"},
+        { "AnsibleStep": "redeploy" },
+        { "SwitchConfigStep": "switch_config" },
+        { "AnsibleStep": "ansible" },
     ]
 }

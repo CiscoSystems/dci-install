@@ -42,7 +42,7 @@ class OspBoostrapCobbler(object):
         else:
             self.logger.info("Skipping step " + step_name)
 
-    def bootstrap(self, config_file, lab_location, properties, action="default"):
+    def bootstrap(self, config_file, lab_location, properties, action="deploy"):
 
         config = Config(config_file, lab_location, properties)
 
@@ -70,17 +70,22 @@ def main():
     parser.add_argument('-p', '--property', action='append', default=[])
 
     parser.add_argument('--action',
-                        help='Action [default, redeploy]',
-                        default='default')
+                        help='Action [deploy, redeploy]',
+                        default='deploy')
 
     args = parser.parse_args()
 
     extra_properties = {}
+
+    if args.action == 'redeploy':
+        extra_properties['ansible.node_discovery'] = str(False)
+        extra_properties['ansible.deploy_undercloud'] = str(False)
+
     for value in args.property:
         n, v = value.split('=')
         extra_properties[n] = v
 
-    OspBoostrapCobbler().bootstrap(args.config_file, args.lab_location, extra_properties)
+    OspBoostrapCobbler().bootstrap(args.config_file, args.lab_location, extra_properties, args.action)
 
 if __name__ == '__main__':
     main()
