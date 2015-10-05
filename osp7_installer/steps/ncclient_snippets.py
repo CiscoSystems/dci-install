@@ -1,5 +1,6 @@
 __author__ = 'brdemers'
 
+# snippets used for ncclient, just to keep the ugly xml strings out of the way.
 
 exec_conf_prefix = """
       <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">

@@ -15,5 +15,10 @@
 - hosts: overcloud_controller
   remote_user: root
   roles:
+  - add-test-gateway-ip
+
+- hosts: overcloud_compute
+  remote_user: root
+  roles:
   - rhel-register
   - rh-os-cert

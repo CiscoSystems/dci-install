@@ -5,6 +5,7 @@ import ConfigParser
 import os
 
 class Config(object):
+    """Config wrapper that will parse an ini file and convert strings that look like objects into dicts, and lists"""
 
     logger = logging.getLogger("config")
 
@@ -12,9 +13,23 @@ class Config(object):
         self.config = self._read_config(config_file, location, override_args)
 
     def get(self, key):
+        """Gets property from config.
+
+        :param key: dictionary key used to find a value
+        :return: value corresponding to key.
+        """
         return self.config.get(key)
 
     def _read_config(self, config_file, location, override_args):
+        """Parse config, values that appear to be python snippets will also be evaluated.
+
+        For example, any config string starting with '{' or '[' will be eval'd.
+
+        :param config_file: Config file to parse.
+        :param location: short lab location name ['sj', 'bxb']
+        :param override_args: args that will override anything config files.
+        :return: dict representing all of the configuration.
+        """
 
         module_dir = os.path.dirname(os.path.abspath(__file__))
         common_conf_dir = os.path.join(module_dir, 'conf_common')
