@@ -54,12 +54,5 @@
 - name: Start rhcert-backend
   service: name=rhcert-backend state=started
 
-# now run something like:
-# python -c 'from  rhcert.suites.openstack.openstack import *; run("/tmp/bdemers")'
-
-# TODO: not sure how this works out for multi-controller environments.
-- name: hack in ip for testsvi
-  shell: ip a add {{ overcloud_bm_network_gateway }}/24 dev br-ex
-
 - name: Run quick network sanity test (tempest)
   shell: cd /usr/share/openstack-tempest-kilo && ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks' --config /etc/redhat-certification-openstack/tempest.conf

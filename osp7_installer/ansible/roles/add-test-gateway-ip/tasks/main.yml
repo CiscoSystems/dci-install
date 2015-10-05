@@ -1,0 +1,5 @@
+---
+
+# TODO: not sure how this works out for multi-controller environments.
+- name: hack in ip for testsvi
+  shell: ip a add {{ overcloud_bm_network_gateway }}/24 dev br-ex

@@ -131,6 +131,7 @@
         grep -q ext-subnet ||
         neutron subnet-create
         --name ext-subnet
+        --disable-dhcp
         --allocation-pool start={{ overcloud_floating_ip_start }},end={{ overcloud_floating_ip_end }}
         --gateway={{ overcloud_bm_network_gateway }}
         ext-net {{ overcloud_floating_ip_cidr }}
