@@ -29,6 +29,8 @@ class SwitchConfigStep(step.Step):
                 self._edit_config(connection, snip.cmd_port_trunk.format(type="ethernet",
                                                                          port=switchport['port'],
                                                                          native_vlan=switchport['native_vlan'],
+                                                                         testbed_vlan=kargs['testbed_vlan'],
+                                                                         overcloud_vlan=kargs['overcloud_vlan'],
                                                                          description=switchport['description'] ))
         finally:
             connection.close_session()

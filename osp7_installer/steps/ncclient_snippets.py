@@ -42,7 +42,7 @@ cmd_port_trunk = """
                   <trunk>
                     <allowed>
                       <vlan>
-                        <value>1,{native_vlan},3999</value>
+                        <value>{testbed_vlan},{native_vlan},{overcloud_vlan}</value>
                       </vlan>
                     </allowed>
                   </trunk>
