@@ -94,7 +94,7 @@ def main():
     parser.add_argument('-p', '--property', action='append', default=[])
 
     parser.add_argument('--action',
-                        help='Action [deploy, redeploy]',
+                        help='Action [deploy, redeploy, test]',
                         default='deploy')
 
     args = parser.parse_args()
