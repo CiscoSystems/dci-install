@@ -9,3 +9,5 @@
   roles:
   - add-test-gateway-ip
   - rh-tempest
+# Replace the above line with the below, to configure the certification to run.
+#  - rh-os-cert
