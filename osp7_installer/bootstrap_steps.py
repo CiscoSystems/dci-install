@@ -12,9 +12,11 @@ bootstrap_steps = {
         {"AnsibleStep": "ansible"},
     ],
     "redeploy": [
-        { "AnsibleStep": "redeploy" },
         { "SwitchConfigStep": "switch_config" },
-        { "AnsibleStep": "ansible" },
+        { "AnsibleStep": "redeploy" },
+    ],
+    "test": [
+        { "AnsibleStep": "test_cloud" },
     ]
 }
 """Mapping of 'actions' to steps, This allows for mixing python and ansible runs together sequentially.

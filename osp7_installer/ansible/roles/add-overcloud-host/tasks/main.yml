@@ -1,5 +1,18 @@
 ---
 
+- name: Find Overcloud Connection Properties (OS_AUTH_URL)
+  shell: "source /home/stack/overcloudrc && echo ${OS_AUTH_URL}"
+  register: OS_AUTH_URL
+
+- name: Find Overcloud Connection Properties (OS_PASSWORD)
+  shell: "source /home/stack/overcloudrc && echo ${OS_PASSWORD}"
+  register: OS_PASSWORD
+
+- name: Set Overcloud Connection Variables
+  set_fact:
+    overcloud_os_auth_url: "{{ OS_AUTH_URL['stdout'] }}"
+    overcloud_os_admin_password: "{{ OS_PASSWORD['stdout'] }}"
+
 - name: Find Overcloud Controller 0 IP
   sudo_user: stack
   shell: >
