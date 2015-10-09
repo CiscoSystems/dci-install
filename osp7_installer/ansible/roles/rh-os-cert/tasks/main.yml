@@ -1,0 +1,60 @@
+---
+
+- name: Setup Yum Repos
+  environment: proxy_env
+  get_url: url={{ item.url }} dest=/etc/yum.repos.d/{{ item.name }} force=true
+  with_items: "{{ cert_yum_repos }}"
+
+- name: remove the openstack-dashboard
+  yum: name=openstack-dashboard state=absent
+
+- name: remove horizon_vhost.conf
+  file: path=/etc/httpd/conf.d/10-horizon_vhost.conf state=absent
+  register: horizon_vhost_removed
+
+- name: restart httpd
+  shell: "systemctl daemon-reload && systemctl restart httpd"
+  when: horizon_vhost_removed.changed
+
+- name: install certification rpms
+  yum: name={{ item.name }}
+  with_items:
+    - { name: "redhat-certification" }
+    - { name: "redhat-certification-openstack" }
+
+- name: copy cert config
+  shell: cp /etc/rhcert-default.xml /etc/rhcert.xml
+
+- name: restart httpd (again)
+  service: name=httpd state=reloaded
+
+- name: test_config.json
+  template: src=test_config.json dest=/etc/redhat-certification-openstack/test_config.json mode=644
+
+- name: Write tempest.conf
+  shell: >
+        cd /usr/share/openstack-tempest-kilo &&
+        python tools/config_tempest.py --image "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
+        --create identity.uri {{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}
+        identity.username demo
+        identity.password demo
+        identity.auth_version v2
+        identity.tenant_name demo
+        identity.admin_domain_name Default
+        auth.allow_tenant_isolation True
+        auth.tempest_roles _member_
+        network.ipv6 true
+        network.ipv6_subnet_attributes true
+        compute-feature-enabled.live_migration false
+        identity.admin_username admin
+        identity.admin_password {{ hostvars[director_node_ssh_ip]['overcloud_os_admin_password'] }}
+        --out /etc/redhat-certification-openstack/tempest.conf
+
+- name: rhcert-backend init.d script
+  template: src=rhcert-backend dest=/etc/init.d/rhcert-backend mode=755
+
+- name: Start rhcert-backend
+  service: name=rhcert-backend state=started
+
+- name: Run quick network sanity test (tempest)
+  shell: cd /usr/share/openstack-tempest-kilo && ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks' --config /etc/redhat-certification-openstack/tempest.conf

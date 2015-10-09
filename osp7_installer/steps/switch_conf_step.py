@@ -6,6 +6,7 @@ import ncclient.manager as manager
 import ncclient_snippets as snip
 
 class SwitchConfigStep(step.Step):
+    """Configures switch ports with some basic defaults, used by the under and overclouds."""
 
     logger = logging.getLogger("switch_config_step")
     logger.setLevel(logging.DEBUG)
@@ -15,6 +16,7 @@ class SwitchConfigStep(step.Step):
         mgr_conn.edit_config(target='running', config=confstr)
 
     def execute(self, kargs):
+        """Configures switch ports with some basic defaults, used by the under and overclouds."""
 
         connection = manager.connect(host=kargs["switch_ssh_ip_address"],
                                      port=kargs["switch_ssh_port"],
@@ -27,6 +29,8 @@ class SwitchConfigStep(step.Step):
                 self._edit_config(connection, snip.cmd_port_trunk.format(type="ethernet",
                                                                          port=switchport['port'],
                                                                          native_vlan=switchport['native_vlan'],
+                                                                         testbed_vlan=kargs['testbed_vlan'],
+                                                                         overcloud_vlan=kargs['overcloud_vlan'],
                                                                          description=switchport['description'] ))
         finally:
             connection.close_session()

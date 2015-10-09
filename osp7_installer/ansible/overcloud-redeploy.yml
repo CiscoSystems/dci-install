@@ -2,11 +2,7 @@
 - hosts: "{{ director_node_ssh_ip }}"
   connection: ssh
   roles:
-    - etc-hosts
-    - osp-director
-    - nfs-shares
-    - geerlingguy.nfs
-    - osp-prep-for-overcloud
+    - delete-overcloud
     - osp-overcloud
     - osp-test-data
     - add-overcloud-host

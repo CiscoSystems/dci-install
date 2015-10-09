@@ -1,0 +1,29 @@
+---
+
+- name: NFS Exports dir
+  file: path=/export  state=directory mode=0755
+
+- name: NFS Exports dir (cinder)
+  file: path=/export/cinder  state=directory mode=0777
+
+- name: NFS Exports dir (glance)
+  file: path=/export/glance  state=directory mode=0777
+
+- name: Check for icmp-host-prohibited iptables rule
+  shell: iptables-save  | grep -q "icmp-host-prohibited"
+  ignore_errors: true
+  register: iptables_reject_check
+
+- name: Remove Reject rule for icmp-host-prohibited (in memory)
+  shell: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited
+  when: iptables_reject_check|success
+
+- name: Check for NFS iptables rule
+  shell: iptables-save  | grep -q "\ 2049\ "
+  ignore_errors: true
+  register: iptables_nfs_check
+
+- name: Allow NFS in iptables (in memory)
+  shell: iptables -A INPUT -p tcp -m tcp --dport 2049 -j ACCEPT
+  when: iptables_nfs_check|failed
+

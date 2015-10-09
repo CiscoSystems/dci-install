@@ -1,0 +1,36 @@
+---
+
+- name: Setup Yum Repos
+  environment: proxy_env
+  get_url: url={{ item.url }} dest=/etc/yum.repos.d/{{ item.name }} force=true
+  with_items: "{{ cert_yum_repos }}"
+
+- name: Create dir for tempest.conf
+  file: path=/etc/redhat-certification-openstack state=directory mode=0755
+
+- name: install tempest rpms
+  yum: name={{ item.name }}
+  with_items:
+    - { name: "openstack-tempest" }
+
+- name: Write tempest.conf
+  shell: >
+        cd /usr/share/openstack-tempest-kilo &&
+        python tools/config_tempest.py --image "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
+        --create identity.uri {{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}
+        identity.username demo
+        identity.password demo
+        identity.auth_version v2
+        identity.tenant_name demo
+        identity.admin_domain_name Default
+        auth.allow_tenant_isolation True
+        auth.tempest_roles _member_
+        network.ipv6 true
+        network.ipv6_subnet_attributes true
+        compute-feature-enabled.live_migration false
+        identity.admin_username admin
+        identity.admin_password {{ hostvars[director_node_ssh_ip]['overcloud_os_admin_password'] }}
+        --out /etc/redhat-certification-openstack/tempest.conf
+
+- name: Run quick network sanity test (tempest)
+  shell: cd /usr/share/openstack-tempest-kilo && ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks' --config /etc/redhat-certification-openstack/tempest.conf

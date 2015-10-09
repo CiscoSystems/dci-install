@@ -8,11 +8,19 @@ from bootstrap_steps import bootstrap_steps
 
 class OspBoostrapCobbler(object):
 
+    # Configure logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger("bootstrap")
     logger.setLevel(logging.INFO)
 
+    #
     def get_all_subclasses(self, klass):
+        """Returns list of all known subclasses of 'klass'.
+        This should probably not be done this way in python.  In other languages, this could easily pulled from an IoC
+          Container.  I'm not sure, what the best way to do this is.
+        :param klass: Gets list of all subclasses
+        :return: A list of all subclasses of 'klass'
+        """
         all_subclasses = {}
 
         for subclass in klass.__subclasses__():
@@ -22,9 +30,17 @@ class OspBoostrapCobbler(object):
         return all_subclasses
 
     def all_steps(self):
+        """Returns list of all known Step classes"""
+
         return self.get_all_subclasses(steps.Step)
 
     def execute_step(self, step_name, klass, kargs):
+        """Executes Step against a set of configuration
+
+        :param step_name: Name of step to run
+        :param klass: Class that defines the step
+        :param kargs: args to use as step input
+        """
 
         self.logger.debug("Executing Step %(step_name)s, with class: %(klass)s, and args: %(kargs)s", {'step_name': step_name, 'klass': klass, 'kargs': kargs})
 
@@ -42,7 +58,14 @@ class OspBoostrapCobbler(object):
         else:
             self.logger.info("Skipping step " + step_name)
 
-    def bootstrap(self, config_file, lab_location, properties, action="default"):
+    def bootstrap(self, config_file, lab_location, properties, action="deploy"):
+        """
+
+        :param config_file: path to config file which contains host specific information.
+        :param lab_location: short labname string ['sj', 'bxb'].
+        :param properties: Dictionary used to override config from 'config_file'.
+        :param action: Key name of which set of steps to run ['deploy', 'redeploy'] see 'bootstrap_steps.py'
+        """
 
         config = Config(config_file, lab_location, properties)
 
@@ -59,6 +82,7 @@ class OspBoostrapCobbler(object):
                 self.execute_step( name, steps[class_name], config.get(name))
 
 def main():
+    """CLI method, run bootstrap.py --help to view."""
     import argparse
     parser = argparse.ArgumentParser(description='Ansible based utility to Bootstrap OSP7.')
     parser.add_argument('--config_file',
@@ -70,17 +94,23 @@ def main():
     parser.add_argument('-p', '--property', action='append', default=[])
 
     parser.add_argument('--action',
-                        help='Action [default, redeploy]',
-                        default='default')
+                        help='Action [deploy, redeploy, test]',
+                        default='deploy')
 
     args = parser.parse_args()
 
     extra_properties = {}
+
+    # This is hack, this should be pulled from a config file, this section should NOT have implementation details.
+    if args.action == 'redeploy':
+        extra_properties['ansible.node_discovery'] = str(False)
+        extra_properties['ansible.deploy_undercloud'] = str(False)
+
     for value in args.property:
         n, v = value.split('=')
         extra_properties[n] = v
 
-    OspBoostrapCobbler().bootstrap(args.config_file, args.lab_location, extra_properties)
+    OspBoostrapCobbler().bootstrap(args.config_file, args.lab_location, extra_properties, args.action)
 
 if __name__ == '__main__':
     main()

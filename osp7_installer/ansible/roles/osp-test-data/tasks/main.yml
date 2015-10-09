@@ -48,9 +48,11 @@
   shell: >
         source /home/stack/overcloudrc &&
         default_net=$(neutron net-list --quote minimal --format csv -c id -c name | grep ext-net | sed 's_,.*__') &&
-        nova --os-tenant-name test-project
+        nova
+        --os-tenant-name test-project
         --os-user-name test-user
-        --os-password password boot cirros-test
+        --os-password password
+        boot cirros-test
         --flavor m1.tiny
         --image 'cirros 0.3.4'
         --security-groups default

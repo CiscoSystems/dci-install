@@ -2,13 +2,6 @@
 - hosts: "{{ director_node_ssh_ip }}"
   connection: ssh
   roles:
-    - etc-hosts
-    - osp-director
-    - nfs-shares
-    - geerlingguy.nfs
-    - osp-prep-for-overcloud
-    - osp-overcloud
-    - osp-test-data
     - add-overcloud-host
 
 - hosts: overcloud_controller
@@ -16,3 +9,5 @@
   roles:
   - add-test-gateway-ip
   - rh-tempest
+# Replace the above line with the below, to configure the certification to run.
+#  - rh-os-cert

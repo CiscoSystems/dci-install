@@ -9,11 +9,17 @@ import logging
 import socket
 
 class CobblerOSInstallStep(step.Step):
+    """ Reboots and installs OS against a Cobbler profile."""
 
     logger = logging.getLogger("cobbler_os_install")
     logger.setLevel(logging.DEBUG)
 
     def reboot(self, ci_key, kargs):
+        """Updates netbook key and reboots Server via cobbler.
+
+        :param ci_key: unique key used to identify the kickstart was successful.
+        :param kargs: Args for step (cobbler connection info)
+        """
 
         director_node = kargs["osp_directory_node"]
         server = xmlrpclib.Server(kargs["cobbler_api_url"])
@@ -33,9 +39,16 @@ class CobblerOSInstallStep(step.Step):
         server.sync(token)
 
     def poll_for_server(self, ssh_ip, ssh_user, ci_key):
+
+        """Poll server ssh to check when it is alive, verifies 'ci_key' upon successful connection.
+
+        :param ssh_ip: IP to attempt ssh connection.
+        :param ssh_user: username for connection (NOTE: ssh keys MUST be present on local and remote server.
+        :param ci_key: unique key used to identify the kickstart was successful.
+        :return: boolean, True if ci_key matched, false otherwise.
+        """
         poll_interval = 30
         poll_times = 60 # 30 min max
-
 
         self.logger.info("Testing connection to: "+ ssh_ip)
 
@@ -80,7 +93,9 @@ class CobblerOSInstallStep(step.Step):
 
 
     def execute(self, kargs):
+        """ Reboots and installs OS against a Cobbler profile."""
 
+        # generate random key
         ci_key = str(uuid.uuid4())
 
         self.reboot(ci_key, kargs)

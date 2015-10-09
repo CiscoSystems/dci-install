@@ -1,5 +1,18 @@
 ---
 
+- name: Find Overcloud Connection Properties (OS_AUTH_URL)
+  shell: "source /home/stack/overcloudrc && echo ${OS_AUTH_URL}"
+  register: OS_AUTH_URL
+
+- name: Find Overcloud Connection Properties (OS_PASSWORD)
+  shell: "source /home/stack/overcloudrc && echo ${OS_PASSWORD}"
+  register: OS_PASSWORD
+
+- name: Set Overcloud Connection Variables
+  set_fact:
+    overcloud_os_auth_url: "{{ OS_AUTH_URL['stdout'] }}"
+    overcloud_os_admin_password: "{{ OS_PASSWORD['stdout'] }}"
+
 - name: Find Overcloud Controller 0 IP
   sudo_user: stack
   shell: >
@@ -12,12 +25,36 @@
         grep ctlplane | sed 's_.*\=__'
   register: overcloud_controller_0_ip
 
-- name: debug
-  debug: msg="{{ overcloud_controller_0_ip['stdout'] }}"
+- name: Add Overcloud Controller host (for cert)
+  add_host:
+    hostname: "{{ overcloud_controller_0_ip['stdout'] }}"
+    groups: overcloud_controller
+
+- name: Find Overcloud Compute 0 IP
+  sudo_user: stack
+  shell: >
+        source /home/stack/stackrc &&
+        openstack server list
+        --format csv
+        --quote minimal
+        -c Networks
+        --name overcloud-compute-0 |
+        grep ctlplane | sed 's_.*\=__'
+  register: overcloud_compute_0_ip
+
+- name: Add Overcloud Compute host (for cert)
+  add_host:
+    hostname: "{{ overcloud_compute_0_ip['stdout'] }}"
+    groups: overcloud_compute
 
 - name: Allow root ssh on Overcloud Controller 0
   sudo_user: stack
   shell: ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  heat-admin@{{ overcloud_controller_0_ip['stdout'] }} sudo sed -i'' 's_.*ssh-rsa_ssh-rsa_' /root/.ssh/authorized_keys
+
+- name: Allow root ssh on Overcloud Compute 0
+  sudo_user: stack
+  shell: ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  heat-admin@{{ overcloud_compute_0_ip['stdout'] }} sudo sed -i'' 's_.*ssh-rsa_ssh-rsa_' /root/.ssh/authorized_keys
+
 
 - name: Build authorized keys file
   shell: "cat /root/.ssh/authorized_keys /home/stack/.ssh/id_rsa.pub > /tmp/authorized_keys"
@@ -25,7 +62,5 @@
 - name: Set authorized_keys on Overcloud Controller 0
   shell: scp -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  /tmp/authorized_keys root@{{ overcloud_controller_0_ip['stdout'] }}:/root/.ssh/authorized_keys
 
-- name: Add Overcloud Controller host (for cert)
-  add_host:
-    hostname: "{{ overcloud_controller_0_ip['stdout'] }}"
-    groups: overcloud_controller
+- name: Set authorized_keys on Overcloud Compute 0
+  shell: scp -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  /tmp/authorized_keys root@{{ overcloud_compute_0_ip['stdout'] }}:/root/.ssh/authorized_keys

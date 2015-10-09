@@ -1,5 +1,6 @@
 __author__ = 'brdemers'
 
+# snippets used for ncclient, just to keep the ugly xml strings out of the way.
 
 exec_conf_prefix = """
       <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
@@ -41,7 +42,7 @@ cmd_port_trunk = """
                   <trunk>
                     <allowed>
                       <vlan>
-                        <value>1,{native_vlan}</value>
+                        <value>{testbed_vlan},{native_vlan},{overcloud_vlan}</value>
                       </vlan>
                     </allowed>
                   </trunk>
