@@ -101,11 +101,6 @@ def main():
 
     extra_properties = {}
 
-    # This is hack, this should be pulled from a config file, this section should NOT have implementation details.
-    if args.action == 'redeploy':
-        extra_properties['ansible.node_discovery'] = str(False)
-        extra_properties['ansible.deploy_undercloud'] = str(False)
-
     for value in args.property:
         n, v = value.split('=')
         extra_properties[n] = v

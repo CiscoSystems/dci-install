@@ -43,7 +43,7 @@ class AnsibleStep(step.Step):
         inventory = ansible.inventory.Inventory(hosts)
         stats = callbacks.AggregateStats()
 
-        # enable debug if 'debug' is set (from CLI this would be 'ansible.debug')
+        # enable debug if 'debug' is set (from CLI this would be '-p ansible.debug=true')
         if "debug" in kargs and kargs["debug"] is True:
             utils.VERBOSITY = 3
 

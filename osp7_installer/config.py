@@ -53,9 +53,14 @@ class Config(object):
 
             # for each section look look for override args
             for key, value in override_args.iteritems():
+                # override all keys in format of section.key
                 if key.startswith(section+'.'):
                     new_key = key.replace(section+'.', '', 1)
                     section_dict[new_key] = value
+                # override all properties if they do NOT contain a "."
+                elif "." not in key:
+                    section_dict[key] = value
+
 
             # now parse bools, and maps from args
             for key, value in section_dict.iteritems():

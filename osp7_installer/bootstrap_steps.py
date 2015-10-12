@@ -6,7 +6,7 @@ bootstrap_steps = {
 
     "deploy": [
         # { "ExampleStep": 'example' },
-        { "AnsibleStep": 'rhel_unregister' },
+        # { "AnsibleStep": 'rhel_unregister' },
         { "SwitchConfigStep": 'switch_config' },
         {"CobblerOSInstallStep": "cobbler"},
         {"AnsibleStep": "ansible"},

@@ -24,6 +24,11 @@
   with_items:
 #    - { template_file: 'network-environment.yaml' }
     - { template_file: 'networking-cisco-environment.yaml' }
+    - { template_file: 'nfs-environment.yaml' }
+
+- name:  Write deploy_overcloud.sh
+  template: src=deploy_overcloud.sh dest=/home/stack/bin/deploy_overcloud.sh owner=stack group=stack mode=755
+
 
 ###
 # If still needed these commented out bits should be moved to (osp-prep-for-overcloud)
@@ -90,24 +95,7 @@
 
 - name: Install overcloud
   sudo_user: stack
-  shell: >
-        source /home/stack/stackrc &&
-        cd /home/stack/ &&
-        openstack overcloud deploy --templates
-        --control-scale {{ overcloud_control_scale }}
-        --compute-scale {{ overcloud_compute_scale }}
-        --ceph-storage-scale {{ overcloud_ceph_storage_scale }}
-        --block-storage-scale {{ overcloud_block_storage_scale }}
-        --swift-storage-scale {{ overcloud_swift_storage_scale }}
-        --neutron-network-type vlan
-        --neutron-disable-tunneling
-        --neutron-public-interface {{ neutron_public_nic }}
-        --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }}
-        -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml
-        -e /home/stack/templates/networking-cisco-environment.yaml
-        --neutron-tunnel-type vlan
-        --neutron-network-vlan-ranges {{ network_nexus_vlan_range }}
-        --ntp-server 1.ntp.esl.cisco.com
+  shell: /home/stack/bin/deploy_overcloud.sh
   # up to 2 hours poll every minute
   async: 7200
   poll: 60
