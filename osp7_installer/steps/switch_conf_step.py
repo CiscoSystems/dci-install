@@ -30,7 +30,7 @@ class SwitchConfigStep(step.Step):
                                                                          port=switchport['port'],
                                                                          native_vlan=switchport['native_vlan'],
                                                                          testbed_vlan=kargs['testbed_vlan'],
-                                                                         overcloud_vlan=kargs['overcloud_vlan'],
+                                                                         overcloud_vlan_tempest_hack=kargs['overcloud_vlan_tempest_hack'],
                                                                          description=switchport['description'] ))
         finally:
             connection.close_session()
