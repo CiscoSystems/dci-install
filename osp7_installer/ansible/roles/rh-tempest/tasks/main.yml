@@ -1,5 +1,9 @@
 ---
 
+- name: Add Member Role to Keystone
+  sudo_user: stack
+  shell: source /home/stack/overcloudrc && keystone role-list | grep -q Member || keystone role-create --name=Member
+
 - name: Setup Yum Repos
   environment: proxy_env
   get_url: url={{ item.url }} dest=/etc/yum.repos.d/{{ item.name }} force=true

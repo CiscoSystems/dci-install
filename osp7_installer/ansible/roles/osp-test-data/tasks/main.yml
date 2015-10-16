@@ -4,13 +4,43 @@
   sudo_user: stack
   shell: source /home/stack/overcloudrc && openstack project list | grep -q test-project || openstack project create --description 'Test Project' test-project
 
+- name: Find test-project Id
+  sudo_user: stack
+  shell: source /home/stack/overcloudrc && openstack project list --format csv  --quote minimal | grep test-project | sed 's_,.*__'
+  register: test_project_id
+
 - name: Create test-user
   sudo_user: stack
   shell: source /home/stack/overcloudrc && openstack user list | grep -q test-user || openstack user create --project test-project --password password test-user
 
-- name: Assign test-user to test-project
+- name: Create test-net
   sudo_user: stack
-  shell: source /home/stack/overcloudrc && openstack project list | grep -q test-project || openstack project create --description 'Test Project' test-project
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron net-list |
+        grep -q test-net ||
+        neutron net-create test-net --tenant-id {{ test_project_id['stdout'] }}
+
+- name: Create test-subnet
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron subnet-list |
+        grep -q test-subnet ||
+        neutron subnet-create
+        --name test-subnet
+        --gateway 192.168.1.1
+        test-net 192.168.1.0/24
+
+- name: Create test-router (and ports)
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron router-list --format csv -c name |
+        grep -q test-router ||
+        (neutron router-create test-router &&
+        neutron router-interface-add test-router test-subnet &&
+        neutron router-gateway-set test-router ext-net)
 
 - name: Upload test-user pub key
   sudo_user: stack
@@ -47,7 +77,7 @@
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
-        default_net=$(neutron net-list --quote minimal --format csv -c id -c name | grep ext-net | sed 's_,.*__') &&
+        vm_net=$(neutron net-list --quote minimal --format csv -c id -c name | grep test-net | sed 's_,.*__') &&
         nova
         --os-tenant-name test-project
         --os-user-name test-user
@@ -56,9 +86,5 @@
         --flavor m1.tiny
         --image 'cirros 0.3.4'
         --security-groups default
-        --nic net-id=$default_net
+        --nic net-id=$vm_net
         --key_name default_key
-
-- name: Add Member Role to Keystone
-  sudo_user: stack
-  shell: source /home/stack/overcloudrc && keystone role-list | grep -q Member || keystone role-create --name=Member

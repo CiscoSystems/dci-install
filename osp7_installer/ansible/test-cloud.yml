@@ -4,13 +4,4 @@
   roles:
     - add-test-gateway-ip
     - read-overcloudrc-props
-#    - add-overcloud-host
     - rh-tempest
-
-#- hosts: overcloud_controller
-#  remote_user: root
-#  roles:
-#  - add-test-gateway-ip
-#  - rh-tempest
-# Replace the above line with the below, to configure the certification to run.
-#  - rh-os-cert
