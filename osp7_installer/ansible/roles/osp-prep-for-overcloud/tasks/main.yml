@@ -54,6 +54,7 @@
   with_items:
     - { template_file: 'build-disk-image.sh' }
     - { template_file: 'refresh-images.sh' }
+    - { template_file: 'ipmi_address_to_uuid.py' }
 
 
 - name: Patch overcloud-full.qcow2
@@ -135,8 +136,6 @@
   shell: source /home/stack/stackrc && openstack flavor set --property "cpu_arch"="x86_64" --property "capabilities:boot_option"="local" baremetal
   when: not flavor_baremetal_create|skipped
 
-
-# TODO: remove the to end of file
 - name: Check for control flavor
   sudo_user: stack
   shell: source /home/stack/stackrc &&  openstack flavor list | grep -q control
@@ -145,7 +144,13 @@
 
 - name: Setup control flavor
   sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 control
+  shell: >
+        source /home/stack/stackrc &&
+        openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 control &&
+        openstack flavor set
+        --property "cpu_arch"="x86_64"
+        --property "capabilities:boot_option"="local"
+        --property "capabilities:profile"="control" control
   when: flavor_control_check|failed
 
 
@@ -157,5 +162,26 @@
 
 - name: Setup compute flavor
   sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 compute
+  shell: >
+        source /home/stack/stackrc &&
+        openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 compute &&
+        openstack flavor set
+        --property "cpu_arch"="x86_64"
+        --property "capabilities:boot_option"="local"
+        --property "capabilities:profile"="compute" compute
   when: flavor_compute_check|failed
+
+# NOTE: the need for this might go away with the next OSP release
+- name: Set node name
+  sudo_user: stack
+  shell: >
+        source /home/stack/stackrc &&
+        ironic node-update $(/home/stack/bin/ipmi_address_to_uuid.py {{ item.pm_addr }}) add name={{ item.name | default(item.pm_addr) }}
+  with_items: "{{ overcloud_nodes.nodes }}"
+
+- name: Set node capabilities
+  sudo_user: stack
+  shell: >
+        source /home/stack/stackrc &&
+        ironic node-update $(/home/stack/bin/ipmi_address_to_uuid.py {{ item.pm_addr }}) add properties/capabilities='{{ item.capabilities }}'
+  with_items: "{{ overcloud_nodes.nodes }}"

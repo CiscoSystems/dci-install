@@ -19,6 +19,13 @@ openstack overcloud deploy --templates \
 {% if nfs_for_storage %}
   -e /home/stack/templates/nfs-environment.yaml \
 {% endif %}
+{% if deploy_with_flavors %}
+  {{ deploy_with_flavors_args }} \
+{% endif %}
   --neutron-tunnel-type vlan \
   --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
+{% if deploy_extra_args %}
+   {{ deploy_extra_args }} \
+{% endif %}
   --ntp-server 1.ntp.esl.cisco.com
+
