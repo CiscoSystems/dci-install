@@ -2,6 +2,6 @@
 - hosts: "{{ director_node_ssh_ip }}"
   connection: ssh
   roles:
-    - add-test-gateway-ip
+#    - add-test-gateway-ip
     - read-overcloudrc-props
     - rh-tempest

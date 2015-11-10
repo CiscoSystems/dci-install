@@ -8,7 +8,7 @@
 #    - add-overcloud-host
     - read-overcloudrc-props
     - add-test-gateway-ip
-    - rh-tempest
+    #- rh-tempest
 
 #- hosts: overcloud_controller
 #  remote_user: root

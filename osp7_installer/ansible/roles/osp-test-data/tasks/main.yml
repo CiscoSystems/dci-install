@@ -13,21 +13,24 @@
   sudo_user: stack
   shell: source /home/stack/overcloudrc && openstack user list | grep -q test-user || openstack user create --project test-project --password password test-user
 
+- name:  Write overcloudrc.test-project
+  template: src=overcloudrc.test-project dest=/home/stack/overcloudrc.test-project owner=stack group=stack mode=755
+
 - name: Create test-net
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
-        neutron net-list |
+        neutron --os-tenant-name test-project --os-username test-user --os-password password net-list |
         grep -q test-net ||
-        neutron net-create test-net --tenant-id {{ test_project_id['stdout'] }}
+        neutron --os-tenant-name test-project --os-username test-user --os-password password net-create test-net --tenant-id {{ test_project_id['stdout'] }}
 
 - name: Create test-subnet
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
-        neutron subnet-list |
+        neutron --os-tenant-name test-project --os-username test-user --os-password password subnet-list |
         grep -q test-subnet ||
-        neutron subnet-create
+        neutron --os-tenant-name test-project --os-username test-user --os-password password subnet-create
         --name test-subnet
         --gateway 192.168.1.1
         test-net 192.168.1.0/24
@@ -36,22 +39,22 @@
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
-        neutron router-list --format csv -c name |
+        neutron --os-tenant-name test-project --os-username test-user --os-password password router-list --format csv -c name |
         grep -q test-router ||
-        (neutron router-create test-router &&
-        neutron router-interface-add test-router test-subnet &&
-        neutron router-gateway-set test-router ext-net)
+        (neutron --os-tenant-name test-project --os-username test-user --os-password password router-create test-router &&
+        neutron --os-tenant-name test-project --os-username test-user --os-password password router-interface-add test-router test-subnet &&
+        neutron --os-tenant-name test-project --os-username test-user --os-password password router-gateway-set test-router ext-net)
 
 - name: Upload test-user pub key
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
         nova --os-tenant-name test-project
-        --os-user-name test-user
+        --os-username test-user
         --os-password password keypair-list |
         grep -q default_key ||
         nova --os-tenant-name test-project
-        --os-user-name test-user
+        --os-username test-user
         --os-password password keypair-add
         --pub_key /home/stack/.ssh/id_rsa.pub default_key
 

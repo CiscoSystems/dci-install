@@ -1,0 +1,13 @@
+resource_registry:
+  OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/cisco-n1kv.yaml
+  OS::TripleO::ComputeExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/cisco-n1kv.yaml
+parameter_defaults:
+  N1000vVSMIP: '172.17.32.50'
+  N1000vMgmtGatewayIP: '172.17.32.1'
+  N1000vVSMDomainID: '500'
+  N1000vVSMHostMgmtIntf: br-ex
+  N1000vPacemakerControl: true
+  N1000vExistingBridge: true
+  N1000vVSMVersion: '5.2.1.SK3.2.2a-1'
+  N1000vVEMHostMgmtIntf: 'br-ex'
+  N1000vUplinkProfile: '{eth0: system-uplink,}'

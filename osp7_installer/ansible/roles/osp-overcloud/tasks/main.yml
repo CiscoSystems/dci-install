@@ -112,8 +112,7 @@
         neutron net-create ext-net
         --router:external=True
         --provider:physical_network datacentre
-        --provider:network_type vlan
-        --provider:segmentation_id {{ overcloud_vlan }}
+        --provider:network_type flat
 
 - name: Create ext-subnet
   sudo_user: stack
