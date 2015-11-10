@@ -17,7 +17,7 @@ parameter_defaults:
   NetworkNexusSwitchHeartbeatTime: {{ network_nexus_switch_heartbeat_time }}
   NetworkNexusSwitchReplayCount: {{ network_nexus_switch_replay_count }}
   NetworkNexusProviderVlanAutoCreate: '{{ network_nexus_provider_vlan_auto_create|to_json }}'
-  NetworkNexusProviderVlanAutoTrunk: '{{ network_nexus_rovider_vlan_auto_trunk|to_json }}'
+  NetworkNexusProviderVlanAutoTrunk: '{{ network_nexus_provider_vlan_auto_trunk|to_json }}'
   NetworkNexusVxlanGlobalConfig: '{{ network_nexus_vxlan_global_config|to_json }}'
   NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'
   NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
