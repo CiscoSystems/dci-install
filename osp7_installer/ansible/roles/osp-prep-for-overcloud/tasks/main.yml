@@ -127,7 +127,7 @@
 
 - name: Setup baremetal flavor
   sudo_user: stack
-  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 baremetal
+  shell: source /home/stack/stackrc && openstack flavor create --id auto --ram 10 --disk 40 --vcpus 1 baremetal
   when: flavor_baremetal_check|failed
   register: flavor_baremetal_create
 
@@ -170,6 +170,24 @@
         --property "capabilities:boot_option"="local"
         --property "capabilities:profile"="compute" compute
   when: flavor_compute_check|failed
+
+
+- name: Check for ceph flavor
+  sudo_user: stack
+  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q ceph
+  ignore_errors: true
+  register: flavor_ceph_check
+
+- name: Setup ceph flavor
+  sudo_user: stack
+  shell: >
+        source /home/stack/stackrc &&
+        openstack flavor create --id auto --ram 4096 --disk 40 --vcpus 1 ceph &&
+        openstack flavor set
+        --property "cpu_arch"="x86_64"
+        --property "capabilities:boot_option"="local"
+        --property "capabilities:profile"="ceph" ceph
+  when: flavor_ceph_check|failed
 
 # NOTE: the need for this might go away with the next OSP release
 - name: Set node name
