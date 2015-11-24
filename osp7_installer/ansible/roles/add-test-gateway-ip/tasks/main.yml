@@ -1,4 +1,5 @@
 ---
 
 - name: hack in ip for tests
-  shell: ip addr | grep -q {{ overcloud_bm_network_gateway }}/24 || ip a add {{ overcloud_bm_network_gateway }}/24 dev br-ctlplane
+  shell: ip addr | grep -q {{ overcloud_floating_ip_network_gateway }}/24 || ip a add {{ overcloud_floating_ip_network_gateway }}/24 dev br-ctlplane
+  when: hack_in_undercloud_gateway_ip

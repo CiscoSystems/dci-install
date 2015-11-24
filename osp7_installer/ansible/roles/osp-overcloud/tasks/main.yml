@@ -4,6 +4,11 @@
   sudo_user: stack
   file: path=/home/stack/templates state=directory mode=0755
 
+- name: Make nic-configs dir
+  sudo_user: stack
+  file: path=/home/stack/templates/nic-configs state=directory mode=0755
+
+
 #- name: Check existing heat templates
 #  stat: path=/home/stack/templates/nic-configs
 #  register: nic_templates
@@ -13,11 +18,11 @@
 #  shell: cp -r /usr/share/openstack-tripleo-heat-templates/network/config/single-nic-vlans /home/stack/templates/nic-configs
 #  when: nic_templates.stat.isdir is not defined
 
-#- name:  Write {{ item.template_file }}
-#  template: src={{ item.template_file }} dest=/home/stack/templates/nic-configs/{{ item.template_file }} owner=stack group=stack
-#  with_items:
-#    - { template_file: 'controller.yaml' }
-#    - { template_file: 'compute.yaml' }
+- name:  Write nic-config templates
+  template: src={{ item.template_file }} dest=/home/stack/templates/nic-configs/{{ item.template_file }} owner=stack group=stack
+  with_items:
+    - { template_file: 'controller.yaml' }
+    - { template_file: 'compute.yaml' }
 
 - name:  Write environment files
   template: src={{ item.template_file }} dest=/home/stack/templates/{{ item.template_file }} owner=stack group=stack
@@ -111,7 +116,7 @@
         grep -q ext-net ||
         neutron net-create ext-net
         --router:external=True
-        --provider:physical_network datacentre
+        --provider:physical_network {{ ext_net_network }}
         --provider:network_type flat
 
 - name: Create ext-subnet
@@ -124,5 +129,5 @@
         --name ext-subnet
         --disable-dhcp
         --allocation-pool start={{ overcloud_floating_ip_start }},end={{ overcloud_floating_ip_end }}
-        --gateway={{ overcloud_bm_network_gateway }}
+        --gateway={{ overcloud_floating_ip_network_gateway }}
         ext-net {{ overcloud_floating_ip_cidr }}

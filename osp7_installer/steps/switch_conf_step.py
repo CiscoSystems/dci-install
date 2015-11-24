@@ -25,13 +25,39 @@ class SwitchConfigStep(step.Step):
                                      hostkey_verify=False,
                                      device_params={"name": "nexus"})
         try:
+            vlans = {
+                'OSP-Testbed': kargs['testbed_vlan'],
+                'OSP-Storage': kargs['storage_vlan'],
+                'OSP-Storage-Mgmt': kargs['storage_mgmt_vlan'],
+                'OSP-Tenant-Network': kargs['tenant_network_vlan'],
+                'OSP-Undercloud': kargs['undercloud_vlan'],
+                'OSP-Overcloud-Ext': kargs['overcloud_external_vlan'],
+
+            }
+            for vlan_name, vlan_id in vlans.iteritems():
+                self.logger.debug("Creating vlan %s: %s", vlan_name, vlan_id )
+                self._edit_config(connection, snip.cmd_vlan_create.format(vlan_id=vlan_id, vlan_name=vlan_name))
+
+
             for switchport in kargs["physical_ports"]:
+                self.logger.debug("Configuring nic %s, for native vlan: %s, and vlans: %s", switchport['port'], switchport['native_vlan'],[ kargs['testbed_vlan'],kargs['storage_vlan'],kargs['storage_mgmt_vlan'],kargs['tenant_network_vlan']] )
                 self._edit_config(connection, snip.cmd_port_trunk.format(type="ethernet",
                                                                          port=switchport['port'],
                                                                          native_vlan=switchport['native_vlan'],
                                                                          testbed_vlan=kargs['testbed_vlan'],
                                                                          overcloud_vlan=kargs['overcloud_vlan'],
+                                                                         overcloud_external_vlan=kargs['overcloud_external_vlan'],
+                                                                         storage_vlan=kargs['storage_vlan'],
+                                                                         storage_mgmt_vlan=kargs['storage_mgmt_vlan'],
+                                                                         tenant_network_vlan=kargs['tenant_network_vlan'],
                                                                          description=switchport['description'] ))
+            for switchport in kargs["physical_ports_external"]:
+                self.logger.debug("Configuring external nic %s, for vlan: %s", switchport['port'], switchport['native_vlan'])
+                self._edit_config(connection, snip.cmd_port_trunk_external.format(type="ethernet",
+                                                                                  port=switchport['port'],
+                                                                                  native_vlan=switchport['native_vlan'],
+                                                                                  description=switchport['description'] ))
+
         finally:
             connection.close_session()
 

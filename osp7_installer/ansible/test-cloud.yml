@@ -3,5 +3,7 @@
   connection: ssh
   roles:
 #    - add-test-gateway-ip
+#    - osp-test-data
+
     - read-overcloudrc-props
     - rh-tempest

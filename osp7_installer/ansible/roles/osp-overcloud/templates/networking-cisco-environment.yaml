@@ -1,8 +1,30 @@
 resource_registry:
   OS::TripleO::AllNodesExtraConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/all_nodes/neutron-ml2-cisco-nexus-ucsm.yaml
+{% if network_isolation %}
+  OS::TripleO::Compute::Net::SoftwareConfig: /home/stack/templates/nic-configs/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: /home/stack/templates/nic-configs/controller.yaml
+{% else %}
   OS::TripleO::Compute::Net::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/net-config-bridge.yaml
+{% endif %}
 
 parameter_defaults:
+
+  InternalApiNetworkVlanID: {{ testbed_vlan }}
+  StorageNetworkVlanID: {{ storage_vlan }}
+  StorageMgmtNetworkVlanID: {{ storage_mgmt_vlan }}
+  TenantNetworkVlanID: {{ tenant_network_vlan }}
+  EC2MetadataIp: {{ undercloud_local_ip_simple }}
+  ControlPlaneDefaultRoute: {{ undercloud_network_gateway }}
+
+  ExternalNetCidr: {{ overcloud_external_ip_cidr }}
+  ExternalAllocationPools: [{'start': '{{ overcloud_external_ip_start }}', 'end': '{{ overcloud_external_ip_end }}'}]
+  ExternalNetworkVlanID: {{ overcloud_external_vlan }}
+  ExternalInterfaceDefaultRoute: {{ overcloud_external_gateway }}
+
+  DnsServers: ["{{ dns_server_1 }}"]
+  NeutronExternalNetworkBridge: "{{ overcloud_external_net_bridge }}"
+
+
   NetworkUCSMIp: '{{ network_ucsm_ip }}'
   NetworkUCSMUsername: '{{ network_ucsm_username }}'
   NetworkUCSMPassword: '{{ network_ucsm_password }}'

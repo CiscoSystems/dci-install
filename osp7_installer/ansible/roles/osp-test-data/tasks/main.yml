@@ -16,6 +16,12 @@
 - name:  Write overcloudrc.test-project
   template: src=overcloudrc.test-project dest=/home/stack/overcloudrc.test-project owner=stack group=stack mode=755
 
+- name: Add admin to test-project
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc && openstack role list --user admin --project test-project | grep -q admin ||
+        openstack role add --user admin --project test-project admin
+
 - name: Create test-net
   sudo_user: stack
   shell: >

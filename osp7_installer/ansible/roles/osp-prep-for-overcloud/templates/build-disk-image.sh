@@ -17,14 +17,14 @@ mkdir -p /tmp/update-osp-image
 cd /tmp/update-osp-image
 cp $DISK_IMAGE .
 
-# create tripleo-puppet-elements
-if [ ! -d "tripleo-puppet-elements" ]; then
-    git init tripleo-puppet-elements
-fi
-
-cd tripleo-puppet-elements
-git fetch https://review.openstack.org/openstack/tripleo-puppet-elements ${PUPPET_ELEMENTS_REF} && git checkout FETCH_HEAD
-cd ..
+## create tripleo-puppet-elements
+#if [ ! -d "tripleo-puppet-elements" ]; then
+#    git init tripleo-puppet-elements
+#fi
+#
+#cd tripleo-puppet-elements
+#git fetch https://review.openstack.org/openstack/tripleo-puppet-elements ${PUPPET_ELEMENTS_REF} && git checkout FETCH_HEAD
+#cd ..
 
 
 add_rpm_from_url () {
@@ -34,7 +34,6 @@ add_rpm_from_url () {
   virt-customize -a overcloud-full.qcow2 --upload ${file_name}:/tmp/${file_name}
   virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "rpm -Uvh /tmp/${file_name}"
   virt-customize -a overcloud-full.qcow2 --run-command "rm /tmp/${file_name}"
-
 }
 
 correct_selinux_context () {
@@ -57,6 +56,23 @@ do
   add_rpm_from_url "${rpm_url}"
 done
 
+
+{% for patch_info in patch_infos %}
+# create {{ patch_info['name'] }}-{{ loop.index }}
+if [ ! -d "{{ patch_info['name'] }}-{{ loop.index }}" ]; then
+    git init {{ patch_info['name'] }}-{{ loop.index }}
+fi
+
+cd {{ patch_info['name'] }}-{{ loop.index }}
+git fetch https://bdemers@review.openstack.org/openstack/{{ patch_info['name'] }} {{ patch_info['ref'] }} && git checkout FETCH_HEAD
+git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/{{ patch_info['name'] }}-{{ loop.index }}.patch
+cd ..
+
+virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload /home/stack/{{ patch_info['name'] }}-{{ loop.index }}.patch:/tmp
+virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -p1 -d {{ patch_info['path'] }} < /tmp/{{ patch_info['name'] }}-{{ loop.index }}.patch"
+{% endfor %}
+
+
 ## first udpate all the openstack RPMs
 #virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager register --user={{ rhel_username }} --password={{ rhel_password }}'
 #virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager attach --pool={{ rhel_pool }}'
@@ -74,6 +90,6 @@ correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/pyt
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/share/openstack-puppet'
 
 # update 40-hiera-datafiles
-virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
+#virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
 
 mv overcloud-full.qcow2 "${DISK_IMAGE}"
