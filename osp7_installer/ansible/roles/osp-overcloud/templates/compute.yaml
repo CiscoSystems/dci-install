@@ -86,7 +86,8 @@ resources:
               members:
                 -
                   type: interface
-                  name: nic1
+                  # TODO: stop using jinja template here, pass in from heat
+                  name: {{ hypervisor_neutron_public_nic }}
                   # force the MAC address of the bridge to this interface
                   primary: true
                 -
