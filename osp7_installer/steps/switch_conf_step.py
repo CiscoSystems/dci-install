@@ -45,7 +45,6 @@ class SwitchConfigStep(step.Step):
                                                                          port=switchport['port'],
                                                                          native_vlan=switchport['native_vlan'],
                                                                          testbed_vlan=kargs['testbed_vlan'],
-                                                                         overcloud_vlan=kargs['overcloud_vlan'],
                                                                          overcloud_external_vlan=kargs['overcloud_external_vlan'],
                                                                          storage_vlan=kargs['storage_vlan'],
                                                                          storage_mgmt_vlan=kargs['storage_mgmt_vlan'],
