@@ -80,7 +80,7 @@ cmd_port_trunk_external = """
                   <trunk>
                     <allowed>
                       <vlan>
-                        <value>{native_vlan}</value>
+                        <value>{native_vlan},{overcloud_floating_vlan}</value>
                       </vlan>
                     </allowed>
                   </trunk>

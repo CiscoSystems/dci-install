@@ -6,8 +6,8 @@
     - osp-overcloud
     - osp-test-data
 #    - add-overcloud-host
-    - read-overcloudrc-props
     - add-test-gateway-ip
+    - read-overcloudrc-props
     - rh-tempest
 
 #- hosts: overcloud_controller

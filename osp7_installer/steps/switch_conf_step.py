@@ -32,6 +32,7 @@ class SwitchConfigStep(step.Step):
                 'OSP-Tenant-Network': kargs['tenant_network_vlan'],
                 'OSP-Undercloud': kargs['undercloud_vlan'],
                 'OSP-Overcloud-Ext': kargs['overcloud_external_vlan'],
+                'OSP-Overcloud-Float': kargs['overcloud_floating_vlan'],
 
             }
             for vlan_name, vlan_id in vlans.iteritems():
@@ -55,6 +56,7 @@ class SwitchConfigStep(step.Step):
                 self._edit_config(connection, snip.cmd_port_trunk_external.format(type="ethernet",
                                                                                   port=switchport['port'],
                                                                                   native_vlan=switchport['native_vlan'],
+                                                                                  overcloud_floating_vlan=kargs['overcloud_floating_vlan'],
                                                                                   description=switchport['description'] ))
 
         finally:

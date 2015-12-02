@@ -42,50 +42,41 @@
 ###
 # Heat Review
 ###
-#- name: Check if heat review checked out
-#  stat: path=/home/stack/heat-review
-#  register: heat_review
-#
-#- name: Checkout heat review patches
-#  sudo_user: stack
-#  shell: >
-#        mkdir -p /home/stack/heat-review &&
-#        mkdir /home/stack/heat-review/{{ item.number }} &&
-#        cd /home/stack/heat-review/{{ item.number }} &&
-#        git init &&
-#        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ item.ref }} &&
-#        git checkout FETCH_HEAD &&
-#        git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/{{ item.patch_file }}
-#  with_items:
-#    - { number: "1", patch_file: 'heat-review-1.patch', ref: "{{ heat_templates_ref_1 }}" }
-##    - { number: "2", patch_file: 'heat-review-2.patch', ref: "{{ heat_templates_ref_2 }}" }
-##    - { number: "3", patch_file: 'heat-review-3.patch', ref: "{{ heat_templates_ref_3 }}" }
-##    - { number: "4", patch_file: 'heat-review-4.patch', ref: "{{ heat_templates_ref_4 }}" }
-##    - { number: "5", patch_file: 'heat-review-5.patch', ref: "{{ heat_templates_ref_5 }}" }
-#  when: heat_review.stat.isdir is not defined
-#
-#- name:  Write heat-hack.patch
-#  template: src=heat-hack.patch dest=/home/stack/heat-hack.patch owner=stack group=stack
-#
-#- name: Check for heat backup
-#  stat: path=/usr/share/openstack-tripleo-heat-templates.bak
-#  register: heat_backup
-#
-#- name: Backup heat templates
-#  shell: cp -R /usr/share/openstack-tripleo-heat-templates /usr/share/openstack-tripleo-heat-templates.bak
-#  register: template_backup
-#  when: heat_backup.stat.isdir is not defined
-#
-#- name: Patch heat templates
-#  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/{{ item.patch_file }}
-#  with_items:
-#    - { patch_file: 'heat-review-1.patch' }
-##    - { patch_file: 'heat-review-2.patch' }
-##    - { patch_file: 'heat-review-3.patch' }
-##    - { patch_file: 'heat-review-4.patch' }
-##    - { patch_file: 'heat-review-5.patch' }
-##    - { patch_file: 'heat-hack.patch' }
-#  when: not template_backup|skipped
+- name: Check if heat review checked out
+  stat: path=/home/stack/heat-review
+  register: heat_review
+
+- name: Checkout heat review patches
+  sudo_user: stack
+  shell: >
+        mkdir -p /home/stack/heat-review &&
+        mkdir /home/stack/heat-review/{{ item.number }} &&
+        cd /home/stack/heat-review/{{ item.number }} &&
+        git init &&
+        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ item.ref }} &&
+        git checkout FETCH_HEAD &&
+        git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/{{ item.patch_file }}
+  with_items:
+    - { number: "1", patch_file: 'heat-review-1.patch', ref: "{{ heat_templates_ref_1 }}" }
+  when: heat_review.stat.isdir is not defined
+
+- name:  Write heat-hack.patch
+  template: src=heat-hack.patch dest=/home/stack/heat-hack.patch owner=stack group=stack
+
+- name: Check for heat backup
+  stat: path=/usr/share/openstack-tripleo-heat-templates.bak
+  register: heat_backup
+
+- name: Backup heat templates
+  shell: cp -R /usr/share/openstack-tripleo-heat-templates /usr/share/openstack-tripleo-heat-templates.bak
+  register: template_backup
+  when: heat_backup.stat.isdir is not defined
+
+- name: Patch heat templates
+  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/{{ item.patch_file }}
+  with_items:
+    - { patch_file: 'heat-review-1.patch' }
+  when: not template_backup|skipped
 
 
 ###
