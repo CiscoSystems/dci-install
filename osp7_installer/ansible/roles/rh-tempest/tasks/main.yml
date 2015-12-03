@@ -71,3 +71,4 @@
   async: 7200
   poll: 60
   when: run_long_tempest
+  ignore_errors: yes
