@@ -3,7 +3,7 @@
 @@ -592,6 +592,11 @@
      memcached_servers => suffix(hiera('memcache_node_ips'), ':11211'),
    }
-  
+
 +  # tempest workaround due to needing the default pool set to pass network_basic_ops
 +  nova_config { "DEFAULT/default_floating_pool":
 +    value => "ext-net",
