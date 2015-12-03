@@ -58,7 +58,7 @@
   shell: testr last --subunit | subunit-1to2 | subunit2junitxml --output-to=tempest_results.xml
   args:
     chdir: /usr/share/openstack-tempest-kilo/
-#  ignore_errors: yes
+  ignore_errors: yes
 
 - name: Upload test report
   fetch:
