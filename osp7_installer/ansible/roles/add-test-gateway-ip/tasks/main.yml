@@ -1,5 +1,12 @@
 ---
 
 - name: hack in ip for tests
-  shell: ip addr | grep -q {{ overcloud_floating_ip_network_gateway }}/24 || ip a add {{ overcloud_floating_ip_network_gateway }}/24 dev {{ undercloud_fake_gateway_interface }}
+  shell: >
+     if [[ "x{{ undercloud_fake_gw_ip }}" == "x" ]]; then
+       ip addr | grep -q {{ undercloud_fake_gw_ip }}/{{ undercloud_fake_gw_ip_prefix }} ||
+       ip a add {{ undercloud_fake_gw_ip }}/{{ undercloud_fake_gw_ip_prefix }} dev {{ undercloud_fake_gateway_interface }}
+     else
+       ip addr | grep -q {{ overcloud_floating_ip_network_gateway }}/24 ||
+       ip a add {{ overcloud_floating_ip_network_gateway }}/24 dev {{ undercloud_fake_gateway_interface }}
+     fi
   when: hack_in_undercloud_gateway_ip

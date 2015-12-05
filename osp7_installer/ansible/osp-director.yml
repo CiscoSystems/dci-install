@@ -7,9 +7,9 @@
     - nfs-shares
     - geerlingguy.nfs
     - osp-prep-for-overcloud
+    - add-test-gateway-ip
     - osp-overcloud
     - osp-test-data
-    - add-test-gateway-ip
     - read-overcloudrc-props
     - rh-tempest
 

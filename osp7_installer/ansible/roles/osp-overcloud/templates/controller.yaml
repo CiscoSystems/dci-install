@@ -120,6 +120,8 @@ resources:
                   addresses:
                   -
                     ip_netmask: {get_param: TenantIpSubnet}
+            {% if controller_separate_public_nic %}
+
             -
               type: interface
               # TODO: stop using jinja template here, pass in from heat
@@ -132,6 +134,7 @@ resources:
                 -
                   ip_netmask: 0.0.0.0/0
                   next_hop: {get_param: ExternalInterfaceDefaultRoute}
+            {% endif %}
 
             -
               type: ovs_bridge
@@ -144,6 +147,16 @@ resources:
                   name: {{ controller_floating_nic }}
                   # force the MAC address of the bridge to this interface
                   primary: true
+            {% if not controller_separate_public_nic %}
+
+              addresses:
+                -
+                  ip_netmask: {get_param: ExternalIpSubnet}
+              routes:
+                -
+                  ip_netmask: 0.0.0.0/0
+                  next_hop: {get_param: ExternalInterfaceDefaultRoute}
+            {% endif %}
 
 outputs:
   OS::stack_id:

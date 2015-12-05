@@ -86,7 +86,7 @@
   patch:
     src: /home/stack/overcloud_controller_pacemaker.pp.patch
     dest: /usr/share/openstack-tripleo-heat-templates/puppet/manifests/overcloud_controller_pacemaker.pp
-
+  when: not template_backup|skipped
 
 ###
 # Deploy Overcloud

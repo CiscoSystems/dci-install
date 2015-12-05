@@ -55,6 +55,14 @@
     dest: /etc/sudoers.d/stack
     mode: 0440
 
+# this action is done to try and prevent the following error during undercloud install:
+# WARNING: map-services has been deprecated.  Please use the svc-map element.
+# Failed to issue method call: Access denied
+# INFO: 2015-12-03 13:30:31,512 -- ############### End stdout/stderr logging ###############
+# ERROR: 2015-12-03 13:30:31,513 --     Hook FAILED.
+# ERROR: 2015-12-03 13:30:31,513 -- Failed running command ['dib-run-parts', u'/tmp/tmpvQ4HhO/pre-install.d']
+- name: Restart system daemons & iptables
+  shell: 'systemctl daemon-reload && systemctl restart iptables'
 
 #- name: stack user sudo defaults
 #  lineinfile: line="Defaults:nova !requiretty" dest="/etc/sudoers.d/stack" create=yes
