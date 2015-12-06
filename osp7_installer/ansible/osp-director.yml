@@ -12,6 +12,7 @@
     - osp-test-data
     - read-overcloudrc-props
     - rh-tempest
+    - report_status
 
 #- hosts: overcloud_controller
 #  remote_user: root

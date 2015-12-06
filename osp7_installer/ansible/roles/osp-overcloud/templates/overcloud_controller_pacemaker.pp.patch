@@ -1,6 +1,6 @@
 --- overcloud_controller_pacemaker.pp.org	2015-12-02 12:28:19.570191758 -0800
 +++ overcloud_controller_pacemaker.pp	2015-12-02 12:29:09.887190593 -0800
-@@ -592,6 +592,11 @@
+@@ -592,5 +592,10 @@
      memcached_servers => suffix(hiera('memcache_node_ips'), ':11211'),
    }
 +  # tempest workaround due to needing the default pool set to pass network_basic_ops

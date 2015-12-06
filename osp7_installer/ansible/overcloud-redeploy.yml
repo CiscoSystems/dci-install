@@ -8,3 +8,4 @@
     - osp-test-data
     - read-overcloudrc-props
     - rh-tempest
+    - report_status
