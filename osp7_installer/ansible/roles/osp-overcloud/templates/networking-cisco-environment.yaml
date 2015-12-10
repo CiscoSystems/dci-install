@@ -22,7 +22,7 @@ parameter_defaults:
   ExternalInterfaceDefaultRoute: {{ overcloud_external_gateway }}
 
   DnsServers: ["{{ dns_server_1 }}"]
-  NeutronExternalNetworkBridge: "{{ overcloud_external_net_bridge }}"
+  NeutronExternalNetworkBridge: "{{ neutron_external_bridge }}"
 
 
   NetworkUCSMIp: '{{ network_ucsm_ip }}'

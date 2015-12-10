@@ -114,6 +114,12 @@ resources:
                   addresses:
                   -
                     ip_netmask: {get_param: StorageMgmtIpSubnet}
+                -
+                  type: vlan
+                  vlan_id: {get_param: TenantNetworkVlanID}
+                  addresses:
+                  -
+                    ip_netmask: {get_param: TenantIpSubnet}
 
             -
               type: ovs_bridge
