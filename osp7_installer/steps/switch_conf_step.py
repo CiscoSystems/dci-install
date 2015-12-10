@@ -59,6 +59,12 @@ class SwitchConfigStep(step.Step):
                                                                                   overcloud_floating_vlan=kargs['overcloud_floating_vlan'],
                                                                                   description=switchport['description'] ))
 
+            for switchport in kargs["physical_ports_floating"]:
+                self.logger.debug("Configuring external nic %s, for vlan: %s", switchport['port'], switchport['native_vlan'])
+                self._edit_config(connection, snip.cmd_port_trunk_floating.format(type="ethernet",
+                                                                                  port=switchport['port'],
+                                                                                  native_vlan=switchport['native_vlan'],
+                                                                                  description=switchport['description'] ))
         finally:
             connection.close_session()
 
