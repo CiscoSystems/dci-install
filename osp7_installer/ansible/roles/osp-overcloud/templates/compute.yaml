@@ -66,7 +66,7 @@ resources:
           network_config:
             -
               type: ovs_bridge
-              name: {get_input: bridge_name}
+              name: br-prov
               use_dhcp: false
               dns_servers: {get_param: DnsServers}
               addresses:
@@ -87,7 +87,7 @@ resources:
                 -
                   type: interface
                   # TODO: stop using jinja template here, pass in from heat
-                  name: {{ hypervisor_neutron_public_nic }}
+                  name: {{ compute_provisioning_nic }}
                   # force the MAC address of the bridge to this interface
                   primary: true
                 -
@@ -108,6 +108,18 @@ resources:
                   addresses:
                   -
                     ip_netmask: {get_param: TenantIpSubnet}
+
+            -
+              type: ovs_bridge
+              name: {get_input: bridge_name}
+              use_dhcp: false
+              members:
+                -
+                  type: interface
+                  # TODO: stop using jinja template here, pass in from heat
+                  name: {{ compute_tenant_nic }}
+                  # force the MAC address of the bridge to this interface
+                  primary: true
 
 outputs:
   OS::stack_id:

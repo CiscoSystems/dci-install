@@ -116,7 +116,7 @@
         grep -q ext-net ||
         neutron net-create ext-net
         --router:external=True
-        --provider:physical_network {{ ext_net_network }}
+        --provider:physical_network {{ 'datacentre' if neutron_external_bridge == neutron_tenant_bridge else 'external' }}
         --provider:network_type flat
 
 - name: Create ext-subnet

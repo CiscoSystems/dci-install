@@ -75,7 +75,7 @@ resources:
           network_config:
             -
               type: ovs_bridge
-              name: br-vlan
+              name: br-prov
               use_dhcp: false
               dns_servers: {get_param: DnsServers}
               addresses:
@@ -93,7 +93,7 @@ resources:
                 -
                   type: interface
                   # TODO: stop using jinja template here, pass in from heat
-                  name: {{ neutron_private_nic }}
+                  name: {{ controller_provisioning_nic }}
                   # force the MAC address of the bridge to this interface
                   primary: true
                 -
@@ -114,27 +114,6 @@ resources:
                   addresses:
                   -
                     ip_netmask: {get_param: StorageMgmtIpSubnet}
-                -
-                  type: vlan
-                  vlan_id: {get_param: TenantNetworkVlanID}
-                  addresses:
-                  -
-                    ip_netmask: {get_param: TenantIpSubnet}
-            {% if controller_separate_public_nic %}
-
-            -
-              type: interface
-              # TODO: stop using jinja template here, pass in from heat
-              name: {{ neutron_public_nic }}
-              use_dhcp: false
-              addresses:
-                -
-                  ip_netmask: {get_param: ExternalIpSubnet}
-              routes:
-                -
-                  ip_netmask: 0.0.0.0/0
-                  next_hop: {get_param: ExternalInterfaceDefaultRoute}
-            {% endif %}
 
             -
               type: ovs_bridge
@@ -144,10 +123,9 @@ resources:
                 -
                   type: interface
                   # TODO: stop using jinja template here, pass in from heat
-                  name: {{ controller_floating_nic }}
+                  name: {{ controller_external_nic }}
                   # force the MAC address of the bridge to this interface
                   primary: true
-            {% if not controller_separate_public_nic %}
 
               addresses:
                 -
@@ -156,6 +134,20 @@ resources:
                 -
                   ip_netmask: 0.0.0.0/0
                   next_hop: {get_param: ExternalInterfaceDefaultRoute}
+            {% if controller_tenant_nic %}
+
+            -
+              type: ovs_bridge
+              name: {{ neutron_tenant_bridge }}
+              use_dhcp: false
+              members:
+                -
+                  type: interface
+                  # TODO: stop using jinja template here, pass in from heat
+                  name: {{ controller_tenant_nic }}
+                  # force the MAC address of the bridge to this interface
+                  primary: true
+
             {% endif %}
 
 outputs:
