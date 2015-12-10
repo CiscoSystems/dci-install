@@ -46,19 +46,19 @@
   stat: path=/home/stack/heat-review
   register: heat_review
 
-- name: Checkout heat review patches
-  sudo_user: stack
-  shell: >
-        mkdir -p /home/stack/heat-review &&
-        mkdir /home/stack/heat-review/{{ item.number }} &&
-        cd /home/stack/heat-review/{{ item.number }} &&
-        git init &&
-        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ item.ref }} &&
-        git checkout FETCH_HEAD &&
-        git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/{{ item.patch_file }}
-  with_items:
-    - { number: "1", patch_file: 'heat-review-1.patch', ref: "{{ heat_templates_ref_1 }}" }
-  when: heat_review.stat.isdir is not defined
+#- name: Checkout heat review patches
+#  sudo_user: stack
+#  shell: >
+#        mkdir -p /home/stack/heat-review &&
+#        mkdir /home/stack/heat-review/{{ item.number }} &&
+#        cd /home/stack/heat-review/{{ item.number }} &&
+#        git init &&
+#        git fetch https://review.openstack.org/openstack/tripleo-heat-templates {{ item.ref }} &&
+#        git checkout FETCH_HEAD &&
+#        git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/{{ item.patch_file }}
+#  with_items:
+#    - { number: "1", patch_file: 'heat-review-1.patch', ref: "{{ heat_templates_ref_1 }}" }
+#  when: heat_review.stat.isdir is not defined
 
 - name:  Write heat-hack.patch
   template: src=heat-hack.patch dest=/home/stack/heat-hack.patch owner=stack group=stack
@@ -72,11 +72,11 @@
   register: template_backup
   when: heat_backup.stat.isdir is not defined
 
-- name: Patch heat templates
-  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/{{ item.patch_file }}
-  with_items:
-    - { patch_file: 'heat-review-1.patch' }
-  when: not template_backup|skipped
+#- name: Patch heat templates
+#  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/{{ item.patch_file }}
+#  with_items:
+#    - { patch_file: 'heat-review-1.patch' }
+#  when: not template_backup|skipped
 
 # work around for tempest
 - name: Write overcloud_controller_pacemaker.pp.patch
