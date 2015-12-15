@@ -32,6 +32,7 @@
         network.ipv6 false
         compute.build_timeout 500
         compute.ssh_timeout 500
+        orchestration.build_timeout 5000
         network.ipv6_subnet_attributes false
         compute-feature-enabled.live_migration false
         identity.admin_username admin
