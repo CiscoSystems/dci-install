@@ -78,15 +78,15 @@
 #    - { patch_file: 'heat-review-1.patch' }
 #  when: not template_backup|skipped
 
-# work around for tempest
-- name: Write overcloud_controller_pacemaker.pp.patch
-  template: src=overcloud_controller_pacemaker.pp.patch dest=/home/stack/overcloud_controller_pacemaker.pp.patch owner=stack group=stack
-
-- name: Apply patch to overcloud_controller_pacemaker.pp.patch
-  patch:
-    src: /home/stack/overcloud_controller_pacemaker.pp.patch
-    dest: /usr/share/openstack-tripleo-heat-templates/puppet/manifests/overcloud_controller_pacemaker.pp
-  when: not template_backup|skipped
+## work around for tempest
+#- name: Write overcloud_controller_pacemaker.pp.patch
+#  template: src=overcloud_controller_pacemaker.pp.patch dest=/home/stack/overcloud_controller_pacemaker.pp.patch owner=stack group=stack
+#
+#- name: Apply patch to overcloud_controller_pacemaker.pp.patch
+#  patch:
+#    src: /home/stack/overcloud_controller_pacemaker.pp.patch
+#    dest: /usr/share/openstack-tripleo-heat-templates/puppet/manifests/overcloud_controller_pacemaker.pp
+#  when: not template_backup|skipped
 
 ###
 # Deploy Overcloud
@@ -107,41 +107,40 @@
   when: deploy_overcloud and exiting_cloud_check|failed
 
 # Create external network
-
-- name: Create ext-net (flat)
+- name: Create net nova (ext-net)
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
-        neutron net-list |
-        grep -q ext-net ||
-        neutron net-create ext-net
+        neutron nova |
+        grep -q nova ||
+        neutron net-create nova
         --router:external=True
         --provider:physical_network 'datacentre'
         --provider:network_type flat
   when: not create_ext_net_vlan_provider
 
-- name: Create ext-net on vlan provider
+- name: Create nova (ext-net) on vlan provider
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
         neutron net-list |
-        grep -q ext-net ||
-        neutron net-create ext-net
+        grep -q nova ||
+        neutron net-create nova
         --router:external=True
         --provider:physical_network {{ 'datacentre' if neutron_external_bridge == neutron_tenant_bridge else 'external' }}
         --provider:network_type vlan
         --provider:segmentation_id {{ neutron_external_vlan }}
   when: create_ext_net_vlan_provider
 
-- name: Create ext-subnet
+- name: Create subnet nova (ext-subnet)
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
         neutron subnet-list |
-        grep -q ext-subnet ||
+        grep -q nova ||
         neutron subnet-create
-        --name ext-subnet
+        --name nova
         --disable-dhcp
         --allocation-pool start={{ overcloud_floating_ip_start }},end={{ overcloud_floating_ip_end }}
         --gateway={{ overcloud_floating_ip_network_gateway }}
-        ext-net {{ overcloud_floating_ip_cidr }}
+        nova {{ overcloud_floating_ip_cidr }}
