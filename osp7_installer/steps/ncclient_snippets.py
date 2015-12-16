@@ -69,18 +69,9 @@ cmd_port_trunk_external = """
                 </switchport>
                 <switchport>
                   <trunk>
-                    <native>
-                      <vlan>
-                        <value>{native_vlan}</value>
-                      </vlan>
-                    </native>
-                  </trunk>
-                </switchport>
-                <switchport>
-                  <trunk>
                     <allowed>
                       <vlan>
-                        <value>{native_vlan},{overcloud_floating_vlan}</value>
+                        <value>{native_vlan}</value>
                       </vlan>
                     </allowed>
                   </trunk>
