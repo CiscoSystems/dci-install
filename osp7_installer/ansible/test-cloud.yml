@@ -7,4 +7,5 @@
 
     - read-overcloudrc-props
     - rh-tempest
+    - run_tests
     - report_status
