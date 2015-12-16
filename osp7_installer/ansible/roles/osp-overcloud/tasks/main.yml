@@ -78,16 +78,6 @@
 #    - { patch_file: 'heat-review-1.patch' }
 #  when: not template_backup|skipped
 
-## work around for tempest
-#- name: Write overcloud_controller_pacemaker.pp.patch
-#  template: src=overcloud_controller_pacemaker.pp.patch dest=/home/stack/overcloud_controller_pacemaker.pp.patch owner=stack group=stack
-#
-#- name: Apply patch to overcloud_controller_pacemaker.pp.patch
-#  patch:
-#    src: /home/stack/overcloud_controller_pacemaker.pp.patch
-#    dest: /usr/share/openstack-tripleo-heat-templates/puppet/manifests/overcloud_controller_pacemaker.pp
-#  when: not template_backup|skipped
-
 ###
 # Deploy Overcloud
 ###
