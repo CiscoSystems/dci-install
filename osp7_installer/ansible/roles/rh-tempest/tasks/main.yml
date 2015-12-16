@@ -69,7 +69,8 @@
 #        tempest.scenario.test_network_basic_ops
 #        tempest.scenario.test_security_groups_basic_op
 #        tempest.scenario.test_network_v6
-  async: 7200
+  # poll every 60 seconds for 3 hours
+  async: "{{ 3 * 60 * 60 }}"
   poll: 60
   when: run_long_tempest
   ignore_errors: yes
