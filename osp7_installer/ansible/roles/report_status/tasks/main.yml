@@ -3,15 +3,7 @@
 - name: install libffi-devel, git and other useful tools
   yum: name={{ item.name }}
   with_items:
-#    - { name: "libffi-devel" }
-#    - { name: "wget" }
-#    - { name: "git" }
-#    - { name: "vim" }
-#    - { name: "bash-completion" }
-#    - { name: "python-devel" }
-#    - { name: "openssl-devel" }
     - { name: "python-junitxml" }
-#    - { name: "screen" }
 
 
 - name: Save node list

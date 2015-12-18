@@ -49,7 +49,7 @@
         grep -q test-router ||
         (neutron --os-tenant-name test-project --os-username test-user --os-password password router-create test-router &&
         neutron --os-tenant-name test-project --os-username test-user --os-password password router-interface-add test-router test-subnet &&
-        neutron --os-tenant-name test-project --os-username test-user --os-password password router-gateway-set test-router ext-net)
+        neutron --os-tenant-name test-project --os-username test-user --os-password password router-gateway-set test-router nova)
 
 - name: Upload test-user pub key
   sudo_user: stack

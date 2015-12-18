@@ -13,3 +13,5 @@ target/
 *.pyc
 *~
 .idea/
+target-*
+
