@@ -10,3 +10,6 @@ scripts/
 AUTHORS
 ChangeLog
 target/
+*.pyc
+*~
+.idea/

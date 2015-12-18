@@ -105,11 +105,12 @@
     line: "source ~/stackrc"
     insertafter: EOF
 
-- name: Add openstack complete to .bash_profile
-  lineinfile:
-    dest: /home/stack/.bash_profile
-    line: "source <(openstack complete)"
-    insertafter: EOF
+# openstack complete isn't working -- "No module named ipaddress"
+#- name: Add openstack complete to .bash_profile
+#  lineinfile:
+#    dest: /home/stack/.bash_profile
+#    line: "source <(openstack complete)"
+#    insertafter: EOF
 
 - name: Alias ironic-discoverd reset
   lineinfile:
