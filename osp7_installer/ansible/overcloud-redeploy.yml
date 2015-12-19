@@ -5,6 +5,7 @@
     - delete-overcloud
     - add-test-gateway-ip
     - osp-overcloud
+    - add-overcloud-host
     - osp-test-data
     - read-overcloudrc-props
     - rh-tempest
