@@ -1,0 +1,11 @@
+---
+
+- name: Print HA tenants
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        cd /home/stack/openstack-tools/openstack &&
+        tstamp=`date +%Y%m%d%H%M%S` &&
+        python find_orphan_ha_nets.py --kill_orphans > /home/stack/target/ha_nets.$tstamp
+  when: (ha_tenant_kill_orphans is defined) and ha_tenant_kill_orphans
+

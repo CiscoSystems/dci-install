@@ -2,6 +2,7 @@
 - hosts: "{{ director_node_ssh_ip }}"
   connection: ssh
   roles:
+      - ha-tenant-orphan-assassin
 #    - add-test-gateway-ip
 #    - osp-test-data
 
