@@ -1,6 +1,9 @@
 ---
 
-- name: Print HA tenants
+- name: Create target dir for data
+  file: path=/home/stack/target state=directory mode=0755
+
+- name: Print HA tenants and kill the orphans
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
