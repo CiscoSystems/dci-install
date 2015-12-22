@@ -56,7 +56,7 @@ if [ ! -d "{{ patch_info['name'] }}-{{ loop.index }}" ]; then
 fi
 
 cd {{ patch_info['name'] }}-{{ loop.index }}
-git fetch https://bdemers@review.openstack.org/openstack/{{ patch_info['name'] }} {{ patch_info['ref'] }} && git checkout FETCH_HEAD
+git fetch https://review.openstack.org/openstack/{{ patch_info['name'] }} {{ patch_info['ref'] }} && git checkout FETCH_HEAD
 git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/{{ patch_info['name'] }}-{{ loop.index }}.patch
 cd ..
 
