@@ -79,6 +79,14 @@
         --run-command "sed -i 's/PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
   when: not override_qcow and images_downloaded|success
 
+- name: Allow password ssh in overcloud-full.qcow2
+  sudo_user: stack
+  shell: cd /tmp/ && wget http://memory.cisco.com/osp7/patches/utils.py
+
+- name: Allow password ssh in overcloud-full.qcow2
+  sudo_user: stack
+  shell: virt-customize --selinux-relabel  -a /home/stack/images/overcloud-full.qcow2 --upload /tmp/utils.py:/usr/lib/python2.7/site-packages/os_net_config/utils.py
+
 #- name: Override overcloud-full.qcow2
 #  sudo_user: stack
 #  environment: proxy_env

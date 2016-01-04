@@ -30,6 +30,10 @@
         auth.allow_tenant_isolation True
         auth.tempest_roles _member_
         network.ipv6 true
+        compute_feature_enabled.ec2_api False
+        volume-feature-enabled.api_v1 False
+        image-feature-enabled.api_v1 False
+        identity-feature-enabled.api_v3 False
         compute.build_timeout 500
         compute.ssh_timeout 500
         orchestration.build_timeout 43100
