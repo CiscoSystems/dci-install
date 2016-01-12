@@ -2,16 +2,19 @@
 - hosts: "{{ director_node_ssh_ip }}"
   connection: ssh
   roles:
+    - disable-lab-pxe
     - etc-hosts
     - osp-director
     - nfs-shares
     - geerlingguy.nfs
     - osp-prep-for-overcloud
-    - osp-overcloud
-    - osp-test-data
     - add-test-gateway-ip
+    - osp-overcloud
+    - add-overcloud-host
+    - osp-test-data
     - read-overcloudrc-props
     - rh-tempest
+    - report_status
 
 #- hosts: overcloud_controller
 #  remote_user: root

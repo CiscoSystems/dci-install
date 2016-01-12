@@ -13,7 +13,7 @@
     overcloud_os_auth_url: "{{ OS_AUTH_URL['stdout'] }}"
     overcloud_os_admin_password: "{{ OS_PASSWORD['stdout'] }}"
 
-- name: Fine Overcloud Controller IPs
+- name: Find Overcloud Controller Nodes
   sudo_user: stack
   shell: >
         source /home/stack/stackrc &&
@@ -25,9 +25,17 @@
         grep ctlplane | sed 's_.*\=__'
   register: overcloud_controller_ips
 
-- debug:
-    msg: "Controller IP: '{{ item }}'"
-  with_items: overcloud_controller_ips.stdout_lines
+- name: Find Overcloud Compute Nodes
+  sudo_user: stack
+  shell: >
+        source /home/stack/stackrc &&
+        openstack server list
+        --format csv
+        --quote minimal
+        -c Networks
+        --name overcloud-compute |
+        grep ctlplane | sed 's_.*\=__'
+  register: overcloud_compute_ips
 
 - name: Add Overcloud Controller hosts to 'overcloud_controller' group
   add_host:
@@ -35,59 +43,63 @@
     groups: overcloud_controller
   with_items: overcloud_controller_ips.stdout_lines
 
-- name: Allow root ssh on Overcloud Controller 0
+- name: Add Overcloud Compute hosts to 'overcloud_compute' group
+  add_host:
+    hostname: "{{ item }}"
+    groups: overcloud_compute
+  with_items: overcloud_compute_ips.stdout_lines
+
+- name: Allow root ssh on Overcloud Contrller Nodes
   sudo_user: stack
-  shell: ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  heat-admin@{{ overcloud_controller_0_ip['stdout'] }} sudo sed -i'' 's_.*ssh-rsa_ssh-rsa_' /root/.ssh/authorized_keys
+  shell: >
+         ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+         heat-admin@{{ item }}
+         sudo sed -i'' 's_.*ssh-rsa_ssh-rsa_' /root/.ssh/authorized_keys
+  with_items: overcloud_controller_ips.stdout_lines
+
+- name: Allow root ssh on Overcloud Compute Nodes
+  sudo_user: stack
+  shell: >
+         ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+         heat-admin@{{ item }}
+         sudo sed -i'' 's_.*ssh-rsa_ssh-rsa_' /root/.ssh/authorized_keys
+  with_items: overcloud_compute_ips.stdout_lines
 
 
-#- name: Find Overcloud Controller 0 IP
-#  sudo_user: stack
-#  shell: >
-#        source /home/stack/stackrc &&
-#        openstack server list
-#        --format csv
-#        --quote minimal
-#        -c Networks
-#        --name overcloud-controller-0 |
-#        grep ctlplane | sed 's_.*\=__'
-#  register: overcloud_controller_0_ip
+- name: Build authorized keys file
+  shell: "cat /root/.ssh/authorized_keys /home/stack/.ssh/id_rsa.pub > /tmp/authorized_keys"
 
-#- name: Add Overcloud Controller host (for cert)
-#  add_host:
-#    hostname: "{{ overcloud_controller_0_ip['stdout'] }}"
-#    groups: overcloud_controller
-#
-#- name: Find Overcloud Compute 0 IP
-#  sudo_user: stack
-#  shell: >
-#        source /home/stack/stackrc &&
-#        openstack server list
-#        --format csv
-#        --quote minimal
-#        -c Networks
-#        --name overcloud-compute-0 |
-#        grep ctlplane | sed 's_.*\=__'
-#  register: overcloud_compute_0_ip
-#
-#- name: Add Overcloud Compute host (for cert)
-#  add_host:
-#    hostname: "{{ overcloud_compute_0_ip['stdout'] }}"
-#    groups: overcloud_compute
-#
-#- name: Allow root ssh on Overcloud Controller 0
-#  sudo_user: stack
-#  shell: ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  heat-admin@{{ overcloud_controller_0_ip['stdout'] }} sudo sed -i'' 's_.*ssh-rsa_ssh-rsa_' /root/.ssh/authorized_keys
-#
-#- name: Allow root ssh on Overcloud Compute 0
-#  sudo_user: stack
-#  shell: ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  heat-admin@{{ overcloud_compute_0_ip['stdout'] }} sudo sed -i'' 's_.*ssh-rsa_ssh-rsa_' /root/.ssh/authorized_keys
-#
-#
-#- name: Build authorized keys file
-#  shell: "cat /root/.ssh/authorized_keys /home/stack/.ssh/id_rsa.pub > /tmp/authorized_keys"
-#
-#- name: Set authorized_keys on Overcloud Controller 0
-#  shell: scp -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  /tmp/authorized_keys root@{{ overcloud_controller_0_ip['stdout'] }}:/root/.ssh/authorized_keys
-#
-#- name: Set authorized_keys on Overcloud Compute 0
-#  shell: scp -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  /tmp/authorized_keys root@{{ overcloud_compute_0_ip['stdout'] }}:/root/.ssh/authorized_keys
+- name: Set authorized_keys on Overcloud Controller Nodes
+  shell: >
+         scp -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+         /tmp/authorized_keys
+         root@{{ item }}:/root/.ssh/authorized_keys
+  with_items: overcloud_controller_ips.stdout_lines
+
+- name: Set authorized_keys on Overcloud Compute Nodes
+  shell: >
+        scp -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+        /tmp/authorized_keys
+        root@{{ item }}:/root/.ssh/authorized_keys
+  with_items: overcloud_compute_ips.stdout_lines
+
+
+
+# sysctl.d/99-bridge.conf is also needed on compute nodes
+- name: Write sysctl.d/99-bridge.conf
+  template: src=99-bridge.conf dest=/home/stack/99-bridge.conf mode=644
+
+- name: Upload /etc/sysctl.d/99-bridge.conf to compute nodes
+  shell: >
+        scp -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+        /home/stack/99-bridge.conf
+        root@{{ item }}:/etc/sysctl.d/99-bridge.conf
+  with_items: overcloud_compute_ips.stdout_lines
+
+- name: Reload sysctl on remote compute
+  shell: >
+        ssh -i /home/stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+        root@{{ item }} sysctl --system
+  with_items: overcloud_compute_ips.stdout_lines
+
+

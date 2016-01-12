@@ -12,9 +12,15 @@ openstack overcloud deploy --templates \
   --swift-storage-scale {{ overcloud_swift_storage_scale }} \
   --neutron-network-type vlan \
   --neutron-disable-tunneling \
-  --neutron-public-interface {{ neutron_public_nic }} \
-  --hypervisor-neutron-public-interface {{ hypervisor_neutron_public_nic }} \
-  -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+  --neutron-flat-networks {{ neutron_flat_networks }} \
+  --neutron-public-interface {{ controller_external_nic }} \
+  --hypervisor-neutron-public-interface {{ compute_tenant_nic }} \
+  --neutron-physical-bridge {{ neutron_tenant_bridge }} \
+{% if network_isolation %}
+  -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+{% else %}
+    -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+{% endif %}
   -e /home/stack/templates/networking-cisco-environment.yaml \
 {% if nfs_for_storage %}
   -e /home/stack/templates/nfs-environment.yaml \
@@ -23,6 +29,11 @@ openstack overcloud deploy --templates \
   {{ deploy_with_flavors_args }} \
 {% endif %}
   --neutron-tunnel-type vlan \
+{% if neutron_external_bridge == neutron_tenant_bridge %}
+  --neutron-bridge-mappings datacentre:{{ neutron_tenant_bridge }} \
+{% else %}
+  --neutron-bridge-mappings "datacentre:{{ neutron_tenant_bridge }},external:{{ neutron_external_bridge }}" \
+{% endif %}
   --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
 {% if deploy_extra_args %}
    {{ deploy_extra_args }} \

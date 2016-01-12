@@ -1,0 +1,6 @@
+---
+
+- name: Clone tiswanso openstack-tools
+  git: repo=http://gitlab.cisco.com/tiswanso/openstack-tools.git
+       dest=/home/stack/openstack-tools
+

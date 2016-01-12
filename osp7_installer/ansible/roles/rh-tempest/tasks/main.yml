@@ -30,11 +30,51 @@
         auth.allow_tenant_isolation True
         auth.tempest_roles _member_
         network.ipv6 true
+        compute_feature_enabled.ec2_api False
+        volume-feature-enabled.api_v1 False
+        image-feature-enabled.api_v1 False
+        identity-feature-enabled.api_v3 False
+        compute.build_timeout 500
+        compute.ssh_timeout 500
+        orchestration.build_timeout 43100
         network.ipv6_subnet_attributes true
         compute-feature-enabled.live_migration false
         identity.admin_username admin
         identity.admin_password {{ hostvars[director_node_ssh_ip]['overcloud_os_admin_password'] }}
         --out /etc/redhat-certification-openstack/tempest.conf
 
+# Need this for tempest.api.orchestration.stacks.test_neutron_resources.NeutronResourcesTestJSON
+- name: Create heat_stack_owner role
+  sudo_user: stack
+  shell: >
+         source /home/stack/overcloudrc && openstack role list |
+         grep -q heat_stack_owner || openstack role create heat_stack_owner
+
 - name: Run quick network sanity test (tempest)
-  shell: cd /usr/share/openstack-tempest-kilo && ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks' --config /etc/redhat-certification-openstack/tempest.conf
+  shell: >
+         cd /usr/share/openstack-tempest-kilo &&
+         ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks'
+         --config /etc/redhat-certification-openstack/tempest.conf
+  when: not run_long_tempest
+
+- name: Run longer network tests (tempest)
+  shell: >
+        cd /usr/share/openstack-tempest-kilo &&
+        cp /etc/redhat-certification-openstack/tempest.conf /usr/share/openstack-tempest-kilo/etc/tempest.conf &&
+        sleep 60 &&
+        ./run_tempest.sh -N --config /etc/redhat-certification-openstack/tempest.conf --serial network
+#        testr run --parallel --concurrency 1 network
+#        ./run_tempest.sh -N
+#        --config /etc/redhat-certification-openstack/tempest.conf
+#        --serial
+#        tempest.api.network
+#        tempest.scenario.test_load_balancer_basic
+#        tempest.scenario.test_network_advanced_server_ops
+#        tempest.scenario.test_network_basic_ops
+#        tempest.scenario.test_security_groups_basic_op
+#        tempest.scenario.test_network_v6
+  # poll every 60 seconds for 3 hours
+  async: "{{ 3 * 60 * 60 }}"
+  poll: 60
+  when: run_long_tempest
+  ignore_errors: yes

@@ -1,0 +1,10 @@
+---
+
+- name: ifdown lab pxe interface (we already booted this machine)
+  shell: ifdown {{ undercloud_lab_pxe_interface }}
+
+- name: disabling lab pxe interface
+  template: src=ifcfg.template dest=/etc/sysconfig/network-scripts/ifcfg-{{ undercloud_lab_pxe_interface }}
+
+
+

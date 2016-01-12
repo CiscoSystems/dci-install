@@ -16,6 +16,12 @@
 - name:  Write overcloudrc.test-project
   template: src=overcloudrc.test-project dest=/home/stack/overcloudrc.test-project owner=stack group=stack mode=755
 
+- name: Add admin to test-project
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc && openstack role list --user admin --project test-project | grep -q admin ||
+        openstack role add --user admin --project test-project admin
+
 - name: Create test-net
   sudo_user: stack
   shell: >
@@ -43,7 +49,7 @@
         grep -q test-router ||
         (neutron --os-tenant-name test-project --os-username test-user --os-password password router-create test-router &&
         neutron --os-tenant-name test-project --os-username test-user --os-password password router-interface-add test-router test-subnet &&
-        neutron --os-tenant-name test-project --os-username test-user --os-password password router-gateway-set test-router ext-net)
+        neutron --os-tenant-name test-project --os-username test-user --os-password password router-gateway-set test-router nova)
 
 - name: Upload test-user pub key
   sudo_user: stack
@@ -75,6 +81,16 @@
         --container-format=bare
         --disk-format=qcow2 < /home/stack/cirros-0.3.4-x86_64-disk.img
   when: cirros_image_downloaded|success
+
+- name: Set Security Group Rules
+  sudo_user: stack
+  shell: >
+         source /home/stack/overcloudrc &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-show default |
+         grep icmp ||
+         (neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction ingress default &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction egress default &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol tcp --port-range-min 22 --port-range-max 22 --direction ingress default)
 
 - name: Create Test VM
   sudo_user: stack

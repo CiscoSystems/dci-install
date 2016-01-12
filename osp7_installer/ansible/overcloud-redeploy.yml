@@ -3,15 +3,10 @@
   connection: ssh
   roles:
     - delete-overcloud
-    - osp-overcloud
-    - osp-test-data
-#    - add-overcloud-host
-    - read-overcloudrc-props
     - add-test-gateway-ip
-    #- rh-tempest
-
-#- hosts: overcloud_controller
-#  remote_user: root
-#  roles:
-#  - add-test-gateway-ip
-#  - rh-tempest
+    - osp-overcloud
+    - add-overcloud-host
+    - osp-test-data
+    - read-overcloudrc-props
+    - rh-tempest
+    - report_status

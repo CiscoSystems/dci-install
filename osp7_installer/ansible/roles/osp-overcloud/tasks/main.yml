@@ -4,6 +4,11 @@
   sudo_user: stack
   file: path=/home/stack/templates state=directory mode=0755
 
+- name: Make nic-configs dir
+  sudo_user: stack
+  file: path=/home/stack/templates/nic-configs state=directory mode=0755
+
+
 #- name: Check existing heat templates
 #  stat: path=/home/stack/templates/nic-configs
 #  register: nic_templates
@@ -13,11 +18,11 @@
 #  shell: cp -r /usr/share/openstack-tripleo-heat-templates/network/config/single-nic-vlans /home/stack/templates/nic-configs
 #  when: nic_templates.stat.isdir is not defined
 
-#- name:  Write {{ item.template_file }}
-#  template: src={{ item.template_file }} dest=/home/stack/templates/nic-configs/{{ item.template_file }} owner=stack group=stack
-#  with_items:
-#    - { template_file: 'controller.yaml' }
-#    - { template_file: 'compute.yaml' }
+- name:  Write nic-config templates
+  template: src={{ item.template_file }} dest=/home/stack/templates/nic-configs/{{ item.template_file }} owner=stack group=stack
+  with_items:
+    - { template_file: 'controller.yaml' }
+    - { template_file: 'compute.yaml' }
 
 - name:  Write environment files
   template: src={{ item.template_file }} dest=/home/stack/templates/{{ item.template_file }} owner=stack group=stack
@@ -37,10 +42,10 @@
 ###
 # Heat Review
 ###
-#- name: Check if heat review checked out
-#  stat: path=/home/stack/heat-review
-#  register: heat_review
-#
+- name: Check if heat review checked out
+  stat: path=/home/stack/heat-review
+  register: heat_review
+
 #- name: Checkout heat review patches
 #  sudo_user: stack
 #  shell: >
@@ -53,35 +58,25 @@
 #        git format-patch -n HEAD^ --no-prefix --stdout > /home/stack/{{ item.patch_file }}
 #  with_items:
 #    - { number: "1", patch_file: 'heat-review-1.patch', ref: "{{ heat_templates_ref_1 }}" }
-##    - { number: "2", patch_file: 'heat-review-2.patch', ref: "{{ heat_templates_ref_2 }}" }
-##    - { number: "3", patch_file: 'heat-review-3.patch', ref: "{{ heat_templates_ref_3 }}" }
-##    - { number: "4", patch_file: 'heat-review-4.patch', ref: "{{ heat_templates_ref_4 }}" }
-##    - { number: "5", patch_file: 'heat-review-5.patch', ref: "{{ heat_templates_ref_5 }}" }
 #  when: heat_review.stat.isdir is not defined
-#
-#- name:  Write heat-hack.patch
-#  template: src=heat-hack.patch dest=/home/stack/heat-hack.patch owner=stack group=stack
-#
-#- name: Check for heat backup
-#  stat: path=/usr/share/openstack-tripleo-heat-templates.bak
-#  register: heat_backup
-#
-#- name: Backup heat templates
-#  shell: cp -R /usr/share/openstack-tripleo-heat-templates /usr/share/openstack-tripleo-heat-templates.bak
-#  register: template_backup
-#  when: heat_backup.stat.isdir is not defined
-#
+
+- name:  Write heat-hack.patch
+  template: src=heat-hack.patch dest=/home/stack/heat-hack.patch owner=stack group=stack
+
+- name: Check for heat backup
+  stat: path=/usr/share/openstack-tripleo-heat-templates.bak
+  register: heat_backup
+
+- name: Backup heat templates
+  shell: cp -R /usr/share/openstack-tripleo-heat-templates /usr/share/openstack-tripleo-heat-templates.bak
+  register: template_backup
+  when: heat_backup.stat.isdir is not defined
+
 #- name: Patch heat templates
 #  shell: cd /usr/share/openstack-tripleo-heat-templates && patch -p0 < /home/stack/{{ item.patch_file }}
 #  with_items:
 #    - { patch_file: 'heat-review-1.patch' }
-##    - { patch_file: 'heat-review-2.patch' }
-##    - { patch_file: 'heat-review-3.patch' }
-##    - { patch_file: 'heat-review-4.patch' }
-##    - { patch_file: 'heat-review-5.patch' }
-##    - { patch_file: 'heat-hack.patch' }
 #  when: not template_backup|skipped
-
 
 ###
 # Deploy Overcloud
@@ -102,27 +97,40 @@
   when: deploy_overcloud and exiting_cloud_check|failed
 
 # Create external network
+- name: Create net nova (ext-net)
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron nova |
+        grep -q nova ||
+        neutron net-create nova
+        --router:external=True
+        --provider:physical_network 'datacentre'
+        --provider:network_type flat
+  when: not create_ext_net_vlan_provider
 
-- name: Create ext-net
+- name: Create nova (ext-net) on vlan provider
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
         neutron net-list |
-        grep -q ext-net ||
-        neutron net-create ext-net
+        grep -q nova ||
+        neutron net-create nova
         --router:external=True
-        --provider:physical_network datacentre
-        --provider:network_type flat
+        --provider:physical_network {{ 'datacentre' if neutron_external_bridge == neutron_tenant_bridge else 'external' }}
+        --provider:network_type vlan
+        --provider:segmentation_id {{ neutron_external_vlan }}
+  when: create_ext_net_vlan_provider
 
-- name: Create ext-subnet
+- name: Create subnet nova (ext-subnet)
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
         neutron subnet-list |
-        grep -q ext-subnet ||
+        grep -q nova ||
         neutron subnet-create
-        --name ext-subnet
+        --name nova
         --disable-dhcp
         --allocation-pool start={{ overcloud_floating_ip_start }},end={{ overcloud_floating_ip_end }}
-        --gateway={{ overcloud_bm_network_gateway }}
-        ext-net {{ overcloud_floating_ip_cidr }}
+        --gateway={{ overcloud_floating_ip_network_gateway }}
+        nova {{ overcloud_floating_ip_cidr }}

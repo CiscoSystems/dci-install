@@ -2,9 +2,16 @@
 dist/
 .eggs/
 .venv/
+.os-client/
 osp7_installer.egg-info/
 bootstrap.conf
 bxb-conf/
 scripts/
 AUTHORS
 ChangeLog
+target/
+*.pyc
+*~
+.idea/
+target-*
+
