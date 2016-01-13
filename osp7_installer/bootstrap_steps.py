@@ -18,6 +18,9 @@ bootstrap_steps = {
     "test": [
         { "AnsibleStep": "test_cloud" },
     ],
+    "update_image": [
+        {"AnsibleStep": "update_overcloud_image" },
+    ],
     "noop": [
         { "ExampleStep": 'example' },
     ]
