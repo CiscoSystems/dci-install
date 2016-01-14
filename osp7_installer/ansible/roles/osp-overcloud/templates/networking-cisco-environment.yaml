@@ -45,8 +45,11 @@ parameter_defaults:
   NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
 
   NeutronMechanismDrivers: '{{ neutron_mechanism_drivers }}'
-  NetworkNexusVxlanVniRanges: '0:0'
-  NetworkNexusVxlanMcastRanges: '0.0.0.0:0.0.0.0'
+
+  NeutronTypeDrivers: '{{ type_driver }}'
+  NeutronNetworkType: '{{ network_type }}'
+  NetworkNexusVxlanVniRanges: '{{ vni_ranges }}'
+  NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'
 
 parameters:
   Debug: "{{ overcloud_debug }}"

@@ -1,0 +1,26 @@
+# Apply patches manually
+
+- name: Get diff file 1
+  get_url: url={{ url1 }}
+           dest=/tmp/patch1.diff
+  when: url1 is defined
+
+- name: Apply patch 1
+  shell: sudo patch -p1 < /tmp/patch1.diff
+  args:
+        chdir: /usr/lib/python2.7/site-packages/
+  when: url1 is defined
+
+- name: Get diff file 2
+  get_url: url={{ url2 }}
+           dest=/tmp/patch2.diff
+  when: url2 is defined
+
+- name: Apply patch 2
+  shell: sudo patch -p1 < /tmp/patch2.diff
+  args:
+        chdir: /usr/lib/python2.7/site-packages/
+  when: url2 is defined
+
+- name: Restart services
+  shell: systemctl restart neutron-server
