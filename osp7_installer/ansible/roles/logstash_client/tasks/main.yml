@@ -1,0 +1,26 @@
+---
+
+- name: Create directory
+  file: path="{{ logstash_dir }}" state=directory
+
+- name: download logstash
+  get_url: url=http://172.29.173.233/nightly/osp7/logstash-2.1.1.tar.gz dest={{ logstash_dir }} force=true
+
+- name: unpack logstash
+  shell: tar -xzvf logstash-2.1.1.tar.gz
+        chdir={{ logstash_dir }}
+
+- name:  Write logstash.conf
+  template: src=logstash.conf dest={{ logstash_dir }}/logstash-2.1.1/bin/logstash.conf owner=stack group=stack
+
+- name: install java
+  yum: name={{ item.name }}
+  with_items:
+    - { name: "java" }
+
+- name: start service to upload results
+  shell: nohup ./logstash -f logstash.conf -w 1 &
+        chdir={{ logstash_dir }}/logstash-2.1.1/bin/
+#  async: 200
+#  poll: 50
+#  ignore_errors: yes
