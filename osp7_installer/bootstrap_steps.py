@@ -17,6 +17,9 @@ bootstrap_steps = {
     ],
     "test": [
         { "AnsibleStep": "test_cloud" },
+    ],
+    "noop": [
+        { "ExampleStep": 'example' },
     ]
 }
 """Mapping of 'actions' to steps, This allows for mixing python and ansible runs together sequentially.
