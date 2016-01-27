@@ -9,8 +9,8 @@ class Config(object):
 
     logger = logging.getLogger("config")
 
-    def __init__(self, config_file, location='sj', override_args={}):
-        self.config = self._read_config(config_file, location, override_args)
+    def __init__(self, config_file, osp_version, location='sj', override_args={}):
+        self.config = self._read_config(config_file, osp_version, location, override_args)
 
     def get(self, key):
         """Gets property from config.
@@ -20,7 +20,7 @@ class Config(object):
         """
         return self.config.get(key)
 
-    def _read_config(self, config_file, location, override_args):
+    def _read_config(self, config_file, osp_version, location, override_args):
         """Parse config, values that appear to be python snippets will also be evaluated.
 
         For example, any config string starting with '{' or '[' will be eval'd.
@@ -35,10 +35,11 @@ class Config(object):
         common_conf_dir = os.path.join(module_dir, 'conf_common')
         location_conf = os.path.join(common_conf_dir, location + '.conf')
         base_conf = os.path.join(common_conf_dir, 'base.conf')
+        osp_version_conf = os.path.join(common_conf_dir, 'osp{0}.conf'.format(osp_version))
         user_conf = os.path.join(os.path.expanduser('~'), '.osp7-installer', 'osp7.conf')
 
         config_parser = ConfigParser.SafeConfigParser()
-        config_files_to_read = [base_conf, location_conf, user_conf, config_file]
+        config_files_to_read = [base_conf, osp_version_conf, location_conf, user_conf, config_file]
         actual_config_files = config_parser.read(config_files_to_read)
         self.logger.debug("Config loaded from files: " + str(actual_config_files))
         config = {}

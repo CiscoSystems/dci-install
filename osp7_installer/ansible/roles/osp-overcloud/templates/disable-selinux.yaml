@@ -1,0 +1,23 @@
+heat_template_version: 2015-04-30
+
+description: >
+  Disable selinux
+
+parameters:
+  server:
+    type: string
+
+resources:
+  ExtraConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: |
+        #!/bin/sh
+        setenforce 0
+      group: script
+
+  ExtraDeployments:
+    type: OS::Heat::SoftwareDeployment
+    properties:
+      server: {get_param: server}
+      config: {get_resource: ExtraConfig}

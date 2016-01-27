@@ -71,7 +71,7 @@
       dest: /home/stack/cirros-0.3.4-x86_64-disk.img
   register: cirros_image_downloaded
 
-- name: Upload cirros disk image
+- name: Upload cirros disk image (OSP7)
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
@@ -80,7 +80,18 @@
         --is-public=true
         --container-format=bare
         --disk-format=qcow2 < /home/stack/cirros-0.3.4-x86_64-disk.img
-  when: cirros_image_downloaded|success
+  when: osp_version == 7 and cirros_image_downloaded|success
+
+- name: Upload cirros disk image (OSP8)
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        glance image-list | grep -q "cirros 0.3.4" ||
+        glance image-create --name='cirros 0.3.4'
+        --visibility=public
+        --container-format=bare
+        --disk-format=qcow2 < /home/stack/cirros-0.3.4-x86_64-disk.img
+  when: osp_version == 8 and cirros_image_downloaded|success
 
 - name: Set Security Group Rules
   sudo_user: stack

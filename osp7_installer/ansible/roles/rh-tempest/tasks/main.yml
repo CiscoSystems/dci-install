@@ -15,6 +15,7 @@
 - name: Install tempest rpms and related tools
   yum: name={{ item.name }}
   with_items:
+    - { name: "openstack-tempest" }
     - { name: "libffi-devel" }
     - { name: "wget" }
     - { name: "git" }
@@ -34,7 +35,8 @@
 
 - name: Write tempest.conf
   shell: >
-        cd /usr/share/openstack-tempest-kilo &&
+        ln -sf /usr/share/openstack-tempest-* /usr/share/openstack-tempest &&
+        cd /usr/share/openstack-tempest &&
         python tools/config_tempest.py --image "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
         --create identity.uri {{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}
         object-storage.operator_role swiftoperator
@@ -68,15 +70,15 @@
 
 - name: Run quick network sanity test (tempest)
   shell: >
-         cd /usr/share/openstack-tempest-kilo &&
+         cd /usr/share/openstack-tempest &&
          ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks'
          --config /etc/redhat-certification-openstack/tempest.conf
   when: not run_long_tempest
 
 - name: Run longer network tests (tempest)
   shell: >
-        cd /usr/share/openstack-tempest-kilo &&
-        cp /etc/redhat-certification-openstack/tempest.conf /usr/share/openstack-tempest-kilo/etc/tempest.conf &&
+        cd /usr/share/openstack-tempest &&
+        cp /etc/redhat-certification-openstack/tempest.conf /usr/share/openstack-tempest/etc/tempest.conf &&
         sleep 60 &&
         ./run_tempest.sh -N --config /etc/redhat-certification-openstack/tempest.conf --serial network
 #        testr run --parallel --concurrency 1 network

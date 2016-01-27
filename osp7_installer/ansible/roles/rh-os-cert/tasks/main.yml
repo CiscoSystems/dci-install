@@ -33,7 +33,7 @@
 
 - name: Write tempest.conf
   shell: >
-        cd /usr/share/openstack-tempest-kilo &&
+        cd /usr/share/openstack-tempest &&
         python tools/config_tempest.py --image "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
         --create identity.uri {{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}
         identity.username demo
@@ -57,4 +57,4 @@
   service: name=rhcert-backend state=started
 
 - name: Run quick network sanity test (tempest)
-  shell: cd /usr/share/openstack-tempest-kilo && ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks' --config /etc/redhat-certification-openstack/tempest.conf
+  shell: cd /usr/share/openstack-tempest && ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks' --config /etc/redhat-certification-openstack/tempest.conf

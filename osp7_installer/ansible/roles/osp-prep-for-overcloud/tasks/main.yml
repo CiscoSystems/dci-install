@@ -69,7 +69,7 @@
 
 - name: Check for ceph flavor
   sudo_user: stack
-  shell: source /home/stack/stackrc &&  openstack flavor list | grep -q ceph
+  shell: source /home/stack/stackrc &&  openstack flavor list | grep -v ceph-storage | grep ceph
   ignore_errors: true
   register: flavor_ceph_check
 

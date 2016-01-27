@@ -49,11 +49,11 @@
 - name: Generate test report
   shell: testr last --subunit | subunit-1to2 | subunit2junitxml --output-to=tempest_results.xml
   args:
-    chdir: /usr/share/openstack-tempest-kilo/
+    chdir: /usr/share/openstack-tempest/
   ignore_errors: yes
 
 - name: Upload test report
   fetch:
-    src: /usr/share/openstack-tempest-kilo/tempest_results.xml
+    src: /usr/share/openstack-tempest/tempest_results.xml
     dest: "{{ local_report_dir }}"
     flat: yes

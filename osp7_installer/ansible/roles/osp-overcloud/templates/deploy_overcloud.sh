@@ -14,7 +14,9 @@ openstack overcloud deploy --templates \
   --neutron-disable-tunneling \
   --neutron-flat-networks {{ neutron_flat_networks }} \
   --neutron-public-interface {{ controller_external_nic }} \
+{% if osp_version == 7 %}
   --hypervisor-neutron-public-interface {{ compute_tenant_nic }} \
+{% endif %}
   --neutron-physical-bridge {{ neutron_tenant_bridge }} \
 {% if network_isolation %}
   -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \

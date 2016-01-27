@@ -6,6 +6,9 @@ resource_registry:
 {% else %}
   OS::TripleO::Compute::Net::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/net-config-bridge.yaml
 {% endif %}
+{% if osp_version == 8 %}
+  OS::TripleO::NodeExtraConfig: /home/stack/templates/disable-selinux.yaml
+{% endif %}
 
 parameter_defaults:
 

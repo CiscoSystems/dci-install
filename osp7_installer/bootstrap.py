@@ -58,7 +58,7 @@ class OspBoostrapCobbler(object):
         else:
             self.logger.info("Skipping step " + step_name)
 
-    def bootstrap(self, config_file, lab_location, properties, action="deploy"):
+    def bootstrap(self, config_file, osp_version, lab_location, properties, action="deploy"):
         """
 
         :param config_file: path to config file which contains host specific information.
@@ -67,7 +67,7 @@ class OspBoostrapCobbler(object):
         :param action: Key name of which set of steps to run ['deploy', 'redeploy'] see 'bootstrap_steps.py'
         """
 
-        config = Config(config_file, lab_location, properties)
+        config = Config(config_file, osp_version, lab_location, properties)
 
         steps = self.all_steps()
 
@@ -91,6 +91,9 @@ def main():
     parser.add_argument('--lab_location',
                         help='Location of testbed. [sj, bxb]',
                         default='sj')
+    parser.add_argument('--osp_version',
+                        help='Version of OSP to install and configure [7, 8]',
+                        default='7')
     parser.add_argument('-p', '--property', action='append', default=[])
 
     parser.add_argument('--action',
@@ -105,7 +108,7 @@ def main():
         n, v = value.split('=')
         extra_properties[n] = v
 
-    OspBoostrapCobbler().bootstrap(args.config_file, args.lab_location, extra_properties, args.action)
+    OspBoostrapCobbler().bootstrap(args.config_file, args.osp_version, args.lab_location, extra_properties, args.action)
 
 if __name__ == '__main__':
     main()

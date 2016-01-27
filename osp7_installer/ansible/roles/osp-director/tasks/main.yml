@@ -28,8 +28,14 @@
 #- name: Enable chronyd service
 #  service: name=chronyd state=started enabled=yes
 
+# command line client name change between osp 7 and 8
 - name: Install python-rdomanager-oscplugin
   yum: name=python-rdomanager-oscplugin
+  when: osp_version == 7
+
+- name: Install python-tripleoclient
+  yum: name=python-tripleoclient
+  when: osp_version == 8
 
 #- name: openstack-tripleo-heat-templates rpm
 #  shell: rpm -Uvh --force {{ tripleo_heat_rpm_url }}
@@ -37,6 +43,11 @@
 - name: Create Stack user
   # password=password
   user: name=stack groups=wheel append=yes password=$6$rounds=100000$AZq2DbEdgByHTu8s$J20qsZT3AcxDB47N.Qoscv6aI91pIsI7pH.yPfMXwDOhgOdf7bqVqoPqexA9mKJuC.kXArdth67Q7AbN8416g.
+
+# OSP8 beta requires disabling selinux
+- name: disable selinux
+  shell: setenforce 0
+  when: osp_version == 8
 
 - name: Check if stack user is in sudo
   stat: path=/etc/sudoers.d/stack
@@ -92,10 +103,11 @@
 - name: Adjust Allowed hosts
   lineinfile: line="\g<1>', '{{ director_node_ssh_ip }}' ]" dest=/etc/openstack-dashboard/local_settings backrefs=yes regexp="^(ALLOWED_HOSTS = .*localhost).*"
   register: update_allowed_hosts
+  when: osp_version == 7
 
 - name: Restart HTTPD
   service: name=httpd state=restarted
-  when: update_allowed_hosts|changed
+  when: osp_version == 7 and update_allowed_hosts|changed
 
 # lets make debugging a little easier
 - name: Add 'source stackrc' to .bash_profile

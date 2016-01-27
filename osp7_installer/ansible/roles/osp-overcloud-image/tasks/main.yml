@@ -19,7 +19,6 @@
     - { template_file: 'refresh-images.sh' }
     - { template_file: 'ipmi_address_to_uuid.py' }
 
-
 - name: Download images
   sudo_user: stack
   environment: proxy_env
@@ -41,21 +40,8 @@
 
 #- name: Download RHEL Guest Image
 #  sudo_user: stack
-#  get_url: url=http://memory.cisco.com/osp7/rh-images/rhel-guest-image-7.1-20150224.0.x86_64.qcow2 dest=/home/stack/rhel-guest-image-7.1-20150224.0.x86_64.qcow2
+#  get_url: url=http://memory.cisco.com/osp/RHEL_images/rhel-guest-image-7.2-20151102.0.x86_64.qcow2 dest=/home/stack/images/rhel-guest-image-7.2.qcow2
 #  register: images_downloaded
-#
-#- name: Build images
-#  sudo_user: stack
-#  environment:
-#    NODE_DIST: rhel7
-#    DIB_LOCAL_IMAGE: rhel-guest-image-7.1-20150224.0.x86_64.qcow2
-#    REG_METHOD: portal
-#    REG_USER: "{{ rhel_username }}"
-#    REG_PASSWORD: "{{ rhel_password }}"
-#    REG_POOL_ID: "{{ rhel_pool }}"
-#    REG_REPOS: "rhel-7-server-rpms rhel-7-server-extras-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-optional-rpms rhel-7-server-openstack-7.0-rpms"
-#  shell: source /home/stack/stackrc && openstack overcloud image build --all
-#  when: images_downloaded|success
 
 - name: Install libguestfs-tools
   yum: name=libguestfs-tools
@@ -64,6 +50,18 @@
   template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
   with_items:
     - { template_file: 'ml2_mech_driver_debug.patch' }
+  when: osp_version == 7
+
+#- name: Build images
+#  sudo_user: stack
+#  environment:
+#    RHOS: 1
+#    USE_DELOREAN_TRUNK: 0
+#    NODE_DIST: rhel7
+#    DIB_LOCAL_IMAGE: rhel-guest-image-7.2.qcow2
+#    DIB_YUM_REPO_CONF: "/etc/yum.repos.d/RH7-RHOS-8.0.repo /etc/yum.repos.d/rhel-7-server-rpms.repo /etc/yum.repos.d/RH7-RHOS-8.0-director.repo /etc/yum.repos.d/rhel-7-server-extras-rpms.repo"
+#  shell: source /home/stack/stackrc && cd images && openstack overcloud image build --all
+##  when: images_downloaded|success
 
 - name: Patch overcloud-full.qcow2
   sudo_user: stack
@@ -90,10 +88,12 @@
 - name: Download os-net-config patch (nic name natural sort fix)
   sudo_user: stack
   shell: cd /tmp/ && wget http://memory.cisco.com/osp7/patches/utils.py
+  when: osp_version == 7
 
 - name: Apply os-net-config patch (nic name natural sort fix)
   sudo_user: stack
   shell: virt-customize --selinux-relabel  -a /home/stack/images/overcloud-full.qcow2 --upload /tmp/utils.py:/usr/lib/python2.7/site-packages/os_net_config/utils.py
+  when: osp_version == 7
 
 #- name: Override overcloud-full.qcow2
 #  sudo_user: stack

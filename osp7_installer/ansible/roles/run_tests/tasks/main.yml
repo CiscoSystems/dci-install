@@ -27,7 +27,7 @@
         chdir={{ tempest_dir }}/tempest/etc
 
 - name: copy cirros image to the etc folder
-  shell: cp /usr/share/openstack-tempest-kilo/etc/cirros-0.3.1-x86_64-disk.img {{ tempest_dir }}/tempest/etc/
+  shell: cp /usr/share/openstack-tempest/etc/cirros-0.3.1-x86_64-disk.img {{ tempest_dir }}/tempest/etc/
 
 - name: write file private key for git
   get_url: url={{ sjc_apl_gerrit3_private_key }}
