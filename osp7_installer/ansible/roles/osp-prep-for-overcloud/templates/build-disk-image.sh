@@ -84,7 +84,4 @@ correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/share/o
 # update 40-hiera-datafiles
 #virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
 
-# TODO: figure out if this is really what we want to do
-virt-customize -a overcloud-full.qcow2 --run-command "sed -i'' 's/#resume_guests_state_on_host_boot=false/resume_guests_state_on_host_boot=true/' /etc/nova/nova.conf"
-
 mv overcloud-full.qcow2 "${DISK_IMAGE}"
