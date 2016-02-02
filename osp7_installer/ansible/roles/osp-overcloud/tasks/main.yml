@@ -1,5 +1,18 @@
 ---
 
+### write osp_install_run.json
+- name: Get osp_install git info
+  local_action: shell git describe --always
+  register: git_describe
+
+- name: Get undercloud timestamp
+  local_action: shell date
+  register: undercloud_date
+
+- name:  Write osp_install_run.json
+  template: src=osp_install_run.json dest=/etc/osp_install_run.json group=stack
+### end write osp_install_run.json
+
 - name: Make templates dir
   sudo_user: stack
   file: path=/home/stack/templates state=directory mode=0755
