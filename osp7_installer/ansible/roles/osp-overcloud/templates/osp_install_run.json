@@ -1,0 +1,4 @@
+{
+  "git_describe": "{{ git_describe.stdout }}",
+  "deploy_start_time": "{{ undercloud_date.stdout }}"
+}
