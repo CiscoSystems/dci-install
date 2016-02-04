@@ -91,6 +91,19 @@
 #    - { patch_file: 'heat-review-1.patch' }
 #  when: not template_backup|skipped
 
+- name: Write patch
+  template: src=resume_vms_on_boot.patch dest=/home/stack/resume_vms_on_boot.patch owner=stack group=stack
+
+# always copy the original file, so we don't need to worry about the state of the patch
+# not idempotent, but not a big deal in this case.
+- name: Apply patch to resume VMs on boot
+  shell: >
+        cp /usr/share/openstack-tripleo-heat-templates.bak/puppet/manifests/overcloud_compute.pp
+        /usr/share/openstack-tripleo-heat-templates/puppet/manifests/overcloud_compute.pp &&
+        cd /usr/share/openstack-tripleo-heat-templates/puppet/manifests/ &&
+        patch < /home/stack/resume_vms_on_boot.patch
+  when: resume_guests_state_on_host_boot
+
 ###
 # Deploy Overcloud
 ###
