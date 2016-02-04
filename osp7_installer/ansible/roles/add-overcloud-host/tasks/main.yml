@@ -102,4 +102,11 @@
         root@{{ item }} sysctl --system
   with_items: overcloud_compute_ips.stdout_lines
 
+- name: Bld the ansible inventory file for overcloud
+  sudo_user: stack
+  shell: source /home/stack/stackrc && . /home/stack/openstack-tools/openstack/tripleo_bld_ansible_inv.sh /home/stack/ansible_hosts
+
+- name: install filebeat on the overcloud nodes
+  sudo_user: stack
+  shell: source /home/stack/venv_ansible/bin/activate && ansible-playbook -i /home/stack/ansible_hosts /home/stack/openstack-tools/openstack/ansible/setup_filebeat.yml -e "filebeat_port={{ filebeat_port }}"
 

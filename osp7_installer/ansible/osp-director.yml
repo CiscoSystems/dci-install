@@ -10,6 +10,7 @@
     - osp-prep-for-overcloud
     - add-test-gateway-ip
     - osp-overcloud
+    - osp-overcloud-post
     - add-overcloud-host
     - osp-test-data
     - read-overcloudrc-props

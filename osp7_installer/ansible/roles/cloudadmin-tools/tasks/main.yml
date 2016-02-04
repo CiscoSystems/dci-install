@@ -1,6 +1,10 @@
 ---
 
+- name: check whether repo is already pulled 
+  stat: path=/home/stack/openstack-tools
+  register: dir_stat
+
 - name: Clone tiswanso openstack-tools
   git: repo=http://gitlab.cisco.com/tiswanso/openstack-tools.git
        dest=/home/stack/openstack-tools
-
+  when: not dir_stat.stat.exists
