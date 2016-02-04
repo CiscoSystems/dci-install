@@ -1,0 +1,7 @@
+---
+- hosts: "{{ director_node_ssh_ip }}"
+  connection: ssh
+  roles:
+    - scale-patch
+    - report_status
+

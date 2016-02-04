@@ -9,4 +9,5 @@
     - osp-test-data
     - read-overcloudrc-props
     - rh-tempest
+    - scale-patch
     - report_status

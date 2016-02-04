@@ -1,0 +1,7 @@
+---
+
+### copy scale patch to /home
+- name:  Write diff file
+  template: src=rally_scale_changes.patch dest=/home/diff_v1 owner=root group=root mode=755
+
+
