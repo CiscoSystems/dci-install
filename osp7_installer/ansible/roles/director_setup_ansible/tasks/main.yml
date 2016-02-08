@@ -1,0 +1,11 @@
+---
+
+### setup venv & pip install ansible
+- name: setup venv & pip install ansible
+  sudo_user: stack
+  pip: name=ansible virtualenv=/home/stack/venv_ansible
+
+- name: create the ~/ansible.cfg file 
+  sudo_user: stack
+  template: src=ansible.cfg dest=/home/stack/.ansible.cfg
+
