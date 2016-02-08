@@ -1,5 +1,8 @@
 ---
 
+- name: make sure virtualenv is installed
+  yum: name=python-virtualenv state=present
+
 ### setup venv & pip install ansible
 - name: setup venv & pip install ansible
   sudo_user: stack
