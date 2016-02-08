@@ -1,6 +1,6 @@
 ---
 
-- name: Remove disk image files, if existing (not sure if needed)
+- name: Remove disk image files, if existing
   file: dest=/home/stack/images/{{ item.name }} state=absent
   with_items: "{{ disk_images }}"
 
@@ -16,6 +16,9 @@
   template: src={{ item.template_file }} dest=/home/stack/bin/{{ item.template_file }} owner=stack group=stack mode=0755
   with_items:
     - { template_file: 'build-disk-image.sh' }
+    - { template_file: 'refresh-images.sh' }
+    - { template_file: 'ipmi_address_to_uuid.py' }
+
 
 - name: Download images
   sudo_user: stack
@@ -54,10 +57,19 @@
 #  shell: source /home/stack/stackrc && openstack overcloud image build --all
 #  when: images_downloaded|success
 
+- name: Install libguestfs-tools
+  yum: name=libguestfs-tools
+
+- name: Copy image patch files
+  template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
+  with_items:
+    - { template_file: 'ml2_mech_driver_debug.patch' }
+
 - name: Patch overcloud-full.qcow2
   sudo_user: stack
   environment: proxy_env
   shell: "/home/stack/bin/build-disk-image.sh /home/stack/images/overcloud-full.qcow2"
+  when: override_qcow
 
 - name: Set root password in overcloud-full.qcow2
   sudo_user: stack
@@ -75,11 +87,11 @@
         --run-command "sed -i 's/PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
   when: not override_qcow and images_downloaded|success
 
-- name: Allow password ssh in overcloud-full.qcow2
+- name: Download os-net-config patch (nic name natural sort fix)
   sudo_user: stack
   shell: cd /tmp/ && wget http://memory.cisco.com/osp7/patches/utils.py
 
-- name: Allow password ssh in overcloud-full.qcow2
+- name: Apply os-net-config patch (nic name natural sort fix)
   sudo_user: stack
   shell: virt-customize --selinux-relabel  -a /home/stack/images/overcloud-full.qcow2 --upload /tmp/utils.py:/usr/lib/python2.7/site-packages/os_net_config/utils.py
 

@@ -23,10 +23,7 @@ bootstrap_steps = {
     ],
     "noop": [
         { "ExampleStep": 'example' },
-    ],
-    "update_image": [
-        {"AnsibleStep": "update_overcloud_image" },
-    ],
+    ]
 }
 """Mapping of 'actions' to steps, This allows for mixing python and ansible runs together sequentially.
 It is possible that all these steps could be converted to ansible tasks/playbooks given time and understanding, but it
