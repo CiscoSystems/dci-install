@@ -1,0 +1,115 @@
+---
+
+- name: Remove disk image files, if existing
+  file: dest=/home/stack/images/{{ item.name }} state=absent
+  with_items: "{{ disk_images }}"
+
+- name: Make images dir
+  sudo_user: stack
+  file: path=/home/stack/images state=directory mode=0755
+
+- name: Make /home/stack/bin
+  sudo_user: stack
+  file: path=/home/stack/bin state=directory mode=0755
+
+- name: Write disk image scripts
+  template: src={{ item.template_file }} dest=/home/stack/bin/{{ item.template_file }} owner=stack group=stack mode=0755
+  with_items:
+    - { template_file: 'build-disk-image.sh' }
+    - { template_file: 'refresh-images.sh' }
+    - { template_file: 'ipmi_address_to_uuid.py' }
+
+
+- name: Download images
+  sudo_user: stack
+  environment: proxy_env
+  get_url:
+    url: "{{ item.url }}"
+    dest: /home/stack/images/{{ item.name }}
+    timeout: 120
+  with_items: "{{ disk_images }}"
+  register: images_downloaded
+
+- name: Unpack images
+  sudo_user: stack
+  unarchive:
+    src: /home/stack/images/{{ item.name }}
+    dest: /home/stack/images
+    copy: no
+  with_items: "{{ disk_images }}"
+  when: images_downloaded|success
+
+#- name: Download RHEL Guest Image
+#  sudo_user: stack
+#  get_url: url=http://memory.cisco.com/osp7/rh-images/rhel-guest-image-7.1-20150224.0.x86_64.qcow2 dest=/home/stack/rhel-guest-image-7.1-20150224.0.x86_64.qcow2
+#  register: images_downloaded
+#
+#- name: Build images
+#  sudo_user: stack
+#  environment:
+#    NODE_DIST: rhel7
+#    DIB_LOCAL_IMAGE: rhel-guest-image-7.1-20150224.0.x86_64.qcow2
+#    REG_METHOD: portal
+#    REG_USER: "{{ rhel_username }}"
+#    REG_PASSWORD: "{{ rhel_password }}"
+#    REG_POOL_ID: "{{ rhel_pool }}"
+#    REG_REPOS: "rhel-7-server-rpms rhel-7-server-extras-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-optional-rpms rhel-7-server-openstack-7.0-rpms"
+#  shell: source /home/stack/stackrc && openstack overcloud image build --all
+#  when: images_downloaded|success
+
+- name: Install libguestfs-tools
+  yum: name=libguestfs-tools
+
+- name: Copy image patch files
+  template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
+  with_items:
+    - { template_file: 'ml2_mech_driver_debug.patch' }
+
+- name: Patch overcloud-full.qcow2
+  sudo_user: stack
+  environment: proxy_env
+  shell: "/home/stack/bin/build-disk-image.sh /home/stack/images/overcloud-full.qcow2"
+  when: override_qcow
+
+- name: Set root password in overcloud-full.qcow2
+  sudo_user: stack
+  shell: "virt-customize -a /home/stack/images/overcloud-full.qcow2 --root-password password:***REMOVED***"
+  when: not override_qcow and images_downloaded|success
+
+- name: Allow password ssh in overcloud-full.qcow2
+  sudo_user: stack
+  shell: >
+        virt-customize --selinux-relabel
+        -a /home/stack/images/overcloud-full.qcow2
+        --run-command "sed -i 's/.*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config" &&
+        virt-customize --selinux-relabel
+        -a /home/stack/images/overcloud-full.qcow2
+        --run-command "sed -i 's/PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
+  when: not override_qcow and images_downloaded|success
+
+- name: Download os-net-config patch (nic name natural sort fix)
+  sudo_user: stack
+  shell: cd /tmp/ && wget http://memory.cisco.com/osp7/patches/utils.py
+
+- name: Apply os-net-config patch (nic name natural sort fix)
+  sudo_user: stack
+  shell: virt-customize --selinux-relabel  -a /home/stack/images/overcloud-full.qcow2 --upload /tmp/utils.py:/usr/lib/python2.7/site-packages/os_net_config/utils.py
+
+#- name: Override overcloud-full.qcow2
+#  sudo_user: stack
+#  environment: proxy_env
+#  get_url:
+#    url: "{{ overcloud_full_override_url }}"
+#    dest: "/home/stack/overcloud-full.qcow2"
+#    sha256sum: "{{ overcloud_full_override_sha256sum }}"
+#  when: override_qcow
+
+- name: remove images from glance
+  sudo_user: stack
+  shell: source /home/stack/stackrc && glance image-delete bm-deploy-kernel bm-deploy-ramdisk overcloud-full overcloud-full-initrd overcloud-full-vmlinuz
+  ignore_errors: true
+
+- name: Upload disk images
+  sudo_user: stack
+  shell: cd /home/stack/images && source /home/stack/stackrc && openstack overcloud image upload
+

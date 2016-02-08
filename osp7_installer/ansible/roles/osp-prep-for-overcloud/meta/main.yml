@@ -1,0 +1,3 @@
+---
+dependencies:
+  - { role: osp-overcloud-image }
