@@ -108,5 +108,5 @@
 
 - name: install filebeat on the overcloud nodes
   sudo_user: stack
-  shell: source /home/stack/venv_ansible/bin/activate && ansible-playbook -i /home/stack/ansible_hosts /home/stack/openstack-tools/openstack/ansible/setup_filebeat.yml -e "filebeat_port={{ filebeat_port }}"
+  shell: source /home/stack/venv_ansible/bin/activate && ansible-playbook -i /home/stack/ansible_hosts /home/stack/openstack-tools/openstack/ansible/setup_filebeat.yml -e "filebeat_port={{ filebeat_port }} testbed_name={{ testbed_name if testbed_name is defined else ansible_hostname }}"
 
