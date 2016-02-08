@@ -49,6 +49,7 @@ parameter_defaults:
   NetworkNexusVxlanMcastRanges: '0.0.0.0:0.0.0.0'
 
 parameters:
+  Debug: "{{ overcloud_debug }}"
   controllerExtraConfig:
     neutron::server::api_workers: 0
     neutron::agents::metadata::metadata_workers: 0
