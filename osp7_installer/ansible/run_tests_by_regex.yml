@@ -2,4 +2,6 @@
 - hosts: "{{ director_node_ssh_ip }}"
   connection: ssh
   roles:
+    - read-overcloudrc-props
+    - rh-tempest
     - run_tests
