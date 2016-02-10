@@ -1,0 +1,5 @@
+---
+- hosts: "{{ director_node_ssh_ip }}"
+  connection: ssh
+  roles:
+    - run_tests

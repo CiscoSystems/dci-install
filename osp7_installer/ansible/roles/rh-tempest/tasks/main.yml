@@ -12,16 +12,28 @@
 - name: Create dir for tempest.conf
   file: path=/etc/redhat-certification-openstack state=directory mode=0755
 
-- name: install tempest rpms
+- name: Install tempest rpms and related tools
   yum: name={{ item.name }}
   with_items:
-    - { name: "openstack-tempest" }
+    - { name: "libffi-devel" }
+    - { name: "wget" }
+    - { name: "git" }
+    - { name: "vim" }
+    - { name: "bash-completion" }
+    - { name: "python-devel" }
+    - { name: "openssl-devel" }
+    - { name: "python-junitxml" }
+    - { name: "screen" }
+
+- name: Install pip
+  easy_install: name=pip
 
 - name: Write tempest.conf
   shell: >
         cd /usr/share/openstack-tempest-kilo &&
         python tools/config_tempest.py --image "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
         --create identity.uri {{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}
+        object-storage.operator_role swiftoperator
         identity.username demo
         identity.password demo
         identity.auth_version v2

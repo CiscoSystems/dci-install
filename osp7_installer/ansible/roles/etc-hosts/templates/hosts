@@ -1,3 +1,5 @@
 # {{ ansible_managed }}
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4 {{ director_node_hostname }}
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+{{ sw_1 }}  {{ sw_1_name }}
+{{ sw_2 }}  {{ sw_2_name }}

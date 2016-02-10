@@ -1,0 +1,63 @@
+- debug: switch_config
+
+- name: Create directory
+  file: path=/opt/switch_config state=directory
+  when: switch_config is defined
+
+- name: switch
+  git: repo=https://github.com/cisco-openstack/openstack-sqe.git
+       dest=/opt/switch_config/openstack-sqe
+       accept_hostkey=yes
+       force=yes
+  when: switch_config is defined
+
+- name: Install pip
+  easy_install: name=pip
+
+- name: Install virtualenv
+  pip: name=virtualenv
+
+- name: create venv
+  shell: virtualenv .venv
+         chdir=/opt/switch_config/
+  when: switch_config is defined
+
+- name: install requirements
+  pip: name=ansible virtualenv=/opt/switch_config/.venv
+  when: switch_config is defined
+
+- name: install requirements pycsco
+  shell: source /opt/switch_config/.venv/bin/activate && pip install git+https://github.com/jedelman8/pycsco.git@0.3.0
+  when: switch_config is defined
+
+- name: switch
+  git: repo=https://github.com/nikolay-fedotov/nxos-ansible.git
+       dest=/opt/switch_config/nxos-ansible
+       accept_hostkey=yes
+       force=yes
+  when: switch_config is defined
+
+- name: create .netauth
+  template: src=.netauth dest=~/
+  when: switch_config is defined
+
+- name: clear config for ports
+  shell:   source /opt/switch_config/.venv/bin/activate &&
+           export ANSIBLE_LIBRARY='/opt/switch_config/nxos-ansible/library' &&
+           ansible-playbook -i intventory.txt --extra-vars "state=absent"  g8-srv-ports-vpc.yml
+           chdir=/opt/switch_config/openstack-sqe/playbooks/
+  when: switch_config is defined and switch_config == "vxlan"
+
+- name: Configure VXLAN
+  shell:   source /opt/switch_config/.venv/bin/activate &&
+           export ANSIBLE_LIBRARY='/opt/switch_config/nxos-ansible/library' &&
+           ansible-playbook -i intventory.txt --extra-vars 'state=present' g8-srv-ports-standalone.yml
+           chdir=/opt/switch_config/openstack-sqe/playbooks/
+  when: switch_config is defined and switch_config == "vxlan"
+
+- name: Configure VPC
+  shell:   source /opt/switch_config/.venv/bin/activate &&
+           export ANSIBLE_LIBRARY="/opt/switch_config/nxos-ansible/library" &&
+           ansible-playbook -i intventory.txt --extra-vars "state=present"  g8-srv-ports-vpc.yml
+           chdir=/opt/switch_config/openstack-sqe/playbooks/
+  when: switch_config is defined and switch_config == "vpc"
