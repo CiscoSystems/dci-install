@@ -23,6 +23,9 @@ bootstrap_steps = {
     ],
     "noop": [
         { "ExampleStep": 'example' },
+    ],
+    "run_tests_by_regex": [
+        { "AnsibleStep": "run_tests_by_regex" }
     ]
 }
 """Mapping of 'actions' to steps, This allows for mixing python and ansible runs together sequentially.
