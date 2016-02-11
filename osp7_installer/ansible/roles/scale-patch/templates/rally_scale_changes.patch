@@ -62,10 +62,10 @@ index 274b14d..63b9fab 100644
 +                                     **kwargs)
 +
 diff --git a/rally/plugins/openstack/scenarios/nova/utils.py b/rally/plugins/openstack/scenarios/nova/utils.py
-index 98b8859..cc1e7d4 100644
+index 28eb017..24c1be3 100644
 --- a/rally/plugins/openstack/scenarios/nova/utils.py
 +++ b/rally/plugins/openstack/scenarios/nova/utils.py
-@@ -874,21 +874,21 @@ class NovaScenario(scenario.OpenStackScenario):
+@@ -874,25 +874,25 @@ class NovaScenario(scenario.OpenStackScenario):
          """
          server.unlock()
  
@@ -87,6 +87,7 @@ index 98b8859..cc1e7d4 100644
 -        :param net_id: The nova-network ID to delete
 -        """
 -        return self.admin_clients("nova").networks.delete(net_id)
+-
 +#    @atomic.action_timer("nova.create_network")
 +#    def _create_network(self, ip_range, **kwargs):
 +#        """Create nova network.
@@ -105,3 +106,7 @@ index 98b8859..cc1e7d4 100644
 +#        :param net_id: The nova-network ID to delete
 +#        """
 +#        return self.admin_clients("nova").networks.delete(net_id)
++#
+     @atomic.action_timer("nova.list_flavors")
+     def _list_flavors(self, detailed=True, **kwargs):
+         """List all flavors.
