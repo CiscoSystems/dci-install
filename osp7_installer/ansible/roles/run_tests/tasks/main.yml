@@ -60,7 +60,7 @@
   when: specific is defined
 
 - name: install tox
-  shell: pip install tox virtualenv
+  shell: pip install tox==2.0 virtualenv
 
 - name: Create venv
   shell: cd {{ tempest_dir }}/tempest && tox -efull --notest
