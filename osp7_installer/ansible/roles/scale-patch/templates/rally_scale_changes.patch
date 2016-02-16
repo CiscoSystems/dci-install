@@ -1,5 +1,5 @@
 diff --git a/rally/plugins/openstack/scenarios/nova/servers.py b/rally/plugins/openstack/scenarios/nova/servers.py
-index 274b14d..63b9fab 100644
+index 274b14d..53e04d4 100644
 --- a/rally/plugins/openstack/scenarios/nova/servers.py
 +++ b/rally/plugins/openstack/scenarios/nova/servers.py
 @@ -20,6 +20,7 @@ from rally import consts
@@ -20,7 +20,7 @@ index 274b14d..63b9fab 100644
      """Benchmark scenarios for Nova servers."""
  
      @types.set(image=types.ImageResourceType,
-@@ -792,3 +794,40 @@ class NovaServers(utils.NovaScenario,
+@@ -792,3 +794,39 @@ class NovaServers(utils.NovaScenario,
          """
          server = self._boot_server(image, flavor, **kwargs)
          self._get_server_console_output(server, length)
