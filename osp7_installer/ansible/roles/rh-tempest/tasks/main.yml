@@ -25,8 +25,12 @@
     - { name: "python-junitxml" }
     - { name: "screen" }
 
-- name: Install pip
-  easy_install: name=pip
+- name: Get pip
+  get_url: url=https://bootstrap.pypa.io/get-pip.py dest=/tmp/
+
+- name: install pip
+  shell: python get-pip.py
+          chdir=/tmp/
 
 - name: Write tempest.conf
   shell: >

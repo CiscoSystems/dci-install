@@ -60,10 +60,11 @@
   when: specific is defined
 
 - name: install tox
-  shell: pip install tox==2.0 virtualenv
+  shell: pip install tox
 
-- name: Create venv
-  shell: cd {{ tempest_dir }}/tempest && tox -efull --notest
+- name: Create venv and install requirements
+  shell: tox --notest -efull
+          chdir={{ tempest_dir }}/tempest
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install junitxml
@@ -104,7 +105,12 @@
   ignore_errors: yes
 
 - name: Upload report to workspace node
-  fetch: src={{ tempest_dir }}/tempest/tempest_results.xml dest={{ lookup('env','WORKSPACE') }}/files/
+  fetch: src={{ tempest_dir }}/tempest/tempest_results.xml dest={{ lookup('env','WORKSPACE') }}/artefacts/
+        flat=yes
+  when: test_names is defined
+
+- name: Upload tempest.conf to workspace node
+  fetch: src={{ tempest_dir }}/tempest/etc/tempest.conf dest={{ lookup('env','WORKSPACE') }}/artefacts/
         flat=yes
   when: test_names is defined
 
