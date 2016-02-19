@@ -4,7 +4,7 @@
   sudo_user: stack
   shell: >
         source /home/stack/overcloudrc &&
-        neutron nova |
+        neutron net-list |
         grep -q nova ||
         neutron net-create nova
         --router:external=True
