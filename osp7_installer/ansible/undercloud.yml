@@ -1,0 +1,11 @@
+---
+- hosts: "{{ director_node_ssh_ip }}"
+  connection: ssh
+  roles:
+    - disable-lab-pxe
+    - etc-hosts
+    - osp-director
+    - nfs-shares
+    - geerlingguy.nfs
+    - add-test-gateway-ip
+    - osp-prep-for-overcloud

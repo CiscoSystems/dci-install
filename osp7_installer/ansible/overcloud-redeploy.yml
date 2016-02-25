@@ -3,12 +3,5 @@
   connection: ssh
   roles:
     - delete-overcloud
-    - add-test-gateway-ip
-    - osp-overcloud
-    - osp-overcloud-post
-    - add-overcloud-host
-    - osp-test-data
-    - read-overcloudrc-props
-    - rh-tempest
-    - scale-patch
-    - report_status
+
+- include: overcloud-deploy.yml

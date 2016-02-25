@@ -20,8 +20,16 @@ class AnsibleStep(step.Step):
         """
         hosts = [kargs["director_node_ssh_ip"]]
 
+        ssh_conf_file = "{base_dir}/ssh.config.ansible".format(base_dir=os.getcwd())
+
+        # create the file if it does not exist (should do this in ansible with a local action)
+        if not os.path.isfile(ssh_conf_file):
+            with open(ssh_conf_file, 'a'):
+                os.utime(ssh_conf_file, None)
+
         # Dynamic hosts change keys, so ignore that.
         ansible.constants.HOST_KEY_CHECKING = False
+        ansible.constants.ANSIBLE_SSH_ARGS = "-F {ssh_conf_file}".format(ssh_conf_file=ssh_conf_file)
 
         # load plugins, this will change in ansible 2
         module_dir = os.path.dirname(os.path.abspath(__file__))
