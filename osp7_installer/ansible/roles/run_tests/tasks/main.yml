@@ -105,12 +105,12 @@
   when: specific is defined
 
 - name: Add ssh keys of sw1 to known_hosts
-  shell: ssh-keyscan -H {{ sw_1 }} >> ~/.ssh/known_hosts
+  shell: ssh-keyscan -H {{ switch_tempest_section.0.sw }} >> ~/.ssh/known_hosts
   when: specific is defined
   ignore_errors: yes
 
 - name: Add ssh keys of sw2 to known_hosts
-  shell: ssh-keyscan -H {{ sw_2 }} >> ~/.ssh/known_hosts
+  shell: ssh-keyscan -H {{ switch_tempest_section.1.sw }} >> ~/.ssh/known_hosts
   when: specific is defined
   ignore_errors: yes
 
