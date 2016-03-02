@@ -72,7 +72,7 @@
 
 - name: upload additional lines for tempest.conf file
   template: src=tempest_cisco.cfg dest={{ tempest_dir }}/tempest/etc/tempest_cisco.conf
-  when: specific is defined
+  when: test_names is defined
 
 - name: Add port_security to network_extensions. p1
   shell: openstack-config --get tempest.conf network-feature-enabled api_extensions
@@ -88,43 +88,34 @@
 - name: modify tempest.conf file
   shell: cat tempest_cisco.conf >> tempest.conf
         chdir={{ tempest_dir }}/tempest/etc
-  when: specific is defined
+  when: test_names is defined
 
 - name: copy cirros image to the etc folder
   shell: cp /usr/share/openstack-tempest-kilo/etc/cirros-0.3.1-x86_64-disk.img {{ tempest_dir }}/tempest/etc/
 
-- name: write file private key for git
-  get_url: url={{ sjc_apl_gerrit3_private_key }}
-           dest=/root/rsa
-           mode=0600
-  when: (specific is defined) and ('vlan' in specific or 'vxlan' in specific)
-  ignore_errors: yes
-
 - name: Add git repo to ssh known_hosts
   shell: ssh-keyscan -p 29418 -H sjc-apl-gerrit3.cisco.com >> ~/.ssh/known_hosts
-  when: specific is defined
+  when: test_names is defined
 
 - name: Add ssh keys of sw1 to known_hosts
   shell: ssh-keyscan -H {{ switch_tempest_section.0.sw }} >> ~/.ssh/known_hosts
-  when: specific is defined
+  when: test_names is defined
   ignore_errors: yes
 
 - name: Add ssh keys of sw2 to known_hosts
   shell: ssh-keyscan -H {{ switch_tempest_section.1.sw }} >> ~/.ssh/known_hosts
-  when: specific is defined
+  when: test_names is defined
   ignore_errors: yes
 
-- name: Download tests
-  git: repo=ssh://{{ sjc_apl_gerrit3_user }}@sjc-apl-gerrit3.cisco.com:29418/os-devtest/OpenStack-DevTest
+- name: Download custom tests from sjc-apl-gerrit3.cisco.com
+  git: repo=https://{{ sjc_apl_gerrit3_user }}:{{ sjc_apl_gerrit3_http_password }}@sjc-apl-gerrit3.cisco.com:8081/os-devtest/OpenStack-DevTest
        dest={{ tempest_dir }}/tempest/tempest/thirdparty/cir
        accept_hostkey=yes
        force=yes
        recursive=no
-       key_file=/root/rsa
   environment:
        GIT_SSL_NO_VERIFY: true
-       GIT_SSH_COMMAND: "ssh -i /root/rsa"
-  when: (specific is defined) and ('vlan' in specific or 'vxlan' in specific)
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
   ignore_errors: yes
 
 - name: install tox
@@ -137,22 +128,22 @@
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install  pexpect
           chdir={{ tempest_dir }}/tempest/
-  when: (specific is defined) and ('vlan' in specific or 'vxlan' in specific)
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install wget http://172.29.173.233/pyATS/predcore-1.0.2.tar.gz
           chdir={{ tempest_dir }}/tempest/
-  when: (specific is defined) and ('vlan' in specific or 'vxlan' in specific)
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install wget http://172.29.173.233/pyATS/parsercore-1.0.4.tar.gz
           chdir={{ tempest_dir }}/tempest/
-  when: (specific is defined) and ('vlan' in specific or 'vxlan' in specific)
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install wget http://172.29.173.233/pyATS/parsergen-1.0.2.tar.gz
           chdir={{ tempest_dir }}/tempest/
-  when: (specific is defined) and ('vlan' in specific or 'vxlan' in specific)
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install junitxml
