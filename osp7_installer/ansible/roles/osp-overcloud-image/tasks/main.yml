@@ -55,7 +55,7 @@
 - name: Copy image patch files (OSP8)
   template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
   with_items:
-    - { template_file: 'uscm_config_parse_fix.patch' }
+    - { template_file: 'ucsm_config_parse_fix.patch' }
   when: osp_version == 8
 
 #- name: Build images

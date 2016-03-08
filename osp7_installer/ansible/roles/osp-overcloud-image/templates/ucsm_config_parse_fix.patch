@@ -1,0 +1,51 @@
+diff --git a/networking_cisco/plugins/ml2/drivers/cisco/ucsm/config.py b/networking_cisco/plugins/ml2/drivers/cisco/ucsm/config.py
+index 4133ef6..eb7d003 100644
+--- a/networking_cisco/plugins/ml2/drivers/cisco/ucsm/config.py
++++ b/networking_cisco/plugins/ml2/drivers/cisco/ucsm/config.py
+@@ -84,7 +84,8 @@ def parse_ucsm_host_config():
+                 raise cfg.Error(_("UCS Mech Driver: Invalid Host Service "
+                                   "Profile config: %s") % host)
+             key = (cfg.CONF.ml2_cisco_ucsm.ucsm_ip, hostname)
+-            sp_dict[key] = service_profile
++            sp_dict[key] = (const.SERVICE_PROFILE_PATH_PREFIX +
++                service_profile.strip())
+             host_dict[hostname] = cfg.CONF.ml2_cisco_ucsm.ucsm_ip
+         return sp_dict, host_dict
+ 
+diff --git a/networking_cisco/plugins/ml2/drivers/cisco/ucsm/constants.py b/networking_cisco/plugins/ml2/drivers/cisco/ucsm/constants.py
+index 8c57e4a..858cc55 100644
+--- a/networking_cisco/plugins/ml2/drivers/cisco/ucsm/constants.py
++++ b/networking_cisco/plugins/ml2/drivers/cisco/ucsm/constants.py
+@@ -41,6 +41,7 @@ VLAN_PROFILE_NAME_PREFIX = "OS-"
+ PORT_PROFILE_NAME_PREFIX = "OS-PP-"
+ CLIENT_PROFILE_NAME_PREFIX = "OS-CL-"
+ CLIENT_PROFILE_PATH_PREFIX = "/cl-"
++SERVICE_PROFILE_PATH_PREFIX = "org-root/ls-"
+ 
+ ETH0 = "/ether-eth0"
+ ETH1 = "/ether-eth1"
+diff --git a/networking_cisco/plugins/ml2/drivers/cisco/ucsm/ucsm_network_driver.py b/networking_cisco/plugins/ml2/drivers/cisco/ucsm/ucsm_network_driver.py
+index f407764..f9ea8a6 100644
+--- a/networking_cisco/plugins/ml2/drivers/cisco/ucsm/ucsm_network_driver.py
++++ b/networking_cisco/plugins/ml2/drivers/cisco/ucsm/ucsm_network_driver.py
+@@ -412,7 +412,8 @@ class CiscoUcsmDriver(object):
+         ethernet ports and the Fabric Interconnect's network ports.
+         """
+         ucsm_ip = self.ucsm_host_dict.get(host_id)
+-        service_profile = self.ucsm_sp_dict.get(ucsm_ip, host_id)
++        key = (ucsm_ip, host_id)
++        service_profile = self.ucsm_sp_dict.get(key)
+         if service_profile:
+             LOG.debug("UCS Manager network driver Service Profile : %s",
+                 service_profile)
+@@ -492,8 +493,8 @@ class CiscoUcsmDriver(object):
+     def _remove_vlan_from_all_service_profiles(self, vlan_id, ucsm_ip):
+         """Deletes VLAN Profile config from server's ethernet ports."""
+         service_profile_list = []
+-        for ucsm, host_id, value in six.iteritems(self.ucsm_sp_dict):
+-            if ucsm == ucsm_ip and value:
++        for ucsm_host_t, value in six.iteritems(self.ucsm_sp_dict):
++            if ucsm_host_t[0] == ucsm_ip and value:
+                 service_profile_list.append(value)
+ 
+         if not service_profile_list:
