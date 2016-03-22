@@ -1,0 +1,14 @@
+---
+
+  - name: Create workspace directory
+    sudo_user: stack
+    file: path=/home/stack/asr-driver state=directory mode="u=rwx,g=rwx,o=rwx"
+
+  - name: Copy ASR Install Playbook to target
+    sudo_user: stack
+    copy: src=startup-asr-driver.yml dest=/home/stack/asr-driver mode="u=rwx,g=rwx,o=rwx"
+
+  - name: Run the startup playbook on the director
+    sudo_user: stack
+    shell: >
+      source venv_ansible/bin/activate && ansible-playbook -i /home/stack/ansible_hosts asr-driver/startup-asr-driver.yml

@@ -1,0 +1,28 @@
+---
+
+  - name: Create workspace directory
+    sudo_user: stack
+    file: path=/home/stack/asr-driver state=directory mode="u=rwx,g=rwx,o=rwx"
+
+  - name: Copy ASR Install Playbook to target
+    sudo_user: stack
+    copy: src=install-controllers.yml dest=/home/stack/asr-driver mode="u=rwx,g=rwx,o=rwx"
+
+  - name: Update install playbook with current vars
+    sudo_user: stack
+    lineinfile: dest=/home/stack/asr-driver/install-controllers.yml regexp="^    {{item.var}}.*" line="    {{ item.var }} {{ item.value }}"
+    with_items:
+       - { var: 'asr_username:', value: '{{ asr_routers.0.username }}' }
+       - { var: 'asr_password:', value: '{{ asr_routers.0.password }}' }
+       - { var: 'asr1_ip:', value: '{{ asr_routers.0.ip_address }}' }
+       - { var: 'asr2_ip:', value: '{{ asr_routers.1.ip_address }}' }
+       - { var: 'asr1_internal_intf:', value: '{{ asr_routers.0.internal_intf }}' }
+       - { var: 'asr1_external_intf:', value: '{{ asr_routers.0.external_intf }}' }
+       - { var: 'asr2_internal_intf:', value: '{{ asr_routers.1.internal_intf }}' }
+       - { var: 'asr2_external_intf:', value: '{{ asr_routers.0.external_intf }}' }
+       - { var: 'network_nexus_vlan_range:', value: '{{network_nexus_vlan_range}}'}
+
+  - name: Run the install playbook on the director
+    sudo_user: stack
+    shell: >
+      source venv_ansible/bin/activate && ansible-playbook -i /home/stack/ansible_hosts asr-driver/install-controllers.yml

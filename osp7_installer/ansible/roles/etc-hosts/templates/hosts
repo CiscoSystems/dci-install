@@ -3,3 +3,6 @@
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 {{ switch_tempest_section.0.sw | default() }}  {{ switch_tempest_section.0.hostname | default() }}
 {{ switch_tempest_section.1.sw | default() }}  {{ switch_tempest_section.1.hostname | default() }}
+{{ asr_routers.0.ip_address | default() }}  {{ asr_routers.0.hostname | default() }}
+{{ asr_routers.1.ip_address | default() }}  {{ asr_routers.1.hostname | default() }}
+
