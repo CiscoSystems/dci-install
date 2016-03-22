@@ -1,0 +1,131 @@
+---
+
+  # The ASR driver needs to have the following done prior to startup.
+  #
+  #   - All routers deleted
+  #   - All networks (not associated with HA) deleted including public
+  #   - All VMs delete
+  #   - Tenant/project "admin" configured with neutron admin
+
+  - name: Determine if neutron is part of admin project
+    sudo_user: stack
+    shell: >
+        source /home/stack/overcloudrc && openstack role list --user neutron
+           --project admin  --format csv
+           --quote minimal | grep neutron  | sed 's_,.*__'
+    register: neutron_admin
+
+  - name: Add neutron to admin project
+    sudo_user: stack
+    shell: >
+        source /home/stack/overcloudrc && openstack role add --user neutron --project admin admin
+    when: neutron_admin.stdout == ""
+
+  ####################################################
+  # We assume we're starting from the end of the VLAN install and the
+  # only router/vm/network we're expecting it the ones left over from
+  # that process - i.e. the test-project
+  ####################################################
+
+  - name: Find test-project Id
+    sudo_user: stack
+    shell: >
+      source /home/stack/overcloudrc &&
+        openstack project list --format csv --quote minimal | grep test-project | sed 's_,.*__'
+    register: test_project_id
+
+  - name: Determine if the test-project VM cirros-test still exists
+    sudo_user: stack
+    shell: >
+     source /home/stack/overcloudrc &&
+       nova --os-tenant-id {{test_project_id.stdout_lines[0] }} list | grep cirros-test | sed 's/| //' | sed 's/ | .*//'
+    register: cirros_test_id
+    when: test_project_id != ""
+
+  - name: Delete the test-project VM cirros-test
+    sudo_user: stack
+    shell: >
+      source /home/stack/overcloudrc && nova --os-tenant-id {{test_project_id.stdout_lines[0]}} delete {{cirros_test_id.stdout_lines[0]}}
+    when: cirros_test_id.stdout_lines[0] is defined
+
+  - name: Determine if the test-project router still exists
+    sudo_user: stack
+    shell: >
+      source /home/stack/overcloudrc &&
+        neutron router-list --format csv --quote minimal | grep test-router  | sed 's_,.*__'
+    register: test_router_id
+    when: test_project_id != ""
+
+  - name: Clear the GW on the router
+    sudo_user: stack
+    shell: >
+      source /home/stack/overcloudrc &&
+        neutron router-gateway-clear  {{test_router_id.stdout_lines[0]}}
+    when: test_router_id.stdout_lines[0] is defined
+
+  # Delete subnet/router
+  #[stack@g8-director ~]$ neutron  router-port-list  3c7eeecd-48b1-43bc-8b2f-b0f5bd2ca880
+  #+--------------------------------------+-------------------------------------------------+-------------------+--------------------------------------------------------------------------------------+
+  #| id                                   | name                                            | mac_address       | fixed_ips                                                                            |
+  #+--------------------------------------+-------------------------------------------------+-------------------+--------------------------------------------------------------------------------------+
+  #| 3f6b4c57-5321-4c24-913e-480e429f7324 | HA port tenant 962b60f2cb62458c96182b72eaa372e3 | fa:16:3e:0e:4f:06 | {"subnet_id": "4a777680-ac72-47a8-881a-a575d61b7b65", "ip_address": "169.254.192.3"} |
+  #| b8fd3a69-a564-4254-99d4-3c347c5604d2 | HA port tenant 962b60f2cb62458c96182b72eaa372e3 | fa:16:3e:fc:e3:e7 | {"subnet_id": "4a777680-ac72-47a8-881a-a575d61b7b65", "ip_address": "169.254.192.2"} |
+  #| d75083d5-bf8d-4472-87d0-d2444d25755e | HA port tenant 962b60f2cb62458c96182b72eaa372e3 | fa:16:3e:c1:69:28 | {"subnet_id": "4a777680-ac72-47a8-881a-a575d61b7b65", "ip_address": "169.254.192.1"} |
+  #| f5c02cfc-539b-4b2b-b817-4101152cb4a1 |                                                 | fa:16:3e:3e:83:3c | {"subnet_id": "81037c15-6486-454e-84d2-15e4fe95a2f4", "ip_address": "192.168.1.1"}   |
+  #+--------------------------------------+-------------------------------------------------+-------------------+--------------------------------------------------------------------------------------+
+  #[stack@g8-director ~]$ neutron router-interface-delete  3c7eeecd-48b1-43bc-8b2f-b0f5bd2ca880 81037c15-6486-454e-84d2-15e4fe95a2f4
+  # Removed interface from router 3c7eeecd-48b1-43bc-8b2f-b0f5bd2ca880.
+  #[stack@g8-director ~]$ neutron router-delete  3c7eeecd-48b1-43bc-8b2f-b0f5bd2ca880
+
+  - name: Get the test-project subnet ID
+    sudo_user: stack
+    shell: >
+       source /home/stack/overcloudrc &&
+         neutron router-port-list {{test_router_id.stdout_lines[0]}} --format csv --quote minimal | grep 192.168.1.1 | sed 's/.*subnet_id..: ..//' | sed 's_..,.*__'
+    register: test_subnet_id
+    when: test_router_id.stdout_lines[0] is defined
+
+  - debug: msg="Test Subnet ID {{ test_subnet_id.stdout_lines }} "
+    when: test_router_id.stdout_lines[0] is defined
+
+  - name: Delete the test-project subnet
+    sudo_user: stack
+    shell: >
+      source /home/stack/overcloudrc &&
+        neutron router-interface-delete {{ test_router_id.stdout_lines[0] }} {{ test_subnet_id.stdout_lines[0] }}
+    when: test_subnet_id.stdout_lines[0] is defined
+
+  - name: Delete the test-project router
+    sudo_user: stack
+    shell: >
+        source /home/stack/overcloudrc &&
+            neutron router-delete {{test_router_id.stdout_lines[0]}}
+    when: test_router_id.stdout_lines[0] is defined
+
+  - name: Determine if the test-project network still exists
+    sudo_user: stack
+    shell: >
+      source /home/stack/overcloudrc &&
+        neutron net-list --format csv --quote minimal | grep test-net | sed 's_,.*__'
+    register: test_net_id
+
+  - name: Delete the test-net
+    sudo_user: stack
+    shell: >
+        source /home/stack/overcloudrc &&
+            neutron net-delete {{test_net_id.stdout_lines[0]}}
+    when: test_net_id.stdout_lines[0] is defined
+
+  - name: Determine public network ID
+    sudo_user: stack
+    shell: >
+      source /home/stack/overcloudrc &&
+        neutron net-list --format csv --quote minimal | grep nova | sed 's_,.*__'
+    register: nova_net_id
+
+  - name: Delete public network
+    sudo_user: stack
+    shell: >
+        source /home/stack/overcloudrc &&
+            neutron net-delete {{nova_net_id.stdout_lines[0]}}
+    when: nova_net_id.stdout_lines[0] is defined

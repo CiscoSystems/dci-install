@@ -1,0 +1,91 @@
+---
+- hosts: controllers
+  serial: 1
+  become: yes
+  become_method: sudo
+
+  ###########################################################
+  tasks:
+    - name: Stop neutron-l3-agent.service
+      service: name=neutron-l3-agent.service state=stopped
+
+    - name: Disable neutron-l3-agent.service
+      service: name=neutron-l3-agent.service enabled=no
+
+    - name: Really stop neutron-l3-agent.service
+      shell: systemctl stop neutron-l3-agent.service
+
+    - name: Really disable neutron-l3-agent.service
+      shell: systemctl disable neutron-l3-agent.service
+
+    - name: Stop all openstack services
+      shell: openstack-service stop
+
+    - name: Stop neutron-server
+      service: name=neutron-server.service state=stopped
+
+    - name: Stop neutron-server
+      shell: systemctl stop neutron-server.service
+
+    - name: Daemon-reload
+      shell: systemctl daemon-reload
+
+    - name: Create new DB tables for the ASR plugin
+      shell:  neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/cisco/cisco_router_plugin.ini upgrade head
+
+    - name: Daemon-reload
+      shell: systemctl daemon-reload
+
+    - name: Start all Openstack services
+      shell: openstack-service start
+
+    - name: Start neutron-server systemctl
+      shell: systemctl start neutron-server.service
+
+    - name: Start neutron-server
+      service: name=neutron-server.service state=started
+
+    - name: Start cfg-agent systemctl
+      shell: systemctl start neutron-cisco-cfg-agent.service
+
+    - name: Enable service neutron-cisco-cfg-agent.service
+      service: name=neutron-cisco-cfg-agent.service enabled=yes
+
+    #######################################
+    # Bounce the serivices again
+    #-----------------------
+    # Stop'em
+    - name: Stop all openstack services
+      shell: openstack-service stop
+
+    - name: Stop neutron-server
+      service: name=neutron-server.service state=stopped
+
+    - name: Stop neutron-server
+      shell: systemctl stop neutron-server.service
+
+    - name: Start cfg-agent systemctl
+      shell: systemctl stop neutron-cisco-cfg-agent.service
+
+    - name: Start cfg-agent
+      service: name=neutron-cisco-cfg-agent.service state=started
+
+    #-----------------------
+    # Start'em
+    - name: Daemon-reload
+      shell: systemctl daemon-reload
+
+    - name: Start all Openstack services
+      shell: openstack-service start
+
+    - name: Start neutron-server systemctl
+      shell: systemctl start neutron-server.service
+
+    - name: Start neutron-server
+      service: name=neutron-server.service state=started
+
+    - name: Start cfg-agent systemctl
+      shell: systemctl start neutron-cisco-cfg-agent.service
+
+    - name: Enable service neutron-cisco-cfg-agent.service
+      service: name=neutron-cisco-cfg-agent.service enabled=yes
