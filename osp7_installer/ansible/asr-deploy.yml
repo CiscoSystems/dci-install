@@ -1,9 +1,0 @@
----
-- hosts: "{{ director_node_ssh_ip }}"
-  connection: ssh
-  roles:
-    - asr-stack-prep
-    - asr-driver-install
-    - asr-driver-startup
-    - asr-global-rtr
-

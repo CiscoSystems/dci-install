@@ -4,9 +4,6 @@ __author__ = 'brdemers'
 #
 bootstrap_steps = {
 
-    "asr-deploy": [
-        {"AnsibleStep": "asr_deploy"},
-    ],
     "deploy": [
         # { "ExampleStep": 'example' },
         # { "AnsibleStep": 'rhel_unregister' },
