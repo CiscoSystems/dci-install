@@ -8,7 +8,7 @@
 
 - name: Trigger delete overcloud stack
   sudo_user: stack
-  shell: source /home/stack/stackrc && heat stack-delete overcloud
+  shell: source /home/stack/stackrc && heat stack-delete overcloud -y
   when: exiting_cloud_check|success
 
 - name: Poll overcloud delete finished
