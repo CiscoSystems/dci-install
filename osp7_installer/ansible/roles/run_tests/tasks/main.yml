@@ -62,11 +62,6 @@
        dest={{ tempest_dir }}/tempest
        version={{ tempest_branch }}
 
-- name: Clone openstack-sqe
-  git: repo=https://github.com/cisco-openstack/openstack-sqe.git
-       dest={{ tempest_dir }}/openstack-sqe
-       version=master
-
 - name: copy etc folder
   shell: yes | cp -rf /etc/redhat-certification-openstack/* {{ tempest_dir }}/tempest/etc/
 
