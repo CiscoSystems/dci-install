@@ -56,7 +56,7 @@ parameter_defaults:
 
 parameters:
   Debug: "{{ overcloud_debug }}"
-  controllerExtraConfig:
-    neutron::server::api_workers: 0
-    neutron::agents::metadata::metadata_workers: 0
-    neutron::server::rpc_workers: 0
+#  controllerExtraConfig:
+#    neutron::server::api_workers: 0
+#    neutron::agents::metadata::metadata_workers: 0
+#    neutron::server::rpc_workers: 0
