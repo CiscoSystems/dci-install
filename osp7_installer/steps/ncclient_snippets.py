@@ -141,3 +141,23 @@ cmd_vlan_create = """
 
             </vlan>
 """
+
+cmd_trunk_allow_vlans = """
+          <interface>
+            <{type}>
+              <interface>{port}</interface>
+              <__XML__MODE_if-ethernet-switch>
+                <switchport></switchport>
+                <switchport>
+                  <trunk>
+                    <allowed>
+                      <vlan>
+                        <value>{trunk_allowed_vlans}</value>
+                      </vlan>
+                    </allowed>
+                  </trunk>
+                </switchport>
+              </__XML__MODE_if-ethernet-switch>
+            </{type}>
+          </interface>
+"""

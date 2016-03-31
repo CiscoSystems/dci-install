@@ -47,7 +47,6 @@
         identity.admin_domain_name Default
         auth.allow_tenant_isolation True
         auth.tempest_roles _member_
-        network.ipv6 true
         compute_feature_enabled.ec2_api False
         volume-feature-enabled.api_v1 False
         image-feature-enabled.api_v1 False
@@ -55,7 +54,9 @@
         compute.build_timeout 500
         compute.ssh_timeout 500
         orchestration.build_timeout 43100
-        network.ipv6_subnet_attributes true
+        network-feature-enabled.ipv6_subnet_attributes false
+        network.ipv6_subnet_attributes false
+        network.ipv6 false
         compute-feature-enabled.live_migration false
         identity.admin_username admin
         identity.admin_password {{ hostvars[director_node_ssh_ip]['overcloud_os_admin_password'] }}

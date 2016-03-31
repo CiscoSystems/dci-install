@@ -51,6 +51,11 @@ class SwitchConfigStep(step.Step):
                                                                          storage_mgmt_vlan=kargs['storage_mgmt_vlan'],
                                                                          tenant_network_vlan=kargs['tenant_network_vlan'],
                                                                          description=switchport['description'] ))
+                print switchport
+                if "trunk_allowed_vlans" in switchport:
+                    self._edit_config(connection, snip.cmd_trunk_allow_vlans.format(type="ethernet",
+                                                                                    port=switchport['port'],
+                                                                                    trunk_allowed_vlans=switchport['trunk_allowed_vlans'] ))
             for switchport in kargs["physical_ports_external"]:
                 self.logger.debug("Configuring external nic %s, for vlan: %s", switchport['port'], switchport['native_vlan'])
                 self._edit_config(connection, snip.cmd_port_trunk_external.format(type="ethernet",
@@ -58,6 +63,11 @@ class SwitchConfigStep(step.Step):
                                                                                   native_vlan=switchport['native_vlan'],
                                                                                   overcloud_floating_vlan=kargs['overcloud_floating_vlan'],
                                                                                   description=switchport['description'] ))
+                print switchport
+                if "trunk_allowed_vlans" in switchport:
+                    self._edit_config(connection, snip.cmd_trunk_allow_vlans.format(type="ethernet",
+                                                                                    port=switchport['port'],
+                                                                                    trunk_allowed_vlans=switchport['trunk_allowed_vlans'] ))
 
             for switchport in kargs["physical_ports_floating"]:
                 self.logger.debug("Configuring external nic %s, for vlan: %s", switchport['port'], switchport['native_vlan'])
@@ -65,6 +75,12 @@ class SwitchConfigStep(step.Step):
                                                                                   port=switchport['port'],
                                                                                   native_vlan=switchport['native_vlan'],
                                                                                   description=switchport['description'] ))
+                print switchport
+                if "trunk_allowed_vlans" in switchport:
+                    self._edit_config(connection, snip.cmd_trunk_allow_vlans.format(type="ethernet",
+                                                                                    port=switchport['port'],
+                                                                                    trunk_allowed_vlans=switchport['trunk_allowed_vlans'] ))
+
         finally:
             connection.close_session()
 
