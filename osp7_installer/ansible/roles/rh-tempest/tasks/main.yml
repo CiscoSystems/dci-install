@@ -54,9 +54,9 @@
         compute.build_timeout 500
         compute.ssh_timeout 500
         orchestration.build_timeout 43100
-        network-feature-enabled.ipv6_subnet_attributes false
-        network.ipv6_subnet_attributes false
-        network.ipv6 false
+        network-feature-enabled.ipv6_subnet_attributes true
+        network.ipv6_subnet_attributes true
+        network.ipv6 true
         compute-feature-enabled.live_migration false
         identity.admin_username admin
         identity.admin_password {{ hostvars[director_node_ssh_ip]['overcloud_os_admin_password'] }}
