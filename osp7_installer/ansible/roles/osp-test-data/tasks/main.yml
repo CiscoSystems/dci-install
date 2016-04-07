@@ -41,6 +41,19 @@
         --gateway 192.168.1.1
         test-net 192.168.1.0/24
 
+- name: Create test-subnet_v6
+  sudo_user: stack
+  shell: >
+        source /home/stack/overcloudrc &&
+        neutron --os-tenant-name test-project --os-username test-user --os-password password subnet-list |
+        grep -q test-subnet_v6 ||
+        neutron --os-tenant-name test-project --os-username test-user --os-password password
+        subnet-create test-net ::/64
+        --name test-subnet_v6
+        --ip_version 6
+        --ipv6_ra_mode slaac
+        --ipv6_address_mode slaac
+
 - name: Create test-router (and ports)
   sudo_user: stack
   shell: >
@@ -49,6 +62,7 @@
         grep -q test-router ||
         (neutron --os-tenant-name test-project --os-username test-user --os-password password router-create test-router &&
         neutron --os-tenant-name test-project --os-username test-user --os-password password router-interface-add test-router test-subnet &&
+        neutron --os-tenant-name test-project --os-username test-user --os-password password router-interface-add test-router test-subnet_v6 &&
         neutron --os-tenant-name test-project --os-username test-user --os-password password router-gateway-set test-router {{ nova_default_floating_pool }})
 
 - name: Upload test-user pub key
@@ -99,9 +113,12 @@
          source /home/stack/overcloudrc &&
          neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-show default |
          grep icmp ||
-         (neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction ingress default &&
-         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction egress default &&
-         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol tcp --port-range-min 22 --port-range-max 22 --direction ingress default)
+         (neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction ingress --ethertype IPv6 default &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction ingress --ethertype IPv4 default &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction egress --ethertype IPv4 default &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol icmp --direction egress --ethertype IPv6 default &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol tcp --port-range-min 22 --port-range-max 22 --direction ingress --ethertype IPv4 default &&
+         neutron --os-tenant-name test-project --os-username test-user --os-password password security-group-rule-create --protocol tcp --port-range-min 22 --port-range-max 22 --direction ingress --ethertype IPv6 default)
 
 - name: Create Test VM
   sudo_user: stack
