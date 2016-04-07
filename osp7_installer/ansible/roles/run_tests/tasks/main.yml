@@ -1,4 +1,56 @@
-- name: Delete folder if existed bedore
+- name: Find Overcloud Controller Nodes
+  sudo_user: stack
+  shell: >
+        source /home/stack/stackrc &&
+        openstack server list
+        --format csv
+        --quote minimal
+        -c Networks
+        --name overcloud-controller |
+        grep ctlplane | sed 's_.*\=__'
+  register: overcloud_controller_ips
+
+- name: Get UCSM host list
+  sudo_user: stack
+  shell: >
+          ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+          heat-admin@{{ item }}
+          sudo awk /ucsm_host_list/ /etc/neutron/plugin.ini > /tmp/ucsm_host_list
+  with_items: overcloud_controller_ips.stdout_lines[0]
+  register: ucsm_host_string
+  when: test_names is defined and 'ucsm' in test_names
+
+- name: Get ucsm_host_dict
+  shell: >
+         awk 'BEGIN{ FS=","; } {  result=""; count=NF; for (i=1;i<=count;i++) { if ($i !~ /\"\"/) { if (i!=1) { result=result ","; result=result $i; } else { n=split($i,arr,"="); result= arr[2]; } } } print result;}' /tmp/ucsm_host_list
+  register: ucsm_host_dict
+  when: test_names is defined and 'ucsm' in test_names
+
+- name: Get network_node_host
+  shell: >
+         awk 'BEGIN{ FS=","; } {  result=""; count=NF; for (i=1;i<=count;i++) { if (($i !~ /\"\"/)&& ($i ~ /controller/)) { if (i!=1) { n=split($i,arr1,":"); result=result ","; result=result arr1[1]; } else { n=split($i,arr1,"=");  n=split(arr1[2],arr2,":"); result= arr2[1]; } } } print result;}' /tmp/ucsm_host_list
+  register: network_node_host
+  when: test_names is defined and 'ucsm' in test_names
+
+- name: Update policy.json file and restart Nova API on controllers
+  sudo_user: root
+  shell: >
+           ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+           root@{{ item }}
+           "jq  '.[\"compute:create:forced_host\"]=\"\"' /etc/nova/policy.json > tmp_policy.json && cat tmp_policy.json > /etc/nova/policy.json && systemctl restart openstack-nova-api"
+  with_items: overcloud_controller_ips.stdout_lines
+  when: test_names is defined and 'ucsm' in test_names
+
+- name: Update plugin.ini with extension driver port_security
+  sudo_user: root
+  shell: >
+           ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+           root@{{ item }}
+           "openstack-config --set  /etc/neutron/plugin.ini ml2 extension_drivers port_security && systemctl restart neutron-server"
+  with_items: overcloud_controller_ips.stdout_lines
+  when: test_names is defined and 'port_security' in test_names
+
+- name: Delete folder if existed before
   shell: rm -rf {{ item }}
   with_items: "{{ tempest_dir }}"
 
@@ -10,54 +62,56 @@
        dest={{ tempest_dir }}/tempest
        version={{ tempest_branch }}
 
-- name: Clone openstack-sqe
-  git: repo=https://github.com/cisco-openstack/openstack-sqe.git
-       dest={{ tempest_dir }}/openstack-sqe
-       version=master
-
 - name: copy etc folder
   shell: yes | cp -rf /etc/redhat-certification-openstack/* {{ tempest_dir }}/tempest/etc/
 
 - name: upload additional lines for tempest.conf file
   template: src=tempest_cisco.cfg dest={{ tempest_dir }}/tempest/etc/tempest_cisco.conf
-  when: sw_2_name is defined
+  when: test_names is defined
+
+- name: Add port_security to network_extensions. p1
+  shell: openstack-config --get tempest.conf network-feature-enabled api_extensions
+         chdir={{ tempest_dir }}/tempest/etc
+  register: network_api_extensions
+  when: test_names is defined and 'port_security' in test_names
+
+- name: Add port_security to network_extensions. p2
+  shell: openstack-config --set tempest.conf network-feature-enabled api_extensions {{ network_api_extensions.stdout }},port-security
+         chdir={{ tempest_dir }}/tempest/etc
+  when: test_names is defined and 'port_security' in test_names
 
 - name: modify tempest.conf file
   shell: cat tempest_cisco.conf >> tempest.conf
         chdir={{ tempest_dir }}/tempest/etc
+  when: test_names is defined
 
 - name: copy cirros image to the etc folder
   shell: cp /usr/share/openstack-tempest/etc/cirros-0.3.1-x86_64-disk.img {{ tempest_dir }}/tempest/etc/
 
-- name: write file private key for git
-  get_url: url={{ sjc_apl_gerrit3_private_key }}
-           dest=/root/rsa
-           mode=0600
-  when: specific is defined
-
 - name: Add git repo to ssh known_hosts
   shell: ssh-keyscan -p 29418 -H sjc-apl-gerrit3.cisco.com >> ~/.ssh/known_hosts
-  when: specific is defined
+  when: test_names is defined
 
 - name: Add ssh keys of sw1 to known_hosts
-  shell: ssh-keyscan -H {{ sw_1 }} >> ~/.ssh/known_hosts
-  when: sw_1 is defined and specific is defined
+  shell: ssh-keyscan -H {{ switch_tempest_section.0.sw }} >> ~/.ssh/known_hosts
+  when: test_names is defined
+  ignore_errors: yes
 
 - name: Add ssh keys of sw2 to known_hosts
-  shell: ssh-keyscan -H {{ sw_2 }} >> ~/.ssh/known_hosts
-  when: sw_2 is defined and specific is defined
+  shell: ssh-keyscan -H {{ switch_tempest_section.1.sw }} >> ~/.ssh/known_hosts
+  when: test_names is defined
+  ignore_errors: yes
 
-- name: Download tests
-  git: repo=ssh://{{ sjc_apl_gerrit3_user }}@sjc-apl-gerrit3.cisco.com:29418/os-devtest/OpenStack-DevTest
+- name: Download custom tests from sjc-apl-gerrit3.cisco.com
+  git: repo=https://{{ sjc_apl_gerrit3_user }}:{{ sjc_apl_gerrit3_http_password }}@sjc-apl-gerrit3.cisco.com:8081/os-devtest/OpenStack-DevTest
        dest={{ tempest_dir }}/tempest/tempest/thirdparty/cir
        accept_hostkey=yes
        force=yes
        recursive=no
-       key_file=/root/rsa
   environment:
        GIT_SSL_NO_VERIFY: true
-       GIT_SSH_COMMAND: "ssh -i /root/rsa"
-  when: specific is defined
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
+  ignore_errors: yes
 
 - name: install tox
   shell: pip install tox
@@ -67,35 +121,70 @@
           chdir={{ tempest_dir }}/tempest
 
 - name: install pip libs
-  shell: source .tox/full/bin/activate && pip install junitxml
-          chdir={{ tempest_dir }}/tempest/
-
-- name: install pip libs
   shell: source .tox/full/bin/activate && pip install  pexpect
           chdir={{ tempest_dir }}/tempest/
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install wget http://172.29.173.233/pyATS/predcore-1.0.2.tar.gz
           chdir={{ tempest_dir }}/tempest/
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install wget http://172.29.173.233/pyATS/parsercore-1.0.4.tar.gz
           chdir={{ tempest_dir }}/tempest/
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install wget http://172.29.173.233/pyATS/parsergen-1.0.2.tar.gz
           chdir={{ tempest_dir }}/tempest/
+  when: (test_names is defined) and ('vlan' in test_names or 'vxlan' in test_names)
 
 - name: install pip libs
   shell: source .tox/full/bin/activate && pip install junitxml
           chdir={{ tempest_dir }}/tempest/
 
-- debug: var=test_names
-
 - name: Execute tests
-  shell: source .tox/full/bin/activate && testr init && testr run  --parallel --concurrency 1 {{ test_names }}
+  shell: source .tox/full/bin/activate && rm -rf .testrepository/ && testr init && testr run  --parallel --concurrency 1 {{ test_names }}
         chdir={{ tempest_dir }}/tempest/
-  when: test_names is defined
+  when: test_names is defined and not (test_list_file_url is defined)
+  register: test_output1
+  ignore_errors: yes
+
+- name: Get test list file
+  get_url: url={{ test_list_file_url }}
+           dest={{ tempest_dir }}/tempest/test_list_file
+           force=yes
+  when: test_list_file_url is defined
+
+- name: Execute tests from file
+  shell: source .tox/full/bin/activate && rm -rf .testrepository/ && testr init && testr run  --parallel --concurrency 1 --load-list=test_list_file
+        chdir={{ tempest_dir }}/tempest/
+  when: test_list_file_url is defined
+  register: test_output2
+  ignore_errors: yes
+
+- debug: var=test_output1.stdout_lines[-1]
+  when: test_output1 is defined
+
+- debug: var=test_output2.stdout_lines[-1]
+  when: test_output2 is defined
+
+- name: Generate a report of tests that failed
+  shell: source .tox/full/bin/activate && testr last --subunit | subunit-1to2 | subunit2junitxml --output-to=tempest_results_failed.xml
+        chdir={{ tempest_dir }}/tempest/
+  when: 'test_output2 is defined and "FAILED" in test_output2.stdout_lines[-1]'
+  ignore_errors: yes
+
+- name: Upload report with failed tests to workspace node
+  fetch: src={{ tempest_dir }}/tempest/tempest_results_failed.xml dest={{ lookup('env','WORKSPACE') | default('/tmp') }}/artefacts/
+        flat=yes
+  when: 'test_output2 is defined and "FAILED" in test_output2.stdout_lines[-1]'
+
+- name: Rerun failed tests
+  shell: source .tox/full/bin/activate && testr run  --parallel --concurrency 1 --failing
+        chdir={{ tempest_dir }}/tempest/
+  when: 'test_output2 is defined and "FAILED" in test_output2.stdout_lines[-1]'
   ignore_errors: yes
 
 - name: Generate a report
@@ -105,12 +194,7 @@
   ignore_errors: yes
 
 - name: Upload report to workspace node
-  fetch: src={{ tempest_dir }}/tempest/tempest_results.xml dest={{ lookup('env','WORKSPACE') }}/artefacts/
-        flat=yes
-  when: test_names is defined
-
-- name: Upload tempest.conf to workspace node
-  fetch: src={{ tempest_dir }}/tempest/etc/tempest.conf dest={{ lookup('env','WORKSPACE') }}/artefacts/
+  fetch: src={{ tempest_dir }}/tempest/tempest_results.xml dest={{ lookup('env','WORKSPACE') | default('/tmp') }}/artefacts/
         flat=yes
   when: test_names is defined
 
