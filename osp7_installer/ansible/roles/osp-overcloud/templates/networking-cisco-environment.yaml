@@ -32,9 +32,9 @@ parameter_defaults:
   NetworkUCSMUsername: '{{ network_ucsm_username }}'
   NetworkUCSMPassword: '{{ network_ucsm_password }}'
   NetworkUCSMHostList: '{{ network_ucsm_host_list }}'
-  {% if ucsm_support_pci_devs %}
+{% if ucsm_support_pci_devs %}
   NetworkUCSMSupportedPciDevs: {{ ucsm_support_pci_devs }}
-  {% endif %}
+{% endif %}
   NetworkNexusConfig: {{ network_nexus_config|to_nice_json }}
 
   NetworkNexusManagedPhysicalNetwork: {{ network_nexus_managed_physical_network }}
@@ -57,10 +57,10 @@ parameter_defaults:
   NetworkNexusVxlanVniRanges: '{{ vni_ranges }}'
   NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'
 
-  {% if do_sriov %}
+{% if do_sriov %}
   NovaComputeExtraConfig:
     nova::compute::pci_passthrough_whitelist: [{"product_id":"0071", "address":"*:07:00.*", "vendor_id":"1137","physical_network": "{{ network_nexus_managed_physical_network }}" }]
-  {% endif %}
+{% endif %}
 
 parameters:
   Debug: "{{ overcloud_debug }}"
