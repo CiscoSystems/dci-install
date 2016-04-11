@@ -59,7 +59,7 @@ parameter_defaults:
 
 {% if do_sriov %}
   NovaComputeExtraConfig:
-    nova::compute::pci_passthrough_whitelist: [{"product_id":"0071", "address":"*:07:00.*", "vendor_id":"1137","physical_network": "{{ network_nexus_managed_physical_network }}" }]
+    nova::compute::pci_passthrough: [{"product_id":"0071", "address":"*:07:00.*", "vendor_id":"1137","physical_network": "{{ network_nexus_managed_physical_network }}" }]
 {% endif %}
 
 parameters:
