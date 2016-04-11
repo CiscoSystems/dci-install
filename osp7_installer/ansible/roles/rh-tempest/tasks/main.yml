@@ -37,7 +37,7 @@
   shell: >
         ln -sf /usr/share/openstack-tempest-* /usr/share/openstack-tempest &&
         cd /usr/share/openstack-tempest &&
-        python tools/config_tempest.py --image "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
+        python tools/config_tempest.py --image "http://memory.cisco.com/osp/cirros_images/cirros-0.3.4-x86_64-disk.img"
         --create identity.uri {{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}
         object-storage.operator_role swiftoperator
         identity.username demo
