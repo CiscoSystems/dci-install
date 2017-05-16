@@ -330,4 +330,4 @@ Create example that stores config outside this repo, other then an example confi
 Ideas:
   * move lab default configs to different project, and include that as a pip dependency,
   * move actual config to a different git repo, which basically just holds the config and a shell python project, to
-include this project and the default lab config project.
+include this project and the default lab config project.# osp7-install-dci
