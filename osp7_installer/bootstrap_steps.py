@@ -26,6 +26,16 @@ bootstrap_steps = {
     ],
     "run_tests_by_regex": [
         { "AnsibleStep": "run_tests_by_regex" }
+    ],
+    "directorInstall": [
+        {"CobblerOSInstallStep": "cobbler"},
+    ],
+    "ucloudDeploy": [
+        { "SwitchConfigStep": 'switch_config' },
+        {"AnsibleStep": "ucloud"},
+    ],
+    "ocloudDeploy": [
+        {"AnsibleStep": "ocloud"},
     ]
 }
 """Mapping of 'actions' to steps, This allows for mixing python and ansible runs together sequentially.
