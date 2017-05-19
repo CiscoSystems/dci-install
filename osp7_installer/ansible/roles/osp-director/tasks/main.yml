@@ -1,9 +1,53 @@
 ---
 
+- name:  Test for Boxborough node
+  shell: hostname | grep bxb
+  ignore_errors: true
+  register: test_for_bxb
+
+- name: Ensure yum will use the proxy
+  ini_file:
+    dest: /etc/yum.conf
+    section: main
+    option: proxy
+    value: http://proxy-wsa.esl.cisco.com:80
+
+- name: Ensure subscription-manager will use the proxy
+  ini_file:
+    dest: /etc/rhsm/rhsm.conf
+    section: server
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - {option: 'proxy_hostname', value: 'proxy-wsa.esl.cisco.com'}
+    - {option: 'proxy_port', value: '80'}
+
+- name:  Test for ifcfg-user already configured
+  shell: grep IPADDR /etc/sysconfig/network-scripts/ifcfg-user
+  ignore_errors: true
+  register: ifcfg_user_cfgd
+
+- name:  Config static route to overcloud nodes if not configured for BXB
+  shell: >
+    sed -i '$i/sbin/route add -net 172.20.208.0/20 gw 172.20.208.1' /etc/rc.local;
+    sed -i 's/BOOTPROTO=dhcp/BOOTPROTO=static/' /etc/sysconfig/network-scripts/ifcfg-user;
+    sed -i 's/PEERDNS=no/IPADDR=172.20.208.85/' /etc/sysconfig/network-scripts/ifcfg-user;
+    sed -i '$iNETMASK=255.255.240.0' /etc/sysconfig/network-scripts/ifcfg-user;
+    systemctl restart network
+  ignore_errors: true
+  when: test_for_bxb|success and ifcfg_user_cfgd|failed
+
 - name: Set RHEL Channels
   shell: subscription-manager repos --enable=rhel-7-server-openstack-7.0-director-rpms --enable=rhel-7-server-openstack-7.0-rpms
   # rhel-server-rhscl-7-rpms
   when: not osp_use_partner_repo
+
+- name: Upgrade RHEL
+  shell: >
+    subscription-manager register --username=gleboude@redhat.com --password=@Zou_REDHAT;
+    subscription-manager register;
+    subscription-manager attach --pool 8a85f981568e999d01568ed222cd6712;
+    subscription-manager repos '--disable=*' --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms;
 
 - name: Setup Yum Partner Repos
   environment: proxy_env
@@ -22,6 +66,9 @@
 - name: yum update (the world)
   yum: name=* state=latest update_cache=yes
 
+- name: yum update the kernel
+  yum: name=kernel state=latest update_cache=yes
+
 #- name: Install chrony
 #  yum: name=chrony
 #
@@ -29,37 +76,19 @@
 #  service: name=chronyd state=started enabled=yes
 
 # command line client name change between osp 7 and 8
-- name: Install python-rdomanager-oscplugin
-  yum: name=python-rdomanager-oscplugin
-  when: osp_version == 7
+#- name: Install python-rdomanager-oscplugin
+#  yum: name=python-rdomanager-oscplugin
+#  when: osp_version == 7
 
 - name: Install python-tripleoclient
   yum: name=python-tripleoclient
-  when: osp_version == 8
 
-- name: Install openstack-tripleo-heat-templates rpm
-  yum:
-    name: openstack-tripleo-heat-templates
-    state: present
-
-- name: Applying https://review.openstack.org/#/c/462035
-  shell: curl 'https://review.openstack.org/changes/462035/revisions/95fbda4d0254edb12bfec1ccd41d3b5f6204fe8f/patch?download' | base64 -d|patch -p1
-   args:
-    chdir: /usr/share/openstack-tripleo-heat-templates
-
-- name: Applying https://review.openstack.org/#/c/461734
-  shell: curl 'https://review.openstack.org/changes/461734/revisions/b8f97f5e1b36dd12c0750b83c54f17e931990a40/patch?download' | base64 -d|patch -p1
-   args:
-    chdir: /usr/share/openstack-tripleo-heat-templates
+#- name: openstack-tripleo-heat-templates rpm
+#  shell: rpm -Uvh --force {{ tripleo_heat_rpm_url }}
 
 - name: Create Stack user
   # password=password
   user: name=stack groups=wheel append=yes password=$6$rounds=100000$AZq2DbEdgByHTu8s$J20qsZT3AcxDB47N.Qoscv6aI91pIsI7pH.yPfMXwDOhgOdf7bqVqoPqexA9mKJuC.kXArdth67Q7AbN8416g.
-
-# OSP8 beta requires disabling selinux
-- name: disable selinux
-  shell: setenforce 0
-  when: osp_version == 8
 
 - name: Check if stack user is in sudo
   stat: path=/etc/sudoers.d/stack

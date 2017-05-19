@@ -26,18 +26,19 @@
     - { name: "python-junitxml" }
     - { name: "screen" }
 
-- name: Get pip
-  get_url: url=https://bootstrap.pypa.io/get-pip.py dest=/tmp/
-
-- name: install pip
-  shell: python get-pip.py
-          chdir=/tmp/
+# Removed for BXB testing.  Not needed.
+#- name: Get pip
+#  get_url: url=https://bootstrap.pypa.io/get-pip.py dest=/tmp/
+#
+#- name: install pip
+#  shell: python get-pip.py
+#          chdir=/tmp/
 
 - name: Write tempest.conf
   shell: >
         ln -sf /usr/share/openstack-tempest-* /usr/share/openstack-tempest &&
         cd /usr/share/openstack-tempest &&
-        python tools/config_tempest.py --image "http://memory.cisco.com/osp/cirros_images/cirros-0.3.4-x86_64-disk.img"
+        python tools/config_tempest.py --image "http://download.cirros-cloud.net/0.3.3/cirros-0.3.3-x86_64-disk.img"
         --create identity.uri {{ hostvars[director_node_ssh_ip]['overcloud_os_auth_url'] }}
         object-storage.operator_role swiftoperator
         identity.username demo
@@ -69,12 +70,16 @@
          source /home/stack/overcloudrc && openstack role list |
          grep -q heat_stack_owner || openstack role create heat_stack_owner
 
+- name: Add 20.0.0.x ip to user interface
+  shell: >
+         ip addr add {{undercloud_fake_gw_ip}}/{{undercloud_fake_gw_ip_prefix}} dev user
+
 - name: Run quick network sanity test (tempest)
   shell: >
          cd /usr/share/openstack-tempest &&
          ./run_tempest.sh -N -- 'test_connectivity_between_vms_on_different_networks'
          --config /etc/redhat-certification-openstack/tempest.conf
-  when: not run_long_tempest
+  when: not run_long_tempest and not quit_all_tests
 
 - name: Run longer network tests (tempest)
   shell: >
@@ -95,5 +100,5 @@
   # poll every 60 seconds for 3 hours
   async: "{{ 3 * 60 * 60 }}"
   poll: 60
-  when: run_long_tempest
+  when: run_long_tempest and not quit_all_tests
   ignore_errors: yes

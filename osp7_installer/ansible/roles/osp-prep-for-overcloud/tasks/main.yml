@@ -9,7 +9,7 @@
 
 - name: configure boot kernals
   sudo_user: stack
-  shell: source /home/stack/stackrc && openstack baremetal configure boot
+  shell: sleep 20 && source /home/stack/stackrc && openstack baremetal configure boot
 
 - name: discover nodes
   sudo_user: stack

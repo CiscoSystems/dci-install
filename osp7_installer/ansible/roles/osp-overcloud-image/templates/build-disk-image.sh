@@ -68,11 +68,6 @@ virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload /home/stack/{{
 virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -p1 -d {{ patch_info['path'] }} < /tmp/{{ patch_info['name'] }}-{{ loop.index }}.patch"
 {% endfor %}
 
-{% if do_sriov %}
-virt-customize --selinux-relabel -a /home/stack/images/overcloud-full.qcow2 --run-command "sed -i 's/rhgb quiet/rhgb quiet intel_iommu=on/g' /etc/sysconfig/grub"
-virt-customize --selinux-relabel -a /home/stack/images/overcloud-full.qcow2 --run-command "sed -i 's/rhgb quiet/rhgb quiet intel_iommu=on/g' /etc/default/grub"
-virt-customize --selinux-relabel -a /home/stack/images/overcloud-full.qcow2 --run-command "grub2-mkconfig -o /boot/grub2/grub.cfg"
-{% endif %}
 
 ## first udpate all the openstack RPMs
 #virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager register --user={{ rhel_username }} --password={{ rhel_password }}'

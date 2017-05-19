@@ -106,6 +106,28 @@
 #  when: resume_guests_state_on_host_boot
 
 ###
+# HACK: With this version of OSP8, the ironic inspector is failing authentication with keystone.
+# As a result, Firewall config wasn’t getting configured in the iptables which tells ironic that these
+# nodes don’t need to be evaluated so don’t offer ip address and don’t give them 
+# inspector pxe image.
+# Solution: Restart  ironic-inspector so keystone authen will succeed which will result
+# in firewall config getting put in place.
+###
+- name: Check on ironic-inspector firewall config
+  sudo_user: stack
+  shell: source /home/stack/stackrc && sudo iptables --list | grep ironic-inspector
+  ignore_errors: true
+  register: result
+
+- debug: msg="Sysout output {{result.stdout}} and {{result.stdout.find("ironic-inspector")}}"
+
+- name: Restart ironic-inspector
+  sudo_user: stack
+  shell: sudo service openstack-ironic-inspector restart && sleep 20
+  when: result.stdout.find("ironic-inspector") == -1
+
+
+###
 # Deploy Overcloud
 ###
 

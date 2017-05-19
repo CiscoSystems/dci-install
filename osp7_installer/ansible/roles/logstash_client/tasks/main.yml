@@ -19,8 +19,8 @@
     - { name: "java" }
 
 - name: start service to upload results
-  shell: ./logstash -f logstash.conf -w 1
+  shell: nohup ./logstash -f logstash.conf -w 1 &
         chdir={{ logstash_dir }}/logstash-2.1.1/bin/
-  async: 200
-  poll: 50
-  ignore_errors: yes
+#  async: 200
+#  poll: 50
+#  ignore_errors: yes

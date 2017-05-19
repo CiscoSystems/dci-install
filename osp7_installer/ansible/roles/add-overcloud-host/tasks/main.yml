@@ -92,7 +92,8 @@
   sudo_user: stack
   shell: source /home/stack/stackrc && . /home/stack/openstack-tools/openstack/tripleo_bld_ansible_inv.sh /home/stack/ansible_hosts
 
-- name: install filebeat on the overcloud nodes
-  sudo_user: stack
-  shell: source /home/stack/venv_ansible/bin/activate && ansible-playbook -i /home/stack/ansible_hosts /home/stack/openstack-tools/openstack/ansible/setup_filebeat.yml -e "filebeat_port={{ filebeat_port }} testbed_name={{ testbed_name if testbed_name is defined else ansible_hostname }}"
+# Removed for boxborough...Not needed
+#- name: install filebeat on the overcloud nodes
+#  sudo_user: stack
+#  shell: source /home/stack/venv_ansible/bin/activate && ansible-playbook -i /home/stack/ansible_hosts /home/stack/openstack-tools/openstack/ansible/setup_filebeat.yml -e "filebeat_port={{ filebeat_port }} testbed_name={{ testbed_name if testbed_name is defined else ansible_hostname }}"
 

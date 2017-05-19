@@ -5,4 +5,3 @@
     - read-overcloudrc-props
     - rh-tempest
     - run_tests
-#    - logstash_client
