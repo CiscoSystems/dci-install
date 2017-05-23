@@ -83,9 +83,20 @@
 - name: Install python-tripleoclient
   yum: name=python-tripleoclient
 
-#- name: openstack-tripleo-heat-templates rpm
-#  shell: rpm -Uvh --force {{ tripleo_heat_rpm_url }}
+- name: Install openstack-tripleo-heat-templates rpm
+  yum:
+    name: openstack-tripleo-heat-templates
+    state: present
 
+- name: Applying https://review.openstack.org/#/c/462035
+  shell: curl 'https://review.openstack.org/changes/462035/revisions/95fbda4d0254edb12bfec1ccd41d3b5f6204fe8f/patch?download' | base64 -d|patch -p1
+   args:
+    chdir: /usr/share/openstack-tripleo-heat-templates
+
+- name: Applying https://review.openstack.org/#/c/461734
+  shell: curl 'https://review.openstack.org/changes/461734/revisions/b8f97f5e1b36dd12c0750b83c54f17e931990a40/patch?download' | base64 -d|patch -p1
+   args:
+    chdir: /usr/share/openstack-tripleo-heat-templates
 - name: Create Stack user
   # password=password
   user: name=stack groups=wheel append=yes password=$6$rounds=100000$AZq2DbEdgByHTu8s$J20qsZT3AcxDB47N.Qoscv6aI91pIsI7pH.yPfMXwDOhgOdf7bqVqoPqexA9mKJuC.kXArdth67Q7AbN8416g.
