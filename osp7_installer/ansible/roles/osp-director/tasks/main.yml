@@ -91,14 +91,14 @@
 - name: Applying https://review.openstack.org/#/c/464700
   shell: |
     set -o pipefail
-    curl 'https://review.openstack.org/changes/464700/revisions/db34e8e61f383e99192a0c23bb4fcf69f304d564/patch?download' | base64 -D | patch -p1
+    curl 'https://review.openstack.org/changes/464700/revisions/db34e8e61f383e99192a0c23bb4fcf69f304d564/patch?download' | base64 -d | patch -p1
   args:
     chdir: /usr/share/openstack-tripleo-heat-templates
 
 - name: Applying https://review.openstack.org/#/c/461821
   shell: |
     set -o pipefail
-    curl 'https://review.openstack.org/changes/461821/revisions/3a9da6191ade6e579484d6b99fee4401eace14cd/patch?download' | base64 -D | patch -p1
+    curl 'https://review.openstack.org/changes/461821/revisions/3a9da6191ade6e579484d6b99fee4401eace14cd/patch?download' | base64 -d | patch -p1
   args:
     chdir: /usr/share/openstack-tripleo-heat-templates
 
