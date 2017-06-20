@@ -30,10 +30,8 @@
 - name:  Write environment files
   template: src={{ item.template_file }} dest=/home/stack/templates/{{ item.template_file }} owner=stack group=stack
   with_items:
-#    - { template_file: 'network-environment.yaml' }
     - { template_file: 'networking-cisco-environment.yaml' }
     - { template_file: 'nfs-environment.yaml' }
-    - { template_file: 'disable-selinux.yaml' } # only used for OSP8 beta
 
 - name:  Write deploy_overcloud.sh
   template: src=deploy_overcloud.sh dest=/home/stack/bin/deploy_overcloud.sh owner=stack group=stack mode=755
