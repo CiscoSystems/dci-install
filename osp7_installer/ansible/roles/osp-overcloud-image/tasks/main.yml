@@ -40,30 +40,6 @@
 - name: Install libguestfs-tools
   yum: name=libguestfs-tools
 
-- name: Copy image patch files (OSP7)
-  template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
-  with_items:
-    - { template_file: 'ml2_mech_driver_debug.patch' }
-  when: osp_version == 7
-
-- name: Copy image patch files (OSP8)
-  template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
-  with_items:
-    - { template_file: 'diff_ucsm_hack.patch' }
-  when: osp_version == 8
-
-#- name: Build images
-#  sudo_user: stack
-#  environment:
-#    RHOS: 1
-#    USE_DELOREAN_TRUNK: 0
-#    NODE_DIST: rhel7
-#    DIB_LOCAL_IMAGE: rhel-guest-image-7.2.qcow2
-#    DIB_YUM_REPO_CONF: "/etc/yum.repos.d/RH7-RHOS-8.0.repo /etc/yum.repos.d/rhel-7-server-rpms.repo /etc/yum.repos.d/RH7-RHOS-8.0-director.repo /etc/yum.repos.d/rhel-7-server-extras-rpms.repo"
-#  shell: source /home/stack/stackrc && cd images && openstack overcloud image build --all
-##  when: images_downloaded|success
-
-
 - name: Lets try and sleep a bit
   sudo_user: stack
   shell: sleep 30
