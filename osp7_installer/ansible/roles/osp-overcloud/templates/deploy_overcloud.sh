@@ -20,8 +20,6 @@ openstack overcloud deploy --templates \
   --neutron-physical-bridge {{ neutron_tenant_bridge }} \
 {% if network_isolation %}
   -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
-{% else %}
-    -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
 {% endif %}
   -e /home/stack/templates/networking-cisco-environment.yaml \
 {% if nfs_for_storage %}
