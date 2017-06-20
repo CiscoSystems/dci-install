@@ -44,12 +44,16 @@ parameter_defaults:
   NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'
   NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
 
-  NeutronMechanismDrivers: '{{ neutron_mechanism_drivers }}'
-
   NeutronTypeDrivers: '{{ type_driver }}'
   NeutronNetworkType: '{{ network_type }}'
   NetworkNexusVxlanVniRanges: '{{ vni_ranges }}'
   NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'
+
+  ControllerExtraConfig:
+    neutron::plugins::ml2::mechanism_drivers: ['openvswitch', 'cisco_ucsm', 'cisco_nexus']
+
+  NovaComputeExtraConfig:
+    neutron::plugins::ml2::mechanism_drivers: ['openvswitch']
 
 #parameters:
 #  Debug: "{{ overcloud_debug }}"

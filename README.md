@@ -245,9 +245,6 @@ overcloud_floating_ip_network_gateway = 172.17.32.1
 **Tenant net & VLAN range**
 ```network_nexus_vlan_range = datacentre:2010:2100```
 
-**Mechanism Drivers**
-```neutron_mechanism_drivers = openvswitch,cisco_nexus,cisco_ucsm```
-
 ### Configuration of the Nexus Switch
  **Limitation:**  Currently, osp7_bootstrap only supports configuring a single nexus switch per testbed. 
  
