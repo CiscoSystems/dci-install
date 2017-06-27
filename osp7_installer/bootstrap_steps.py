@@ -15,18 +15,18 @@ bootstrap_steps = {
         { "SwitchConfigStep": "switch_config" },
         { "AnsibleStep": "redeploy" },
     ],
-    "test": [
-        { "AnsibleStep": "test_cloud" },
-    ],
+#    "test": [
+#        { "AnsibleStep": "test_cloud" },
+#    ],
     "update_image": [
         {"AnsibleStep": "update_overcloud_image" },
     ],
     "noop": [
         { "ExampleStep": 'example' },
     ],
-    "run_tests_by_regex": [
-        { "AnsibleStep": "run_tests_by_regex" }
-    ],
+#    "run_tests_by_regex": [
+#        { "AnsibleStep": "run_tests_by_regex" }
+#    ],
     "directorInstall": [
         {"CobblerOSInstallStep": "cobbler"},
     ],
