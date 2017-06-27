@@ -1,4 +1,4 @@
 ---
 dependencies:
   - { role: cloudadmin-tools }
-  - { role: director_setup_ansible }
+#  - { role: director_setup_ansible }
