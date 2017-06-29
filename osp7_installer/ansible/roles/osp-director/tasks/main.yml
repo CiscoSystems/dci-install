@@ -102,13 +102,6 @@
   args:
     chdir: /usr/share/openstack-tripleo-heat-templates
 
-- name: Applying https://review.openstack.org/#/c/433800
-  shell: |
-    set -o pipefail
-    curl 'https://review.openstack.org/changes/433800/revisions/464cbe5153503bfd479ce457f177baa3dc0365d5/patch?download' | base64 -d | patch -p2
-  args:
-    chdir: /usr/share/openstack-tripleo-heat-templates
-
 - name: Create Stack user
   # password=password
   user: name=stack groups=wheel append=yes password=$6$rounds=100000$AZq2DbEdgByHTu8s$J20qsZT3AcxDB47N.Qoscv6aI91pIsI7pH.yPfMXwDOhgOdf7bqVqoPqexA9mKJuC.kXArdth67Q7AbN8416g.
