@@ -88,20 +88,6 @@
     name: openstack-tripleo-heat-templates
     state: present
 
-- name: Applying https://review.openstack.org/#/c/464700
-  shell: |
-    set -o pipefail
-    curl 'https://review.openstack.org/changes/464700/revisions/db34e8e61f383e99192a0c23bb4fcf69f304d564/patch?download' | base64 -d | patch -p1
-  args:
-    chdir: /usr/share/openstack-tripleo-heat-templates
-
-- name: Applying fix for I9e4011c3be656e895d79016e8632a685b065734b
-  shell: |
-    set -o pipefail
-    curl "https://review.openstack.org/gitweb?p=openstack/tripleo-heat-templates.git;a=patch;h=b6d6fe90c928ec85935084ad089f364b5ed90641"| patch -p1
-  args:
-    chdir: /usr/share/openstack-tripleo-heat-templates
-
 - name: Create Stack user
   # password=password
   user: name=stack groups=wheel append=yes password=$6$rounds=100000$AZq2DbEdgByHTu8s$J20qsZT3AcxDB47N.Qoscv6aI91pIsI7pH.yPfMXwDOhgOdf7bqVqoPqexA9mKJuC.kXArdth67Q7AbN8416g.
