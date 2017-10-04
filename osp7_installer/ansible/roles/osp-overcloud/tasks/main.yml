@@ -44,12 +44,12 @@
 ###
 # Heat Review
 ###
-- name: Check if heat review checked out
-  stat: path=/home/stack/heat-review
-  register: heat_review
+#- name: Check if heat review checked out
+#  stat: path=/home/stack/heat-review
+#  register: heat_review
 
-- name:  Write heat-hack.patch
-  template: src=heat-hack.patch dest=/home/stack/heat-hack.patch owner=stack group=stack
+#- name:  Write heat-hack.patch
+#  template: src=heat-hack.patch dest=/home/stack/heat-hack.patch owner=stack group=stack
 
 - name: Check for heat backup
   stat: path=/usr/share/openstack-tripleo-heat-templates.bak
