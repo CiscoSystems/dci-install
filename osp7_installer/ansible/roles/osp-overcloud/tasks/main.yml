@@ -75,7 +75,7 @@
 
 - name: Check for existing overcloud
   sudo_user: stack
-  shell: source /home/stack/stackrc &&  heat stack-list | grep -q overcloud
+  shell: source /home/stack/stackrc &&  openstack stack list | grep -q overcloud
   ignore_errors: true
   register: exiting_cloud_check
 

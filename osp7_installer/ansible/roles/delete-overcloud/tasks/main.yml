@@ -2,7 +2,7 @@
 
 - name: Check for existing overcloud
   sudo_user: stack
-  shell: source /home/stack/stackrc &&  heat stack-list | grep -q overcloud
+  shell: source /home/stack/stackrc &&  openstack stack list | grep -q overcloud
   ignore_errors: true
   register: exiting_cloud_check
 
@@ -13,7 +13,7 @@
 
 - name: Poll overcloud delete finished
   sudo_user: stack
-  shell: source /home/stack/stackrc && heat stack-list
+  shell: source /home/stack/stackrc && openstack stack list
   register: stack_delete_status
   until: stack_delete_status.stdout.find("overcloud") == -1
   retries: 12
