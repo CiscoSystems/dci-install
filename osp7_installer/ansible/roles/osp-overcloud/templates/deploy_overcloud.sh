@@ -11,7 +11,7 @@ openstack overcloud deploy --templates \
   --block-storage-scale {{ overcloud_block_storage_scale }} \
   --swift-storage-scale {{ overcloud_swift_storage_scale }} \
   --neutron-network-type vlan \
-  --neutron-disable-tunneling \
+#  --neutron-disable-tunneling \
   --neutron-flat-networks {{ neutron_flat_networks }} \
   --neutron-public-interface {{ controller_external_nic }} \
 {% if osp_version == 7 %}
