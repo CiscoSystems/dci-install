@@ -17,7 +17,7 @@ openstack overcloud deploy --templates \
 {% if osp_version == 7 %}
   --hypervisor-neutron-public-interface {{ compute_tenant_nic }} \
 {% endif %}
-  --neutron-physical-bridge {{ neutron_tenant_bridge }} \
+#  --neutron-physical-bridge {{ neutron_tenant_bridge }} \
 {% if network_isolation %}
   -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 {% endif %}
@@ -34,7 +34,7 @@ openstack overcloud deploy --templates \
 {% else %}
   --neutron-bridge-mappings "datacentre:{{ neutron_tenant_bridge }},external:{{ neutron_external_bridge }}" \
 {% endif %}
-  --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
+#  --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
 {% if deploy_extra_args %}
    {{ deploy_extra_args }} \
 {% endif %}

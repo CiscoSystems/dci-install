@@ -22,8 +22,14 @@ parameter_defaults:
   ExternalInterfaceDefaultRoute: {{ overcloud_external_gateway }}
 
   DnsServers: ["{{ dns_server_1 }}"]
-  NeutronExternalNetworkBridge: "{{ neutron_external_bridge }}"
 
+  NeutronTypeDrivers: '{{ type_driver }}'
+  NeutronNetworkType: '{{ network_type }}'
+  NeutronFlatNetworks: '{{ neutron_flat_networks }}'
+  NeutronPublicInterface: '{{ controller_external_nic }}'
+  NeutronBridgeMappings: '{{ neutron_tenant_bridge }}'
+  NeutronExternalNetworkBridge: '{{ neutron_external_bridge }}'
+  NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
 
   NetworkUCSMIp: '{{ network_ucsm_ip }}'
   NetworkUCSMUsername: '{{ network_ucsm_username }}'
@@ -44,10 +50,6 @@ parameter_defaults:
   NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'
   NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
 
-  NeutronTypeDrivers: '{{ type_driver }}'
-  NeutronNetworkType: '{{ network_type }}'
-  NeutronFlatNetworks: '{{ neutron_flat_networks }}'
-  NeutronPublicInterface: '{{ controller_external_nic }}'
   NetworkNexusVxlanVniRanges: '{{ vni_ranges }}'
   NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'
 
