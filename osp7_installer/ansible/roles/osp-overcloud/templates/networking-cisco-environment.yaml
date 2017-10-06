@@ -46,6 +46,8 @@ parameter_defaults:
 
   NeutronTypeDrivers: '{{ type_driver }}'
   NeutronNetworkType: '{{ network_type }}'
+  NeutronFlatNetworks: '{{ neutron_flat_networks }}'
+  NeutronPublicInterface: '{{ controller_external_nic }}'
   NetworkNexusVxlanVniRanges: '{{ vni_ranges }}'
   NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'
 
