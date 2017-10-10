@@ -19,7 +19,7 @@ openstack overcloud deploy --templates \
 {% endif %}
 #  --neutron-physical-bridge {{ neutron_tenant_bridge }} \
 {% if network_isolation %}
-  -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+  --environment-file /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 {% endif %}
   -e /home/stack/templates/networking-cisco-environment.yaml \
 {% if nfs_for_storage %}
@@ -38,5 +38,5 @@ openstack overcloud deploy --templates \
 {% if deploy_extra_args %}
    {{ deploy_extra_args }} \
 {% endif %}
-  --ntp-server 1.ntp.esl.cisco.com
+#  --ntp-server 1.ntp.esl.cisco.com
 
