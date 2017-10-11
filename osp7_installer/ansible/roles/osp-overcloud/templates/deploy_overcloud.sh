@@ -11,6 +11,7 @@ openstack overcloud deploy --templates \
   --block-storage-scale {{ overcloud_block_storage_scale }} \
   --swift-storage-scale {{ overcloud_swift_storage_scale }} \
   --neutron-network-type vlan \
+  --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
 #  --neutron-disable-tunneling \
 #  --neutron-flat-networks {{ neutron_flat_networks }} \
 #  --neutron-public-interface {{ controller_external_nic }} \
@@ -19,7 +20,7 @@ openstack overcloud deploy --templates \
 {% endif %}
 #  --neutron-physical-bridge {{ neutron_tenant_bridge }} \
 {% if network_isolation %}
-  -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+  --environment-file /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
 {% endif %}
   -e /home/stack/templates/networking-cisco-environment.yaml \
 {% if nfs_for_storage %}
@@ -38,5 +39,5 @@ openstack overcloud deploy --templates \
 {% if deploy_extra_args %}
    {{ deploy_extra_args }} \
 {% endif %}
-  --ntp-server 1.ntp.esl.cisco.com
+#  --ntp-server 1.ntp.esl.cisco.com
 
