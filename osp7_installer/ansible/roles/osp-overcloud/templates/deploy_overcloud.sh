@@ -39,5 +39,5 @@ openstack overcloud deploy --templates \
 {% if deploy_extra_args %}
    {{ deploy_extra_args }} \
 {% endif %}
-#  --ntp-server 1.ntp.esl.cisco.com
+  --ntp-server 1.ntp.esl.cisco.com
 
