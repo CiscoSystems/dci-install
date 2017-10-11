@@ -10,8 +10,8 @@ openstack overcloud deploy --templates \
   --ceph-storage-scale {{ overcloud_ceph_storage_scale }} \
   --block-storage-scale {{ overcloud_block_storage_scale }} \
   --swift-storage-scale {{ overcloud_swift_storage_scale }} \
-  --neutron-network-type vlan \
-  --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
+#  --neutron-network-type vlan \
+#  --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
 #  --neutron-disable-tunneling \
 #  --neutron-flat-networks {{ neutron_flat_networks }} \
 #  --neutron-public-interface {{ controller_external_nic }} \
