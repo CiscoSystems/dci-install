@@ -12,7 +12,6 @@ openstack overcloud deploy --templates \
   --swift-storage-scale {{ overcloud_swift_storage_scale }} \
   --neutron-network-type vlan \
   --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
-  --neutron-disable-tunneling \
   --neutron-flat-networks {{ neutron_flat_networks }} \
   --neutron-public-interface {{ controller_external_nic }} \
 {% if osp_version == 7 %}
