@@ -65,7 +65,7 @@ cp /home/stack/images/{{patch_info['patchfile'] }} /home/stack/{{ patch_info['na
 cd ..
 
 virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload /home/stack/{{ patch_info['name'] }}-{{ loop.index }}.patch:/tmp
-virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -p1 -f -d {{ patch_info['path'] }} < /tmp/{{ patch_info['name'] }}-{{ loop.index }}.patch"
+virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -f -d {{ patch_info['path'] }} < /tmp/{{ patch_info['name'] }}-{{ loop.index }}.patch"
 {% endfor %}
 
 
