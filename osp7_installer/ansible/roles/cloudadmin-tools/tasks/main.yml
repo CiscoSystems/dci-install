@@ -4,7 +4,8 @@
   stat: path=/home/stack/openstack-tools
   register: dir_stat
 
-- name: Clone tiswanso openstack-tools
-  git: repo=http://gitlab.cisco.com/tiswanso/openstack-tools.git
-       dest=/home/stack/openstack-tools
+#git: repo=http://gitlab.cisco.com/tiswanso/openstack-tools.git
+- name: Untar tiswanso openstack-tools
+  sudo_user: stack
+  shell: tar -xzvf /home/stack/openstack-tools.tar.gz -C /home/stack
   when: not dir_stat.stat.exists

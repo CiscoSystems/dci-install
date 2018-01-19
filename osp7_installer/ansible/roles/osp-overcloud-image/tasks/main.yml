@@ -19,6 +19,9 @@
     - { template_file: 'refresh-images.sh' }
     - { template_file: 'ipmi_address_to_uuid.py' }
 
+- name: Lets try and sleep a bit
+  shell: sleep 30
+
 - yum:
     name: "{{ item }}"
     state: "latest"
@@ -39,6 +42,23 @@
 
 - name: Install libguestfs-tools
   yum: name=libguestfs-tools
+
+- name: Copy image patch files (OSP10)
+  template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
+  with_items:
+    - { template_file: 'puppet-partial.patch' }
+    - { template_file: 'nw-cisco-dbdupl-p1.patch' }
+    - { template_file: 'nw-cisco-dbdupl-p2.patch' }
+    - { template_file: 'nw-cisco-dbdupl-p3.patch' }
+  when: osp_version == 10
+
+- name: Copy tools files
+  copy:
+    src: /tmp/osp7-install-dci/osp7_installer/ansible/roles/osp-overcloud-image/templates/openstack-tools.tar.gz
+    dest: /home/stack/openstack-tools.tar.gz
+    owner: stack
+    group: stack
+    mode: 0755
 
 - name: Lets try and sleep a bit
   sudo_user: stack

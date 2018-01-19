@@ -44,9 +44,9 @@
 
 - name: Upgrade RHEL
   shell: >
-    subscription-manager register --username=gleboude@redhat.com --password=@Zou_REDHAT;
+    subscription-manager register --username=***REMOVED***  --password=***REMOVED***;
     subscription-manager register;
-    subscription-manager attach --pool 8a85f981568e999d01568ed222cd6712;
+    subscription-manager attach --pool ***REMOVED***;
     subscription-manager repos '--disable=*' --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms;
 
 - name: Setup Yum Partner Repos
