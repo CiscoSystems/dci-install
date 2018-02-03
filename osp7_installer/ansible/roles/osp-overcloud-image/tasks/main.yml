@@ -43,13 +43,10 @@
 - name: Install libguestfs-tools
   yum: name=libguestfs-tools
 
-- name: Copy image patch files (OSP10)
+- name: Copy image patch files (OSP10, nw-cisco 5.5.0)
   template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
   with_items:
-    - { template_file: 'puppet-partial.patch' }
-    - { template_file: 'nw-cisco-dbdupl-p1.patch' }
-    - { template_file: 'nw-cisco-dbdupl-p2.patch' }
-    - { template_file: 'nw-cisco-dbdupl-p3.patch' }
+    - { template_file: 'nw-cisco-534411-DbDupl-MultiC-Brief.patch' }
   when: osp_version == 10
 
 - name: Copy tools files
