@@ -81,7 +81,7 @@ virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -f
 #virt-customize -a overcloud-full.qcow2 --run-command 'yum clean all'
 
 # Temp fix to pull down networking-cisco - SD
-virt-customize -a overcloud-full.qcow2 --run-command 'git clone https://github.com/openstack/networking-cisco /tmp/net-cisco'
+virt-customize -a overcloud-full.qcow2 --run-command 'git clone --branch 5.5.2 https://github.com/openstack/networking-cisco /tmp/net-cisco'
 virt-customize -a overcloud-full.qcow2 --run-command 'cd /tmp/net-cisco'
 virt-customize -a overcloud-full.qcow2 --run-command 'python setup.py install'
 
