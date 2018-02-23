@@ -80,6 +80,10 @@ virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -f
 #virt-customize -a overcloud-full.qcow2 --run-command 'yum update -y'
 #virt-customize -a overcloud-full.qcow2 --run-command 'yum clean all'
 
+# Temp fix to pull down networking-cisco - SD
+virt-customize -a overcloud-full.qcow2 --run-command 'git clone https://github.com/openstack/networking-cisco /tmp/net-cisco'
+virt-customize -a overcloud-full.qcow2 --run-command 'cd /tmp/net-cisco'
+virt-customize -a overcloud-full.qcow2 --run-command 'python setup.py install'
 
 # correct SELinux security context
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/networking_cisco*'
