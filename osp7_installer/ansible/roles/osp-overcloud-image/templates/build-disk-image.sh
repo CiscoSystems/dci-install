@@ -81,9 +81,22 @@ virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -f
 #virt-customize -a overcloud-full.qcow2 --run-command 'yum clean all'
 
 # Temp fix to pull down networking-cisco - SD
-virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager register --user=***REMOVED*** --password=***REMOVED***'
-virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager attach --pool=***REMOVED***'
-virt-customize -a overcloud-full.qcow2 --run-command 'sudo yum install -y python-networking-cisco'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager register --user=***REMOVED*** --password=***REMOVED***'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager attach --pool=***REMOVED***'
+#virt-customize -a overcloud-full.qcow2 --run-command 'sudo yum install -y python-networking-cisco'
+
+virt-customize \
+   --memsize 2000 \
+   --add overcloud-full.qcow2 \
+   --sm-credentials "***REMOVED***:password:***REMOVED***" \
+   --sm-register \
+   --sm-attach "pool:***REMOVED***" \
+   --run-command "subscription-manager repos --disable='*' --enable='rhel-7-server-openstack-11.0-rpms'" \
+   --install python-networking-cisco \
+   --sm-remove \
+   --sm-unregister 
+#   --selinux-relabel 2>&1 | tee -a ~/pilot/customize_image.log
+
 #virt-customize -a overcloud-full.qcow2 --run-command 'cd /tmp/net-cisco'
 #virt-customize -a overcloud-full.qcow2 --run-command 'python setup.py install'
 
