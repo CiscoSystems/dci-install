@@ -27,6 +27,12 @@ parameter_defaults:
   NeutronNetworkType: '{{ network_type }}'
   NeutronFlatNetworks: '{{ neutron_flat_networks }}'
   NeutronPublicInterface: '{{ controller_external_nic }}'
+  NeutronTunnelTypes: '{{ tunnel_type }}'
+
+  # The variable name for neutron-public-interface seemed to have changed in OSP11
+  NeutronPublic: '{{ controller_external_nic }}'
+  NeutronPhysicalBridge: '{{ neutron_tenant_bridge }}'
+
   NeutronBridgeMappings: '{{ neutron_tenant_bridge }}'
   NeutronExternalNetworkBridge: '{{ neutron_external_bridge }}'
   NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
