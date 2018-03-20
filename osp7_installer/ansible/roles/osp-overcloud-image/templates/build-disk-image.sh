@@ -72,21 +72,16 @@ virt-customize --selinux-relabel -a overcloud-full.qcow2 --run-command "patch -f
 
 
 ## first udpate all the openstack RPMs
-virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager register --user={{ rhel_username }} --password={{ rhel_password }}'
-virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager attach --pool={{ rhel_pool }}'
-virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager repos --disable=*'
-virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager repos --enable=rhel-7-server-openstack-11-rpms'
-virt-customize -a overcloud-full.qcow2 --run-command 'yum makecache'
-virt-customize -a overcloud-full.qcow2 --run-command 'yum update -y'
-virt-customize -a overcloud-full.qcow2 --run-command 'yum clean all'
-virt-customize -a overcloud-full.qcow2 --run-command 'yum install -y python-networking-cisco'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager register --user={{ rhel_username }} --password={{ rhel_password }}'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager attach --pool={{ rhel_pool }}'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager repos --disable=*'
+#virt-customize -a overcloud-full.qcow2 --run-command 'subscription-manager repos --enable=rhel-7-server-openstack-7.0-rpms'
+#virt-customize -a overcloud-full.qcow2 --run-command 'yum makecache'
+#virt-customize -a overcloud-full.qcow2 --run-command 'yum update -y'
+#virt-customize -a overcloud-full.qcow2 --run-command 'yum clean all'
 
-#virt-customize -a overcloud-full.qcow2 --run-command 'cd /tmp/net-cisco'
-#virt-customize -a overcloud-full.qcow2 --run-command 'python setup.py install'
 
 # correct SELinux security context
-#SD - not sure if this is required.
-#sudo yum install -y python-networking-cisco
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/networking_cisco*'
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib64/python2.7/site-packages/lxml*'
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/UcsSdk*'
