@@ -28,13 +28,11 @@ openstack overcloud deploy --templates \
 {% if deploy_with_flavors %}
   {{ deploy_with_flavors_args }} \
 {% endif %}
-  --neutron-tunnel-type vlan \
+  --neutron-disable-tunneling \
 {% if neutron_external_bridge == neutron_tenant_bridge %}
   --neutron-bridge-mappings datacentre:{{ neutron_tenant_bridge }} \
 {% else %}
-  --neutron-bridge-mappings "datacentre:{{ neutron_tenant_bridge }},external:{{ neutron_external_bridge }}" \
 {% endif %}
-  --neutron-network-vlan-ranges {{ network_nexus_vlan_range }} \
 {% if deploy_extra_args %}
    {{ deploy_extra_args }} \
 {% endif %}

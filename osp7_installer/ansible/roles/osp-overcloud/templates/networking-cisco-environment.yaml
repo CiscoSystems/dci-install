@@ -27,7 +27,7 @@ parameter_defaults:
   NeutronNetworkType: '{{ network_type }}'
   NeutronFlatNetworks: '{{ neutron_flat_networks }}'
   NeutronPublicInterface: '{{ controller_external_nic }}'
-  NeutronBridgeMappings: '{{ neutron_tenant_bridge }}'
+  NeutronBridgeMappings: 'datacentre:{{ neutron_tenant_bridge }},external:{{ neutron_external_bridge }}'
   NeutronExternalNetworkBridge: '{{ neutron_external_bridge }}'
   NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
 
@@ -35,6 +35,7 @@ parameter_defaults:
   NetworkUCSMUsername: '{{ network_ucsm_username }}'
   NetworkUCSMPassword: '{{ network_ucsm_password }}'
   NetworkUCSMHostList: '{{ network_ucsm_host_list }}'
+  NetworkUCSMHttpsVerify: '{{ network_ucsm_https_verify }}'
   NetworkNexusConfig: {{ network_nexus_config|to_nice_json }}
 
   NetworkNexusManagedPhysicalNetwork: {{ network_nexus_managed_physical_network }}
