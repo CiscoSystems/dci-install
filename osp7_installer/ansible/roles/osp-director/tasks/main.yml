@@ -88,9 +88,9 @@
     name: openstack-tripleo-heat-templates
     state: present
 
-- name: Install openstack-puppet-neutron rpm
+- name: Install puppet-neutron rpm
   yum:
-    name: openstack-puppet-neutron
+    name: puppet-neutron
     state: present
 
 - name: Applying https://review.openstack.org/#/c/537421/
@@ -98,7 +98,7 @@
     set -o pipefail
     curl 'https://review.openstack.org/changes/537421/revisions/6a0f77224c3a26d393fbca341f3ee873071bd773/patch?download' | base64 -d | patch -p2
   args:
-    chdir: /usr/share/openstack-puppet-neutron
+    chdir: /usr/share/puppet-neutron
 
 - name: Create Stack user
   # password=password
