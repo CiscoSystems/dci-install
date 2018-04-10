@@ -96,7 +96,7 @@
 - name: Applying https://review.openstack.org/#/c/537421/
   shell: |
     set -o pipefail
-    curl 'https://review.openstack.org/changes/537421/revisions/6a0f77224c3a26d393fbca341f3ee873071bd773/patch?download' | base64 -d | patch -p1 -f
+    curl 'https://review.openstack.org/changes/537421/revisions/6a0f77224c3a26d393fbca341f3ee873071bd773/patch?download' | base64 -d | filterdiff -i *.pp |patch manifests/plugins/ml2/cisco/ucsm.pp
   args:
     chdir: /usr/share/openstack-puppet/modules/neutron
 
