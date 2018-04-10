@@ -93,6 +93,9 @@
     name: puppet-neutron
     state: present
 
+- name: Install patchutils
+  yum: name=patchutils
+
 - name: Applying https://review.openstack.org/#/c/537421/
   shell: |
     set -o pipefail
