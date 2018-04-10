@@ -88,6 +88,13 @@
     name: openstack-tripleo-heat-templates
     state: present
 
+- name: Applying https://review.openstack.org/#/c/548686/
+  shell: |
+    set -o pipefail
+    curl 'https://review.openstack.org/changes/548686/revisions/afa48621358599100cfeeab6b3008ee71a16d444/patch?download' | base64 -d |patch -p1
+  args:
+    chdir: /usr/share/openstack-tripleo-heat-templates
+
 - name: Install puppet-neutron rpm
   yum:
     name: puppet-neutron
