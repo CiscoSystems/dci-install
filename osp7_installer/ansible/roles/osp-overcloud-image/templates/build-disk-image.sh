@@ -49,7 +49,6 @@ if [ -n "$RPM_FILES_ON_DISK" ]; then
   virt-customize -a overcloud-full.qcow2 --run-command "rm ${RPM_FILES_ON_DISK}"
 fi
 
-virt-customize -v -x --selinux-relabel -a overcloud-full.qcow2 --copy-in /usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2:/usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2
 
 {% for patch_info in patch_infos %}
 # create {{ patch_info['name'] }}-{{ loop.index }}
@@ -88,6 +87,8 @@ correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/pyt
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib64/python2.7/site-packages/lxml*'
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/lib/python2.7/site-packages/UcsSdk*'
 correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/share/openstack-puppet'
+
+virt-customize -v -x --selinux-relabel -a overcloud-full.qcow2 --copy-in /usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2:/usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2
 
 # update 40-hiera-datafiles
 #virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
