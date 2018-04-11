@@ -49,6 +49,8 @@ if [ -n "$RPM_FILES_ON_DISK" ]; then
   virt-customize -a overcloud-full.qcow2 --run-command "rm ${RPM_FILES_ON_DISK}"
 fi
 
+virt-customize -v -x --selinux-relabel -a overcloud-full.qcow2 --copy-in /usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2:/usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2
+
 {% for patch_info in patch_infos %}
 # create {{ patch_info['name'] }}-{{ loop.index }}
 if [ ! -d "{{ patch_info['name'] }}-{{ loop.index }}" ]; then
