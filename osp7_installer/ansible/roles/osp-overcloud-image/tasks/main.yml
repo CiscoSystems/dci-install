@@ -47,7 +47,7 @@
   shell: |
     set -o pipefail
     curl 'https://review.openstack.org/changes/537421/revisions/6a0f77224c3a26d393fbca341f3ee873071bd773/patch?download' | base64 -d | \
-    filterdiff -i *.pp > /home/stack/images/puppet-neutron.patch
+    filterdiff -i *.pp > /tmp/osp7-install-dci/osp7_installer/ansible/roles/osp-overcloud-image/templates/puppet-neutron.patch
 
 - name: Copy image patch files (OSP10, nw-cisco 5.5.0)
   template: src={{ item.template_file }} dest=/home/stack/images/{{ item.template_file }} owner=stack group=stack mode=0755
