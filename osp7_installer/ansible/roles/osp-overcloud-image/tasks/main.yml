@@ -50,6 +50,7 @@
     - { template_file: 'nw-cisco-542877-diff_trunk.patch' }
     - { template_file: 'diff_nexus_fix.patch' }
     - { template_file: 'puppet-neutron.patch' }
+    - { template_file: 'config.py' }
   when: osp_version == 10
 
 - name: Copy tools files
