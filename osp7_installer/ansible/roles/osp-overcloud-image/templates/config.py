@@ -106,6 +106,7 @@ def parse_ucsm_host_config(ucsm_ip, ucsm_host_list):
         if not sep or not service_profile:
             raise cfg.Error(_("UCS Mech Driver: Invalid Host Service "
                               "Profile config: %s") % host)
+        hostname = hostname.rstrip(".localdomain")
         key = (ucsm_ip, hostname)
         if '/' not in service_profile:
             # Assuming the service profile is at the root level
@@ -121,6 +122,8 @@ def parse_ucsm_host_config(ucsm_ip, ucsm_host_list):
             sp_dict[key] = service_profile.strip()
 
         LOG.debug('Service Profile for %s is %s',
+            hostname, sp_dict.get(key))
+        LOG.info('Service Profile for %s is %s',
             hostname, sp_dict.get(key))
         host_dict[hostname] = ucsm_ip
     return sp_dict, host_dict
