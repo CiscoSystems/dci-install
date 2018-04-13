@@ -91,7 +91,7 @@ correct_selinux_context '/usr/lib/python2.7/site-packages/neutron' '/usr/share/o
 #virt-ls -a overcloud-full.qcow2 /usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2
 
 #virt-customize -v -x --selinux-relabel -a overcloud-full.qcow2 --copy-in /usr/share/openstack-puppet/modules/neutron/manifests/plugins/ml2:/usr/share/openstack-puppet/modules/neutron/manifests/plugins/
-virt-customize -v -x --selinux-relabel -a overcloud-full.qcow2 --copy-in /usr/lib/python2.7/site-packages/networking_cisco/plugins/ml2/drivers/cisco/ucsm:/home/stack/images/config.py
+virt-customize -v -x --selinux-relabel -a overcloud-full.qcow2 --copy-in /home/stack/images/config.py:/usr/lib/python2.7/site-packages/networking_cisco/plugins/ml2/drivers/cisco/ucsm/config.py
 
 # update 40-hiera-datafiles
 #virt-customize --selinux-relabel -a overcloud-full.qcow2 --upload tripleo-puppet-elements/elements/hiera/os-refresh-config/configure.d/40-hiera-datafiles:/usr/libexec/os-refresh-config/configure.d
