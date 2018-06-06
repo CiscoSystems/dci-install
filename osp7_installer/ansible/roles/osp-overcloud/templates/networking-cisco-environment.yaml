@@ -55,7 +55,7 @@ parameter_defaults:
   NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'
 
   ControllerExtraConfig:
-    neutron::plugins::ml2::mechanism_drivers: ['openvswitch', 'cisco_ucsm', 'cisco_nexus']
+    neutron::plugins::ml2::mechanism_drivers: [ {{ network_cntlr_mech_driver }} ]
 
   NovaComputeExtraConfig:
     neutron::plugins::ml2::mechanism_drivers: ['openvswitch']

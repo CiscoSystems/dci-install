@@ -29,10 +29,10 @@
 
 - name:  Config static route to overcloud nodes if not configured for BXB
   shell: >
-    sed -i '$i/sbin/route add -net 172.20.208.0/20 gw 172.20.208.1' /etc/rc.local;
+    sed -i '$i/sbin/route add -net {{ overcloud_network_cidr }} gw {{ overcloud_external_gateway }}' /etc/rc.local;
     sed -i 's/BOOTPROTO=dhcp/BOOTPROTO=static/' /etc/sysconfig/network-scripts/ifcfg-user;
-    sed -i 's/PEERDNS=no/IPADDR=172.20.208.85/' /etc/sysconfig/network-scripts/ifcfg-user;
-    sed -i '$iNETMASK=255.255.240.0' /etc/sysconfig/network-scripts/ifcfg-user;
+    sed -i 's/PEERDNS=no/IPADDR={{ overcloud_director_ip }}/' /etc/sysconfig/network-scripts/ifcfg-user;
+    sed -i '$iNETMASK={{ overcloud_mask }}' /etc/sysconfig/network-scripts/ifcfg-user;
     systemctl restart network
   ignore_errors: true
   when: test_for_bxb|success and ifcfg_user_cfgd|failed

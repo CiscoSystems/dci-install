@@ -54,7 +54,7 @@
 
 - name: Copy tools files
   copy:
-    src: /tmp/osp7-install-dci/osp7_installer/ansible/roles/osp-overcloud-image/templates/openstack-tools.tar.gz
+    src: openstack-tools.tar.gz
     dest: /home/stack/openstack-tools.tar.gz
     owner: stack
     group: stack
