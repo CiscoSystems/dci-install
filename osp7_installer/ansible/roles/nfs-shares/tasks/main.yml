@@ -24,6 +24,6 @@
   register: iptables_nfs_check
 
 - name: Allow NFS in iptables (in memory)
-  shell: iptables -A INPUT -p tcp -m tcp --dport 2049 -j ACCEPT
+  shell: iptables -I INPUT -p tcp -m tcp --dport 2049 -j ACCEPT
   when: iptables_nfs_check|failed
 
