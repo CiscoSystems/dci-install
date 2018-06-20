@@ -1,0 +1,216 @@
+---
+cobbler_node_name: bxb6-DIRECTOR
+cobbler_username: cobbler
+cobbler_password: "***REMOVED***"
+cobbler_api_url: http://10.86.7.58/cobbler_api
+
+dns_server_1: 171.70.168.183
+
+undercloud_fake_gw_interface: eth1
+undercloud_fake_gw_cidr: 20.0.0.1/24
+
+undercloud_local_ip_simple: 192.0.2.1
+undercloud_local_ip_cidr: 192.0.2.1/24
+undercloud_network_gateway: 192.0.2.1
+
+
+overcloud_nodes:
+  nodes:
+    - arch: x86_64
+      capabilities: "profile:control,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["06:00:C0:02:00:F0"]
+      memory: "8256"
+      name: "control-1"
+      pm_addr: "10.86.1.38"
+      pm_password: "***REMOVED***"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+    - arch: "x86_64"
+      capabilities: "profile:control,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["06:00:C0:04:00:F0"]
+      memory: "8256"
+      name: "control-3"
+      pm_addr: "10.86.1.40"
+      pm_password: "***REMOVED***"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+    - arch: "x86_64"
+      capabilities: "profile:control,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["06:00:C0:03:00:F0"]
+      memory: "8256"
+      name: "control-2"
+      pm_addr: "10.86.1.39"
+      pm_password: "***REMOVED***"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+    - arch: "x86_64"
+      capabilities: "profile:compute,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["06:00:C0:05:00:F0"]
+      memory: "8256"
+      name: "compute-1"
+      pm_addr: "10.86.1.112"
+      pm_password: "***REMOVED***"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+    - arch: "x86_64"
+      capabilities: "profile:compute,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["06:00:C0:07:00:F0"]
+      memory: "8256"
+      name: "compute-3"
+      pm_addr: "10.86.1.43"
+      pm_password: "***REMOVED***"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+    - arch: "x86_64"
+      capabilities: "profile:compute,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["06:00:C0:06:00:F0"]
+      memory: "8256"
+      name: "compute-2"
+      pm_addr: "10.86.1.42"
+      pm_password: "***REMOVED***"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+
+overcloud_node_nic_mappings:
+  control-1:
+    nic1: 06:00:C0:02:00:AA
+  control-2:
+    nic1: 06:00:C0:03:00:AA
+  control-3:
+    nic1: 06:00:C0:04:00:AA
+  compute-1:
+    nic1: 06:00:C0:05:00:AA
+  compute-2:
+    nic1: 06:00:C0:06:00:AA
+  compute-3:
+    nic1: 06:00:C0:07:00:AA
+
+
+overcloud_control_scale: 3
+overcloud_compute_scale: 3
+overcloud_ceph_storage_scale: 0
+overcloud_block_storage_scale: 0
+overcloud_swift_storage_scale: 0
+
+testbed_vlan: 3000
+storage_vlan: 3001
+storage_mgmt_vlan: 3002
+tenant_network_vlan: 3003
+
+overcloud_external_vlan: 1261
+overcloud_external_ip_cidr: 172.20.208.0/20
+overcloud_external_ip_start: 172.20.208.5
+overcloud_external_gateway: 172.20.208.1
+overcloud_external_ip_end: 172.20.223.253
+overcloud_director_ip: 172.20.208.85
+overcloud_mask: 255.255.240.0
+
+overcloud_floating_ip_cidr: 20.0.0.0/24
+overcloud_floating_ip_start: 20.0.0.10
+overcloud_floating_ip_end: 20.0.0.200
+overcloud_floating_ip_network_gateway: 20.0.0.1
+
+type_driver: vxlan,vlan,flat,gre
+network_type: vlan
+neutron_flat_networks: datacentre
+neutron_external_bridge: br-ex
+
+network_ucsm_ip: 10.86.1.10
+network_ucsm_username: neutron
+network_ucsm_password: ***REMOVED***
+network_ucsm_host_list: "\
+  06:00:C0:06:00:E0:bxb6-C6-compute-2,\
+  06:00:C0:05:00:E0:bxb6-C5-compute-1,\
+  06:00:C0:03:00:E0:bxb6-C3-control-2,\
+  06:00:C0:07:00:E0:bxb6-C7-compute-3,\
+  06:00:C0:04:00:E0:bxb6-C4-control-3,\
+  06:00:C0:02:00:E0:bxb6-C2-control-1"
+network_ucsm_https_verify: False
+
+network_nexus_config:
+  B9-TOR-9K-1:
+    ip_address: "10.86.1.34"
+    username: "admin"
+    password: "***REMOVED***"
+    nve_src_intf: 2
+    ssh_port: 22
+    physnet: "datacentre"
+    servers:
+      06:00:C0:02:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:04:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:03:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:05:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:07:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:06:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+
+  B9-TOR-9K-2:
+    ip_address: "10.86.1.33"
+    username: "admin"
+    password: "***REMOVED***"
+    nve_src_intf: 2
+    ssh_port: 22
+    physnet: "datacentre"
+    servers:
+      06:00:C0:02:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:04:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:03:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:05:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:07:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+      06:00:C0:06:00:F0:
+        ports: "port-channel:301,port-channel:1,port-channel:2"
+
+network_nexus_managed_physical_network: datacentre
+network_nexus_vlan_name_prefix: q-
+network_nexus_svi_round_robin: false
+network_nexus_provider_vlan_name_prefix: p-
+network_nexus_persistent_switch_config: false
+network_nexus_switch_heartbeat_time: 30
+network_nexus_switch_replay_count: 10000
+network_nexus_provider_vlan_auto_create: false
+network_nexus_provider_vlan_auto_trunk: false
+network_nexus_vxlan_global_config: false
+network_nexus_host_key_checks: false
+network_nexus_vlan_range: datacentre:2900:2999
+
+vni_ranges: 0:0
+mcast_ranges: 0.0.0.0:0.0.0.0
+
+network_cntlr_mech_drivers:
+  - openvswitch
+  - cisco_ucsm
+  - cisco_nexus
+
+extra_neutron_config:
+  ml2_cisco_ucsm/ucsm_https_verify:
+    value: False
+  ml2_cisco_ucsm/ucsm_virtio_eth_ports:
+    value: "user,"
