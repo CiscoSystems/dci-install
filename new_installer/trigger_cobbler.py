@@ -4,7 +4,7 @@ import uuid
 import xmlrpclib
 
 
-LOG = logging.getLogger("cobbler_os_install")
+LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 

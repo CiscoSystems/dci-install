@@ -55,6 +55,15 @@
       with_items: "{{ list_of_nodes }}"
       when: not (enable_node_discovery | default(false))
 
+    - name: Wait for available nodes to pop up in nova
+      shell: |
+        source /home/stack/stackrc
+        openstack hypervisor stats show --format value -c count
+      register: hypervisor_count
+      until: hypervisor_count.stdout == '6'
+      retries: 12
+      delay: 10
+
     # 5.3. TAGGING NODES INTO PROFILES
     - name: Tag profile on nodes via capabilities
       debug:
@@ -85,13 +94,89 @@
             BlockStorageCount: {{ overcloud_block_storage_scale }}
             ObjectStorageCount: {{ overcloud_swift_storage_scale }}
 
+    - name: Create extended AllNodesExtraConfig to remove domain names
+      copy:
+        dest: /home/stack/templates/extended_nodes_extra_config.yaml
+        content: |
+          heat_template_version: 2015-04-30
+
+          parameters:
+            servers:
+              type: json
+
+          resources:
+            ConfigureML2:
+              type: OS::TripleO::NetCiscoOriginal
+              properties:
+                servers: {get_param: servers}
+
+            SlurpExistingNetCiscoData:
+              type: OS::Heat::SoftwareConfig
+              properties:
+                group: script
+                config: |
+                  #!/bin/bash
+                  cat /etc/puppet/hieradata/neutron_cisco_data.yaml
+
+            SlurpExistingNetCiscoDataDeploy:
+              type: OS::Heat::SoftwareDeployment
+              depends_on: ConfigureML2
+              properties:
+                name: SlurpExistingNetCiscoDataDeploy
+                server:  {get_param: [servers, Controller, '0']}
+                config: {get_resource: SlurpExistingNetCiscoData}
+                actions: ['CREATE']
+
+            UCSMHostListConfig:
+              type: OS::Heat::StructuredConfig
+              properties:
+                group: os-apply-config
+                config:
+                  hiera:
+                    datafiles:
+                      neutron_cisco_data:
+                        raw_data: {get_attr: [SlurpExistingNetCiscoDataDeploy, deploy_stdout]}
+                        mapped_data:
+                          neutron::plugins::ml2::cisco::ucsm::ucsm_host_list: {get_input: UCSM_host_list}
+
+            NetworkCiscoDeployment:
+              type: OS::Heat::StructuredDeployments
+              properties:
+                name: NetworkCiscoDeployment
+                config: {get_resource: UCSMHostListConfig}
+                servers:  {get_param: [servers, Controller]}
+                input_values:
+                  UCSM_host_list: {get_attr: [MappingToUCSMDeploymentsController, deploy_stdout]}
+
+            RemoveLocalDomain:
+              type: OS::Heat::SoftwareConfig
+              properties:
+                group: script
+                inputs:
+                  - name: some_config
+                config: |
+                  #!/bin/bash
+                  echo "$some_config" | sed "s/.localdomain//g"
+
+            MappingToUCSMDeploymentsController:
+              type: OS::Heat::SoftwareDeployment
+              depends_on: ConfigureML2
+              properties:
+                name: MappingToUCSMDeploymentsController
+                server:  {get_param: [servers, Controller, '0']}
+                config: {get_resource: RemoveLocalDomain}
+                input_values:
+                  some_config: {get_attr: [ConfigureML2, resource.MappingToUCSMDeploymentsController, deploy_stdout]}
+                actions: ['CREATE']
+
     - name: Write out networking-cisco specific config environment
       copy:
         dest: /home/stack/environments/networking-cisco-config.yaml
         content: |
           resource_registry:
-            OS::TripleO::AllNodesExtraConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/all_nodes/neutron-ml2-cisco-nexus-ucsm.yaml
+            OS::TripleO::AllNodesExtraConfig: /home/stack/templates/extended_nodes_extra_config.yaml
             OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
+            OS::TripleO::NetCiscoOriginal: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/all_nodes/neutron-ml2-cisco-nexus-ucsm.yaml
 
           parameter_defaults:
             InternalApiNetworkVlanID: {{ testbed_vlan }}
