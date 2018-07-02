@@ -205,6 +205,12 @@
         ip addr add {{ undercloud_fake_gw_cidr }} dev {{ undercloud_fake_gw_interface }}
       become: yes
 
+    - name: Add IP in overcloud routable network
+      shell: >
+        ip addr | grep -q {{ overcloud_director_ip }} ||
+        ip addr add {{ overcloud_director_ip }} dev usernet
+      become: yes
+
     # Cisco specific addition to run NFS server on the director for overcloud
     # shared storage
     #- name: Create directories for NFS shares
