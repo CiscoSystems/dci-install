@@ -1,0 +1,7 @@
+# Extend the default configuration for yamllint to disable line length checks
+# for now
+
+extends: default
+
+rules:
+  line-length: disable

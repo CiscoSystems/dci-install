@@ -39,6 +39,10 @@ def check(template, out, err):
         err.write("%s: Syntax check failed: %s in %s at %d\n" % (
             template, e.message, e.filename, e.lineno))
         return 1
+    except Exception as e:
+        err.write("Got unexplained error {} while parsing "
+                  "template {}".format(e, template))
+        return 3
 
 
 if __name__ == "__main__":

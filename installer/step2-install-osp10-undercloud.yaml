@@ -62,14 +62,14 @@
     - name: Ensure hostname is set
       hostname:
         name: B6-DIRECTOR.bxb.os
-      become: yes
+      become: true
 
     - name: Ensure hostname set in /etc/hosts
       lineinfile:
         path: /etc/hosts
         regexp: '^127\.0\.0\.1'
         line: '127.0.0.1 B6-DIRECTOR.bxb.os localhost localhost.localdomain'
-      become: yes
+      become: true
 
     # 4.4. REGISTERING YOUR SYSTEM
     - name: Register system with RH
@@ -79,13 +79,13 @@
         password: ***REMOVED***
         pool_ids:
           - ***REMOVED***
-      become: yes
+      become: true
 
     - name: Disable all default repos
       rhsm_repository:
         name: '*'
         state: disabled
-      become: yes
+      become: true
 
     - name: Enable required RHEL repos
       rhsm_repository:
@@ -97,20 +97,20 @@
         - rhel-7-server-rh-common-rpms
         - rhel-ha-for-rhel-7-server-rpms
         - rhel-7-server-openstack-10-rpms
-      become: yes
+      become: true
 
     - name: Update all the system packages
       yum:
         name: '*'
         state: latest
-        update_cache: yes
-      become: yes
+        update_cache: true
+      become: true
 
     - name: Reboot director to pick up updates
       shell: "sleep 5 && reboot"
       async: 1
       poll: 0
-      become: yes
+      become: true
 
     - name: Wait for director to finish rebooting
       wait_for_connection:
@@ -124,12 +124,12 @@
       yum:
         name: python-tripleoclient
         state: present
-      become: yes
+      become: true
 
     # 4.6. CONFIGURING THE DIRECTOR
     - name: Copy default undercloud config to stack
       copy:
-        remote_src: yes
+        remote_src: true
         src: /usr/share/instack-undercloud/undercloud.conf.sample
         dest: /home/stack/undercloud.conf
 
@@ -158,11 +158,11 @@
       with_items:
         - rhosp-director-images
         - rhosp-director-images-ipa
-      become: yes
+      become: true
 
     - name: Unpack the overcloud images into stack
       unarchive:
-        remote_src: yes
+        remote_src: true
         src: "{{ item }}"
         dest: /home/stack/images
       with_items:
@@ -174,7 +174,7 @@
         source /home/stack/stackrc
         openstack overcloud image upload --image-path /home/stack/images/
 
-    # 4.8. SETTING A NAMESERVER ON THE UNDERCLOUD’S NEUTRON
+    # 4.8. SETTING A NAMESERVER ON THE UNDERCLOUD'S NEUTRON
     # SUBNET
     - name: Check if default subnet name is set
       shell: |
@@ -203,10 +203,10 @@
       shell: >
         ip addr | grep -q {{ undercloud_fake_gw_cidr }} ||
         ip addr add {{ undercloud_fake_gw_cidr }} dev {{ undercloud_fake_gw_interface }}
-      become: yes
+      become: true
 
     - name: Add IP in overcloud routable network
       shell: >
         ip addr | grep -q {{ overcloud_director_ip }} ||
         ip addr add {{ overcloud_director_ip }} dev usernet
-      become: yes
+      become: true

@@ -24,7 +24,8 @@ def reboot(ci_key, args):
     # enable PXE Boot
     system_handle = server.get_system_handle(director_node, token)
     server.modify_system(system_handle, "netboot_enabled", True, token)
-    server.modify_system(system_handle, "ks_meta", "ci_key={}".format(ci_key), token)
+    server.modify_system(system_handle, "ks_meta", "ci_key={}".format(ci_key),
+                         token)
     server.sync(token)
 
     # reboot
@@ -33,7 +34,8 @@ def reboot(ci_key, args):
     server.sync(token)
 
 
-parser = argparse.ArgumentParser(description='Reboot a cobbler node to deploy it')
+parser = argparse.ArgumentParser(
+    description='Reboot a cobbler node to deploy it')
 parser.add_argument('cobbler_api_url', type=str)
 parser.add_argument('cobbler_username', type=str)
 parser.add_argument('cobbler_password', type=str)
