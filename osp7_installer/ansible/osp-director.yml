@@ -1,3 +1,0 @@
----
-- include: undercloud.yml
-- include: overcloud-deploy.yml

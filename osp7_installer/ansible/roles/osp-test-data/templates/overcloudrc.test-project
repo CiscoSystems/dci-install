@@ -1,4 +1,0 @@
-source overcloudrc
-export OS_USERNAME=test-user
-export OS_TENANT_NAME=test-project
-export OS_PASSWORD=password

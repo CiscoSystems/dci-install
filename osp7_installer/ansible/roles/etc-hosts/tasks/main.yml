@@ -1,6 +1,0 @@
----
-- name: Set Hostname
-  hostname: name={{ director_node_hostname }}
-
-- name: Writing /etc/hosts
-  template: src=hosts dest=/etc/hosts

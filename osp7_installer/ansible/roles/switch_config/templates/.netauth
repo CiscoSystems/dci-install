@@ -1,4 +1,0 @@
-cisco:
-  nexus:
-    username: "{{ sw_username }}"
-    password: "{{ sw_password }}"

@@ -1,1 +1,0 @@
-{{ overcloud_nodes|to_nice_json }}

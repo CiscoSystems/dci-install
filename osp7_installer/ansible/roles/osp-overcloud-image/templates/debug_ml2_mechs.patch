@@ -1,7 +1,0 @@
-326a327,328
->                 LOG.debug("ML2 manager invoke driver=%(driver)s method=%(method)s",
->                           {'driver': driver.name, 'method': method_name})
-335a338,340
->             finally:
->                 LOG.debug("ML2 manager return driver=%(driver)s method=%(method)s",
->                           {'driver': driver.name, 'method': method_name})
