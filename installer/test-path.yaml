@@ -1,5 +1,0 @@
----
-- hosts: director
-  tasks:
-    - debug:
-        msg: "{{ ansible_env.PATH }}"

@@ -3,7 +3,7 @@
   tasks:
     - name: Trigger cobbler to reinstall the server
       shell: >
-        python {{ playbook_dir }}/trigger_cobbler.py {{ cobbler_api_url }}
+        python {{ playbook_dir }}/files/trigger_cobbler.py {{ cobbler_api_url }}
         {{ cobbler_username }} {{ cobbler_password }} {{ cobbler_node_name }}
       register: cobbler_return
       delegate_to: 127.0.0.1
