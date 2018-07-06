@@ -230,20 +230,6 @@
 
             NetConfigDataLookup: {{ overcloud_node_nic_mappings | to_nice_json }}
 
-
-    # - name: Write out environment for configuring storage backends
-    #  copy:
-    #    dest: /home/stack/environments/storage-config.yaml
-    #    content: |
-    #      parameter_defaults:
-    #        CinderEnableIscsiBackend: false
-    #        CinderEnableRbdBackend: false
-    #        CinderEnableNfsBackend: true
-    #        CinderNfsServers: '{{undercloud_local_ip_simple}}:/export/cinder'
-    #
-    #        GlanceBackend: file
-    #  when: false not is false
-
     # 5.6. CREATING THE OVERCLOUD WITH THE CLI TOOLS
     - name: Deploy the overcloud using the CLI
       shell: |
