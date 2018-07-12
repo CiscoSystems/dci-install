@@ -169,13 +169,44 @@
                   some_config: {get_attr: [ConfigureML2, resource.MappingToUCSMDeploymentsController, deploy_stdout]}
                 actions: ['CREATE']
 
+    - name: Create template to install different version of networking-cisco before puppet runs
+      copy:
+        dest: /home/stack/templates/controller_extra_config_prepuppet.yaml
+        content: |
+          heat_template_version: 2015-04-30
+
+          parameters:
+            server:
+              type: string
+
+          resources:
+            InstallOverrideDefaultPackages:
+              type: OS::Heat::SoftwareConfig
+              properties:
+                group: script
+                config: |
+                  {{ custom_pre_puppet_script | default("") | indent(width=8) }}
+
+            InstallOverrideDefaultPackagesController:
+              type: OS::Heat::SoftwareDeployment
+              properties:
+                name: InstallOverrideDefaultPackagesController
+                config: {get_resource: InstallOverrideDefaultPackages}
+                server: {get_param: server}
+                actions: ['CREATE']
+
+          outputs:
+            deploy_stdout:
+              value: {get_attr: [InstallOverrideDefaultPackagesController, deploy_stdout]}
+
     - name: Write out networking-cisco specific config environment
       copy:
         dest: /home/stack/environments/networking-cisco-config.yaml
         content: |
           resource_registry:
-            OS::TripleO::AllNodesExtraConfig: /home/stack/templates/extended_nodes_extra_config.yaml
             OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
+            OS::TripleO::ControllerExtraConfigPre: /home/stack/templates/controller_extra_config_prepuppet.yaml
+            OS::TripleO::AllNodesExtraConfig: /home/stack/templates/extended_nodes_extra_config.yaml
             OS::TripleO::NetCiscoOriginal: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/all_nodes/neutron-ml2-cisco-nexus-ucsm.yaml
 
           parameter_defaults:

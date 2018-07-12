@@ -214,3 +214,9 @@ extra_neutron_config:
     value: False
   ml2_cisco_ucsm/ucsm_virtio_eth_ports:
     value: "user,"
+
+custom_pre_puppet_script: |
+  #!/bin/bash
+  echo "Insert some bash script here to override things before puppet runs of the overcloud"
+  rpm -q openstack-neutron-cisco || true
+  rpm -q puppet-neutron || true
