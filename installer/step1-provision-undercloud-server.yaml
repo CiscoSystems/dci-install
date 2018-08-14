@@ -1,0 +1,30 @@
+---
+- hosts: director
+  tasks:
+    - name: Trigger cobbler to reinstall the server
+      shell: >
+        python {{ playbook_dir }}/files/trigger_cobbler.py {{ cobbler_api_url }}
+        {{ cobbler_username }} {{ cobbler_password }} {{ cobbler_node_name }}
+      register: cobbler_return
+      delegate_to: 127.0.0.1
+
+    - name: Wait for director to be reprovisioned
+      wait_for_connection:
+        connect_timeout: 20
+        sleep: 30
+        delay: 60
+        timeout: 1800
+
+    - name: Slurp ci-key from director
+      slurp:
+        src: /etc/ci-key
+      register: director_ci_key_raw
+
+    - name: Decode ci-key from director
+      set_fact:
+        director_ci_key: "{{ director_ci_key_raw['content'] | b64decode | trim }}"
+
+    - name: Fail if ci-keys don't match
+      fail:
+        msg: "The ci-key on the director does not match the latest provision request"
+      when: director_ci_key != cobbler_return.stdout

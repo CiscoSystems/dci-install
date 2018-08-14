@@ -1,7 +1,0 @@
-diff --git a/networking_cisco/db/migration/alembic_migrations/versions/EXPAND_HEAD b/networking_cisco/db/migration/alembic_migrations/versions/EXPAND_HEAD
-index a332193..748fab3 100644
---- a/networking_cisco/db/migration/alembic_migrations/versions/EXPAND_HEAD
-+++ b/networking_cisco/db/migration/alembic_migrations/versions/EXPAND_HEAD
-@@ -1 +1 @@
--f3765e42de23
-+6454463cea8b

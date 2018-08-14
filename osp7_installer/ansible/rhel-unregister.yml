@@ -1,5 +1,0 @@
----
-- hosts: all
-  connection: ssh
-  roles:
-    - rhel-unregister

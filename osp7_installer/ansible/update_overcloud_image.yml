@@ -1,5 +1,0 @@
----
-- hosts: "{{ director_node_ssh_ip }}"
-  connection: ssh
-  roles:
-    - osp-overcloud-image

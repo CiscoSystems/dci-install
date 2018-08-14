@@ -1,8 +1,0 @@
----
-
-- name: Unregister RHEL
-#  environment: proxy_env
-  shell: subscription-manager unregister
-  when: ansible_distribution == 'RedHat'
-  ignore_errors: yes
-  # TODO: should try to be a little better about this, but don't want a failure here to stop the reinstall.

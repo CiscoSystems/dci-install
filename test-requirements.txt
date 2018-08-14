@@ -1,0 +1,4 @@
+hacking
+bashate
+yamllint
+ansible
