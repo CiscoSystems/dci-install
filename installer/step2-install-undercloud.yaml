@@ -1,0 +1,52 @@
+---
+- hosts: director
+  vars:
+    ansible_user: root
+  tasks:
+    # 4.1 Creating a director installation user
+    - name: Set fact stack password
+      set_fact:
+        stack_password: stack
+
+    - name: Add stack user
+      user:
+        name: stack
+        password: stack
+
+    - name: Enable passwdless sudo for stack
+      copy:
+        content: |
+          stack ALL=(root) NOPASSWD:ALL
+        dest: /etc/sudoers.d/stack
+        mode: 0440
+
+    - name: Add DCI agent to stack authorized_keys
+      authorized_key:
+        user: stack
+        state: present
+        key: "{{ lookup('file',  lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+    # Special Cisco lab related additons
+    - name: Add Cisco proxy to yum config
+      ini_file:
+        dest: /etc/yum.conf
+        section: main
+        option: proxy
+        value: http://proxy-wsa.esl.cisco.com:80
+
+    - name: Ensure subscription-manager will use the proxy
+      ini_file:
+        dest: /etc/rhsm/rhsm.conf
+        section: server
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      with_items:
+        - {option: 'proxy_hostname', value: 'proxy-wsa.esl.cisco.com'}
+        - {option: 'proxy_port', value: '80'}
+
+
+- hosts: director
+  vars:
+    ansible_user: stack
+  tasks:
+  - include_tasks: "step2-install-undercloud/{{ dci_topic | lower }}/tasks.yaml"

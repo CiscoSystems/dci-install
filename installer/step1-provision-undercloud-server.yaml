@@ -1,6 +1,22 @@
 ---
 - hosts: director
   tasks:
+    - ping:
+      register: connect_test
+      ignore_errors: true
+
+    - name: Unregister system from RH if its online still
+      redhat_subscription:
+        state: absent
+        username: ***REMOVED***
+        password: ***REMOVED***
+        pool_ids:
+          - ***REMOVED***
+      become: true
+      when: connect_test is not failed
+
+- hosts: director
+  tasks:
     - name: Trigger cobbler to reinstall the server
       shell: >
         python {{ playbook_dir }}/files/trigger_cobbler.py {{ cobbler_api_url }}
