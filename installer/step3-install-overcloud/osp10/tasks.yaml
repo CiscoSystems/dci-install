@@ -255,7 +255,7 @@
         NovaComputeExtraConfig:
           neutron::plugins::ml2::mechanism_drivers: ['openvswitch']
 
-        NetConfigDataLookup: {{ overcloud_node_nic_mappings | to_nice_json }}
+        NetConfigDataLookup: {{ overcloud_node_nic_mappings_singlenic | to_nice_json }}
 
 # 5.6. CREATING THE OVERCLOUD WITH THE CLI TOOLS
 - name: Deploy the overcloud using the CLI
