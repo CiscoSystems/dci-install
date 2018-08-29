@@ -202,7 +202,7 @@
 
         ControllerExtraConfig:
           neutron::plugins::ml2::mechanism_drivers: {{ network_cntlr_mech_drivers | to_json }}
-          neutron::config::plugin_ml2_config: {{ extra_neutron_config | to_json }}
+          neutron::config::plugin_ml2_config: {{ extra_neutron_config_osp13 | to_json }}
 
         NovaComputeExtraConfig:
           neutron::plugins::ml2::mechanism_drivers: ['openvswitch']

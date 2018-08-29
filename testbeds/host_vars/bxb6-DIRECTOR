@@ -245,6 +245,10 @@ extra_neutron_config:
   ml2_cisco_ucsm/ucsm_virtio_eth_ports:
     value: "user,"
 
+extra_neutron_config_osp13:
+  ml2_cisco_ucsm/ucsm_virtio_eth_ports:
+    value: "user, eth1"
+
 custom_pre_puppet_script: |
   #!/bin/bash
   echo "Insert some bash script here to override things before puppet runs of the overcloud"
