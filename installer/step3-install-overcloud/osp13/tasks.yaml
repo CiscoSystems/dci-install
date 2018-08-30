@@ -186,11 +186,10 @@
         UCSMHostListConfig:
           type: OS::Heat::StructuredConfig
           properties:
-            group: os-apply-config
+            group: hiera
             config:
-              hiera:
-                datafiles:
-                  neutron_cisco_data: {get_attr: [ConvertToJson, converted]}
+              datafiles:
+                neutron_cisco_data: {get_attr: [ConvertToJson, converted]}
 
         NetworkCiscoDeployment:
           type: OS::Heat::StructuredDeployments
