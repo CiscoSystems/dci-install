@@ -1,14 +1,23 @@
 ---
-# 5.4. USING THE RED HAT REGISTRY AS A REMOTE REGISTRY
-# SOURCE
-- name: Import nodes into the undercloud
+# 5.5. USING THE UNDERCLOUD AS A LOCAL REGISTRY
+- name: Create a template to upload the the images to the local registry
   shell: |
     source /home/stack/stackrc
     openstack overcloud container image prepare \
     --namespace=registry.access.redhat.com/rhosp13 \
+    --push-destination=192.168.24.1:8787 \
     --prefix=openstack- \
     --tag-from-label {version}-{release} \
-    --output-env-file=/home/stack/templates/overcloud_images.yaml
+    --output-env-file=/home/stack/templates/overcloud_images.yaml \
+    --output-images-file /home/stack/local_registry_images.yaml
+
+- name: Pull the container images to the undercloud
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud container image upload \
+    --config-file /home/stack/local_registry_images.yaml \
+    --verbose
+  become: true
 
 # 6.1. REGISTERING NODES FOR THE OVERCLOUD
 - name: Write node definition into instackenv.json
