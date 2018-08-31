@@ -161,9 +161,12 @@
               with open("/etc/puppet/hieradata/neutron_cisco_data.json") as oldjson:
                   oldconfig = json.loads(oldjson.read())
 
+              # Remove mapped_data nesting as it breaks hiera since Ocata
+              oldconfig = oldconfig["mapped_data"]
+
               # Convert nexus config string into nexus config json
-              nexus_config = json.loads(oldconfig["mapped_data"]["neutron::plugins::ml2::cisco::nexus::nexus_config"])
-              oldconfig["mapped_data"]["neutron::plugins::ml2::cisco::nexus::nexus_config"] = nexus_config
+              nexus_config = json.loads(oldconfig["neutron::plugins::ml2::cisco::nexus::nexus_config"])
+              oldconfig["neutron::plugins::ml2::cisco::nexus::nexus_config"] = nexus_config
 
               # Write json to outputs directory
               with open('%s.%s' % (heat_outputs_path, output_name), 'w') as out:
