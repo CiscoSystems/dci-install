@@ -140,6 +140,11 @@ overcloud_ceph_storage_scale: 0
 overcloud_block_storage_scale: 0
 overcloud_swift_storage_scale: 0
 
+total_overcloud_node_count: >-
+  {{ overcloud_control_scale + overcloud_compute_scale +
+     overcloud_ceph_storage_scale + overcloud_block_storage_scale +
+     overcloud_swift_storage_scale }}
+
 testbed_vlan: 3000
 storage_vlan: 3001
 storage_mgmt_vlan: 3002
