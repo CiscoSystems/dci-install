@@ -11,14 +11,14 @@
 # 4.3. SETTING THE HOSTNAME FOR THE SYSTEM
 - name: Ensure hostname is set
   hostname:
-    name: B6-DIRECTOR.bxb.os
+    name: "{{ undercloud_hostname }}"
   become: true
 
 - name: Ensure hostname set in /etc/hosts
   lineinfile:
     path: /etc/hosts
     regexp: '^127\.0\.0\.1'
-    line: '127.0.0.1 B6-DIRECTOR.bxb.os localhost localhost.localdomain'
+    line: '127.0.0.1 {{ undercloud_hostname }} localhost localhost.localdomain'
   become: true
 
 # 4.4. REGISTERING YOUR SYSTEM
