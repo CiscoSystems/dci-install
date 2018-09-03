@@ -9,7 +9,8 @@
     --prefix=openstack- \
     --tag-from-label {version}-{release} \
     --output-env-file=/home/stack/templates/overcloud_images.yaml \
-    --output-images-file /home/stack/local_registry_images.yaml
+    --output-images-file /home/stack/local_registry_images.yaml \
+    --exclude neutron-server
 
 - name: Pull the container images to the undercloud
   shell: |
@@ -18,6 +19,55 @@
     --config-file /home/stack/local_registry_images.yaml \
     --verbose
   become: true
+
+# Custom for getting networking-cisco into the neutron-server container
+
+- name: Create the template for the neutron server images
+  copy:
+    dest: /usr/share/tripleo-common/container-images/overcloud_containers.yaml.j2
+    backup: true
+    content: |
+      {% raw %}
+      container_images_template:
+
+      - imagename: "{{namespace}}/openstack-neutron-server-networking-cisco-plugin:{{tag}}"
+        params:
+        - DockerNeutronApiImage
+        - DockerNeutronConfigImage
+        services:
+        - OS::TripleO::Services::NeutronApi
+        - OS::TripleO::Services::NeutronDhcpAgent
+        - OS::TripleO::Services::NeutronMetadataAgent
+        - OS::TripleO::Services::NeutronServer
+      {% endraw %}
+  register: overcloud_containers
+  become: true
+
+- block:
+    - name: Create a template to upload the neutron images to the local registry
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud container image prepare \
+        --namespace=registry.hub.docker.com/bradleyjones \
+        --push-destination=192.168.24.1:8787 \
+        --tag latest \
+        --output-env-file=/home/stack/templates/overcloud_images_neutron.yaml \
+        --output-images-file /home/stack/local_registry_images_neutron.yaml
+
+    - name: Pull the neutron container images to the undercloud
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud container image upload \
+        --config-file /home/stack/local_registry_images_neutron.yaml \
+        --verbose
+      become: true
+  always:
+    - name: Restore the orignal overcloud_containers template
+      copy:
+        dest: /usr/share/tripleo-common/container-images/overcloud_containers.yaml.j2
+        src: "{{ overcloud_containers.backup_file }}"
+        remote_src: true
+      become: true
 
 # 6.1. REGISTERING NODES FOR THE OVERCLOUD
 - name: Write node definition into instackenv.json
@@ -311,6 +361,7 @@
     openstack overcloud deploy --templates \
         -e /home/stack/environments/node-info.yaml \
         -e /home/stack/templates/overcloud_images.yaml \
+        -e /home/stack/templates/overcloud_images_neutron.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/net-bond-with-vlans.yaml \
         -e /home/stack/environments/networking-cisco-config.yaml \
