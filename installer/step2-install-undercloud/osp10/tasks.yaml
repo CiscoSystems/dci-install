@@ -25,10 +25,10 @@
 - name: Register system with RH
   redhat_subscription:
     state: present
-    username: ***REMOVED***
-    password: ***REMOVED***
+    username: "{{ rh_sub_username }}"
+    password: "{{ rh_sub_password }}"
     pool_ids:
-      - ***REMOVED***
+      - "{{ rh_sub_pool_id }}"
   become: true
 
 - name: Disable all default repos

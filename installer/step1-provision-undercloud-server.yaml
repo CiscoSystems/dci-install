@@ -8,10 +8,10 @@
     - name: Unregister system from RH if its online still
       redhat_subscription:
         state: absent
-        username: ***REMOVED***
-        password: ***REMOVED***
+        username: "{{ rh_sub_username }}"
+        password: "{{ rh_sub_password }}"
         pool_ids:
-          - ***REMOVED***
+          - "{{ rh_sub_pool_id }}"
       become: true
       when: connect_test is not failed
 
