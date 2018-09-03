@@ -1,0 +1,162 @@
+---
+# 4.2 Creating directories for templates and images
+- name: Create required directories for the environment
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "/home/stack/images"
+    - "/home/stack/templates"
+
+# 4.3. SETTING THE HOSTNAME FOR THE SYSTEM
+- name: Ensure hostname is set
+  hostname:
+    name: "{{ undercloud_hostname }}"
+  become: true
+
+- name: Ensure hostname set in /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.0\.1'
+    line: '127.0.0.1 {{ undercloud_hostname }} localhost localhost.localdomain'
+  become: true
+
+# 4.4. REGISTERING YOUR SYSTEM
+- name: Register system with RH
+  redhat_subscription:
+    state: present
+    username: "{{ rh_sub_username }}"
+    password: "{{ rh_sub_password }}"
+    pool_ids:
+      - "{{ rh_sub_pool_id }}"
+  become: true
+
+- name: Disable all default repos
+  rhsm_repository:
+    name: '*'
+    state: disabled
+  become: true
+
+- name: Enable required RHEL repos
+  rhsm_repository:
+    name: "{{ item }}"
+    state: enabled
+  with_items:
+    - rhel-7-server-rpms
+    - rhel-7-server-extras-rpms
+    - rhel-7-server-rh-common-rpms
+    - rhel-ha-for-rhel-7-server-rpms
+    - rhel-7-server-openstack-10-rpms
+  become: true
+
+- name: Update all the system packages
+  yum:
+    name: '*'
+    state: latest
+    update_cache: true
+  become: true
+
+- name: Reboot director to pick up updates
+  shell: "sleep 5 && reboot"
+  async: 1
+  poll: 0
+  become: true
+
+- name: Wait for director to finish rebooting
+  wait_for_connection:
+    connect_timeout: 20
+    sleep: 5
+    delay: 20
+    timeout: 600
+
+# 4.5. INSTALLING THE DIRECTOR PACKAGES
+- name: Install director command line tools
+  yum:
+    name: python-tripleoclient
+    state: present
+  become: true
+
+# 4.6. CONFIGURING THE DIRECTOR
+- name: Copy default undercloud config to stack
+  copy:
+    remote_src: true
+    src: /usr/share/instack-undercloud/undercloud.conf.sample
+    dest: /home/stack/undercloud.conf
+
+- name: Set local_interface in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: local_interface
+    value: pxe-int
+
+- name: Set undercloud admin password
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: auth
+    option: undercloud_admin_password
+    value: password
+
+- name: Run the undercloud installation
+  shell: openstack undercloud install
+
+# 4.7. OBTAINING IMAGES FOR OVERCLOUD NODES
+- name: Install packages containing overcloud images
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - rhosp-director-images
+    - rhosp-director-images-ipa
+  become: true
+
+- name: Unpack the overcloud images into stack
+  unarchive:
+    remote_src: true
+    src: "{{ item }}"
+    dest: /home/stack/images
+  with_items:
+    - /usr/share/rhosp-director-images/overcloud-full-latest-10.0.tar
+    - /usr/share/rhosp-director-images/ironic-python-agent-latest-10.0.tar
+
+- name: Upload overcloud images to the undercloud
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud image upload --image-path /home/stack/images/
+
+# 4.8. SETTING A NAMESERVER ON THE UNDERCLOUD'S NEUTRON
+# SUBNET
+- name: Check if default subnet name is set
+  shell: |
+    source /home/stack/stackrc
+    openstack subnet list --format value --column Name | grep -q default-subnet
+  ignore_errors: true
+  register: default_subnet_has_name
+
+- name: Update default subnet name
+  shell: |
+    source /home/stack/stackrc
+    UUID=`openstack subnet list --format value --column ID | sed -n 1p`
+    openstack subnet set --name default-subnet $UUID
+  when: default_subnet_has_name is failed
+
+- name: Set DNS Server
+  shell: |
+    source /home/stack/stackrc
+    openstack subnet set --dns-nameserver {{ dns_server_1 }} default-subnet
+  when: default_subnet_has_name is failed
+
+# Non-standard Cisco additions to the installer process from here on:
+
+# Cisco specific addition for fake floating ip address gateway
+- name: Add fake floating ip network gateway
+  shell: >
+    ip addr | grep -q {{ undercloud_fake_gw_cidr }} ||
+    ip addr add {{ undercloud_fake_gw_cidr }} dev {{ undercloud_fake_gw_interface }}
+  become: true
+
+- name: Add IP in overcloud routable network
+  shell: >
+    ip addr | grep -q {{ overcloud_director_ip }} ||
+    ip addr add {{ overcloud_director_ip }} dev usernet
+  become: true

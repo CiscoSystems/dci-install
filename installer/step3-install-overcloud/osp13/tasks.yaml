@@ -1,0 +1,368 @@
+---
+# 5.5. USING THE UNDERCLOUD AS A LOCAL REGISTRY
+- name: Create a template to upload the the images to the local registry
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud container image prepare \
+    --namespace=registry.access.redhat.com/rhosp13 \
+    --push-destination=192.168.24.1:8787 \
+    --prefix=openstack- \
+    --tag-from-label {version}-{release} \
+    --output-env-file=/home/stack/templates/overcloud_images.yaml \
+    --output-images-file /home/stack/local_registry_images.yaml \
+    --exclude neutron-server
+
+- name: Pull the container images to the undercloud
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud container image upload \
+    --config-file /home/stack/local_registry_images.yaml \
+    --verbose
+  become: true
+
+# Custom for getting networking-cisco into the neutron-server container
+
+- name: Create the template for the neutron server images
+  copy:
+    dest: /usr/share/tripleo-common/container-images/overcloud_containers.yaml.j2
+    backup: true
+    content: |
+      {% raw %}
+      container_images_template:
+
+      - imagename: "{{namespace}}/openstack-neutron-server-networking-cisco-plugin:{{tag}}"
+        params:
+        - DockerNeutronApiImage
+        - DockerNeutronConfigImage
+        services:
+        - OS::TripleO::Services::NeutronApi
+        - OS::TripleO::Services::NeutronDhcpAgent
+        - OS::TripleO::Services::NeutronMetadataAgent
+        - OS::TripleO::Services::NeutronServer
+      {% endraw %}
+  register: overcloud_containers
+  become: true
+
+- block:
+    - name: Create a template to upload the neutron images to the local registry
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud container image prepare \
+        --namespace=registry.hub.docker.com/bradleyjones \
+        --push-destination=192.168.24.1:8787 \
+        --tag latest \
+        --output-env-file=/home/stack/templates/overcloud_images_neutron.yaml \
+        --output-images-file /home/stack/local_registry_images_neutron.yaml
+
+    - name: Pull the neutron container images to the undercloud
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud container image upload \
+        --config-file /home/stack/local_registry_images_neutron.yaml \
+        --verbose
+      become: true
+  always:
+    - name: Restore the orignal overcloud_containers template
+      copy:
+        dest: /usr/share/tripleo-common/container-images/overcloud_containers.yaml.j2
+        src: "{{ overcloud_containers.backup_file }}"
+        remote_src: true
+      become: true
+
+# 6.1. REGISTERING NODES FOR THE OVERCLOUD
+- name: Write node definition into instackenv.json
+  copy:
+    content: |
+      {{ overcloud_nodes | to_nice_json }}
+    dest: /home/stack/instackenv.json
+
+- name: Import nodes into the undercloud
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud node import /home/stack/instackenv.json
+
+- name: Fetch list of nodes with states
+  shell: |
+    source /home/stack/stackrc
+    openstack baremetal node list -c UUID -c "Provisioning State" -f json
+  register: list_of_nodes_raw
+
+- name: Save list of nodes as fact
+  set_fact:
+    list_of_nodes: "{{ list_of_nodes_raw.stdout }}"
+
+# 6.2. INSPECTING THE HARDWARE OF NODES
+- block:
+    - name: Move all nodes to managable
+      shell: |
+        source /home/stack/stackrc
+        if [ "{{ item['Provisioning State'] }}" != "managable" ] ; then
+            openstack baremetal node manage {{ item['UUID'] }}
+        fi
+      with_items: "{{ list_of_nodes }}"
+
+    - name: Inspect all nodes and return to active
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud node introspect --all-manageable --provide
+
+    - name: Wait for all nodes to finish inspecting
+      debug:
+        msg: "TODO wait for all nodes to finish"
+  when: enable_node_discovery | default(false)
+
+# if not inspecting we must move all nodes to available
+- name: Move all nodes to available
+  shell: |
+    source /home/stack/stackrc
+    if [ "{{ item['Provisioning State'] }}" != "available" ] ; then
+        openstack baremetal node provide {{ item['UUID'] }}
+    fi
+  with_items: "{{ list_of_nodes }}"
+  when: not (enable_node_discovery | default(false))
+
+- name: Wait for available nodes to pop up in nova
+  shell: |
+    source /home/stack/stackrc
+    openstack hypervisor stats show --format value -c count
+  register: hypervisor_count
+  until: hypervisor_count.stdout == '6'
+  retries: 12
+  delay: 10
+
+# 6.4. TAGGING NODES INTO PROFILES
+- name: Tag profile on nodes via capabilities
+  debug:
+    msg: >
+      Importing nodes now includes name and capabilites so we can skip this
+      as long as its in the overcloud_nodes dict
+
+# 6.5. DEFINING THE ROOT DISK FOR NODES
+- name: Set root device hints on nodes
+  debug:
+    msg: >
+      Our nodes currently don't need this
+
+# 6.6. CUSTOMIZING THE OVERCLOUD WITH ENVIRONMENT FILES
+- name: Create directory to include all the environment files
+  file:
+    path: /home/stack/environments
+    state: directory
+
+- name: Write out overcloud misc overcloud config changes
+  copy:
+    dest: /home/stack/environments/node-info.yaml
+    content: |
+      parameter_defaults:
+        ControllerCount: {{ overcloud_control_scale }}
+        ComputeCount: {{ overcloud_compute_scale }}
+        CephStorageCount: {{ overcloud_ceph_storage_scale }}
+        BlockStorageCount: {{ overcloud_block_storage_scale }}
+        ObjectStorageCount: {{ overcloud_swift_storage_scale }}
+
+- name: Write out json converter template
+  copy:
+    dest: /home/stack/templates/json_converter.yaml
+    content: |
+      heat_template_version: 2015-04-30
+
+      parameters:
+        data:
+          type: json
+
+      resources:
+        DummyResource:
+          type: OS::Heat::SoftwareConfig
+          properties:
+            group: script
+            config: |
+              #!/bin/bash
+              echo "Dummy"
+
+      outputs:
+        converted:
+          description: Json data
+          value: { get_param: data }
+
+- name: Create extended AllNodesExtraConfig to remove domain names
+  copy:
+    dest: /home/stack/templates/extended_nodes_extra_config.yaml
+    content: |
+      heat_template_version: 2015-04-30
+
+      parameters:
+        servers:
+          type: json
+
+      resources:
+        ConfigureML2:
+          type: OS::TripleO::NetCiscoOriginal
+          properties:
+            servers: {get_param: servers}
+
+        SlurpExistingNetCiscoData:
+          type: OS::Heat::SoftwareConfig
+          properties:
+            group: script
+            outputs:
+              - type: Json
+                name: net_cisco_data
+                description: "The corrected net_cisco heira data"
+            config: |
+              #!/bin/python
+              import json
+              import os
+
+              heat_outputs_path = os.environ.get("heat_outputs_path")
+              output_name = "net_cisco_data"
+
+              # Load old hieradata from the config file written by the original net cisco template
+              with open("/etc/puppet/hieradata/neutron_cisco_data.json") as oldjson:
+                  oldconfig = json.loads(oldjson.read())
+
+              # Remove mapped_data nesting as it breaks hiera since Ocata
+              oldconfig = oldconfig["mapped_data"]
+
+              # Convert nexus config string into nexus config json
+              nexus_config = json.loads(oldconfig["neutron::plugins::ml2::cisco::nexus::nexus_config"])
+              oldconfig["neutron::plugins::ml2::cisco::nexus::nexus_config"] = nexus_config
+
+              # Write json to outputs directory
+              with open('%s.%s' % (heat_outputs_path, output_name), 'w') as out:
+                  out.write(json.dumps(oldconfig))
+
+        SlurpExistingNetCiscoDataDeploy:
+          type: OS::Heat::SoftwareDeployment
+          depends_on: ConfigureML2
+          properties:
+            name: SlurpExistingNetCiscoDataDeploy
+            server:  {get_param: [servers, Controller, '0']}
+            config: {get_resource: SlurpExistingNetCiscoData}
+            actions: ['CREATE']
+
+        ConvertToJson:
+          type: OS::TripleO::JsonConverter
+          properties:
+            data: {get_attr: [SlurpExistingNetCiscoDataDeploy, net_cisco_data]}
+
+        UCSMHostListConfig:
+          type: OS::Heat::StructuredConfig
+          properties:
+            group: hiera
+            config:
+              datafiles:
+                neutron_cisco_data: {get_attr: [ConvertToJson, converted]}
+
+        NetworkCiscoDeployment:
+          type: OS::Heat::StructuredDeployments
+          properties:
+            name: NetworkCiscoDeployment
+            config: {get_resource: UCSMHostListConfig}
+            servers:  {get_param: [servers, Controller]}
+            actions: ['CREATE']
+
+- name: Create template to install different version of networking-cisco before puppet runs
+  copy:
+    dest: /home/stack/templates/controller_extra_config_prepuppet.yaml
+    content: |
+      heat_template_version: 2015-04-30
+
+      parameters:
+        server:
+          type: string
+
+      resources:
+        InstallOverrideDefaultPackages:
+          type: OS::Heat::SoftwareConfig
+          properties:
+            group: script
+            config: |
+              {{ custom_pre_puppet_script | default("") | indent(width=8) }}
+
+        InstallOverrideDefaultPackagesController:
+          type: OS::Heat::SoftwareDeployment
+          properties:
+            name: InstallOverrideDefaultPackagesController
+            config: {get_resource: InstallOverrideDefaultPackages}
+            server: {get_param: server}
+            actions: ['CREATE']
+
+      outputs:
+        deploy_stdout:
+          value: {get_attr: [InstallOverrideDefaultPackagesController, deploy_stdout]}
+
+- name: Write out networking-cisco specific config environment
+  copy:
+    dest: /home/stack/environments/networking-cisco-config.yaml
+    content: |
+      resource_registry:
+        OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
+        OS::TripleO::ControllerExtraConfigPre: /home/stack/templates/controller_extra_config_prepuppet.yaml
+        OS::TripleO::AllNodesExtraConfig: /home/stack/templates/extended_nodes_extra_config.yaml
+        OS::TripleO::NetCiscoOriginal: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/all_nodes/neutron-ml2-cisco-nexus-ucsm.yaml
+        OS::TripleO::JsonConverter: /home/stack/templates/json_converter.yaml
+
+      parameter_defaults:
+        InternalApiNetworkVlanID: {{ testbed_vlan }}
+        StorageNetworkVlanID: {{ storage_vlan }}
+        StorageMgmtNetworkVlanID: {{ storage_mgmt_vlan }}
+        TenantNetworkVlanID: {{ tenant_network_vlan }}
+        EC2MetadataIp: {{ undercloud_local_ip_simple }}
+        ControlPlaneDefaultRoute: {{ undercloud_network_gateway }}
+
+        ExternalNetCidr: {{ overcloud_external_ip_cidr }}
+        ExternalAllocationPools: [{'start': '{{ overcloud_external_ip_start }}', 'end': '{{ overcloud_external_ip_end }}'}]
+        ExternalNetworkVlanID: {{ overcloud_external_vlan }}
+        ExternalInterfaceDefaultRoute: {{ overcloud_external_gateway }}
+
+        DnsServers: ["{{ dns_server_1 }}"]
+
+        NeutronTypeDrivers: '{{ type_driver }}'
+        NeutronNetworkType: '{{ network_type }}'
+        NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
+        NeutronTunnelTypes: ''
+
+        NetworkUCSMIp: '{{ network_ucsm_ip }}'
+        NetworkUCSMUsername: '{{ network_ucsm_username }}'
+        NetworkUCSMPassword: '{{ network_ucsm_password }}'
+        NetworkUCSMHostList: '{{ network_ucsm_host_list }}'
+        NetworkUCSMHttpsVerify: '{{ network_ucsm_https_verify }}'
+        NetworkNexusConfig: {{ network_nexus_config|to_nice_json }}
+
+        NetworkNexusManagedPhysicalNetwork: {{ network_nexus_managed_physical_network }}
+        NetworkNexusVlanNamePrefix: '{{ network_nexus_vlan_name_prefix }}'
+        NetworkNexusSviRoundRobin: '{{ network_nexus_svi_round_robin|to_json }}'
+        NetworkNexusProviderVlanNamePrefix: '{{ network_nexus_provider_vlan_name_prefix }}'
+        NetworkNexusPersistentSwitchConfig: '{{ network_nexus_persistent_switch_config|to_json }}'
+        NetworkNexusSwitchHeartbeatTime: {{ network_nexus_switch_heartbeat_time }}
+        NetworkNexusSwitchReplayCount: {{ network_nexus_switch_replay_count }}
+        NetworkNexusProviderVlanAutoCreate: '{{ network_nexus_provider_vlan_auto_create|to_json }}'
+        NetworkNexusProviderVlanAutoTrunk: '{{ network_nexus_provider_vlan_auto_trunk|to_json }}'
+        NetworkNexusVxlanGlobalConfig: '{{ network_nexus_vxlan_global_config|to_json }}'
+        NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'
+        NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
+
+        NetworkNexusVxlanVniRanges: '{{ vni_ranges }}'
+        NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'
+
+        ControllerExtraConfig:
+          neutron::plugins::ml2::mechanism_drivers: {{ network_cntlr_mech_drivers | to_json }}
+          neutron::config::plugin_ml2_config: {{ extra_neutron_config_osp13 | to_json }}
+
+        NovaComputeExtraConfig:
+          neutron::plugins::ml2::mechanism_drivers: ['openvswitch']
+
+        NetConfigDataLookup: {{ overcloud_node_nic_mappings_bond | to_nice_json }}
+
+# 6.7. CREATING THE OVERCLOUD WITH THE CLI TOOLS
+- name: Deploy the overcloud using the CLI
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud deploy --templates \
+        -e /home/stack/environments/node-info.yaml \
+        -e /home/stack/templates/overcloud_images.yaml \
+        -e /home/stack/templates/overcloud_images_neutron.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/net-bond-with-vlans.yaml \
+        -e /home/stack/environments/networking-cisco-config.yaml \
+        --ntp-server 1.ntp.esl.cisco.com

@@ -1,0 +1,6 @@
+---
+- hosts: director
+  vars:
+    ansible_user: stack
+  tasks:
+  - include_tasks: "step3-install-overcloud/{{ dci_topic | lower }}/tasks.yaml"
