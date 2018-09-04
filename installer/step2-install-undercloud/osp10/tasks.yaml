@@ -233,3 +233,5 @@
     ip addr | grep -q {{ overcloud_director_ip }} ||
     ip addr add {{ overcloud_director_ip }} dev usernet
   become: true
+
+# TODO(sambetts) Persist the network changes from above so they survive reboot
