@@ -90,6 +90,48 @@
     option: local_interface
     value: pxe-int
 
+- name: Set local_ip in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: local_ip
+    value: "{{ undercloud_local_ip }}"
+
+- name: Set local gateway in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: network_gateway
+    value: "{{ undercloud_network_gateway }}"
+
+- name: Set local subnet in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: network_cidr
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') }}"
+
+- name: Set masquerade_network in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: masquerade_network
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') }}"
+
+- name: Set local network DHCP start in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: dhcp_start
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('5') }}"
+
+- name: Set local network DHCP end in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: dhcp_end
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') }}"
+
 - name: Set undercloud admin password
   ini_file:
     path: /home/stack/undercloud.conf
