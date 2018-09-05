@@ -307,7 +307,7 @@
         StorageNetworkVlanID: {{ storage_vlan }}
         StorageMgmtNetworkVlanID: {{ storage_mgmt_vlan }}
         TenantNetworkVlanID: {{ tenant_network_vlan }}
-        EC2MetadataIp: {{ undercloud_local_ip_simple }}
+        EC2MetadataIp: {{ undercloud_local_ip | ipaddr('address') }}
         ControlPlaneDefaultRoute: {{ undercloud_network_gateway }}
 
         ExternalNetCidr: {{ overcloud_external_ip_cidr }}
