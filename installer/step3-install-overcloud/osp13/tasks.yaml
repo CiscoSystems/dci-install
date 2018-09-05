@@ -126,7 +126,7 @@
     source /home/stack/stackrc
     openstack hypervisor stats show --format value -c count
   register: hypervisor_count
-  until: hypervisor_count.stdout == '6'
+  until: hypervisor_count.stdout == total_overcloud_node_count
   retries: 12
   delay: 10
 
