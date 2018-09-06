@@ -130,7 +130,16 @@
     path: /home/stack/undercloud.conf
     section: DEFAULT
     option: dhcp_end
-    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') | ipaddr('address') }}"
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('99') | ipaddr('address') }}"
+
+
+- name: Set inspection ip range in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: inspection_iprange
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('100') | ipaddr('address') }},\
+      {{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') | ipaddr('address') }}"
 
 - name: Set undercloud admin password
   ini_file:
