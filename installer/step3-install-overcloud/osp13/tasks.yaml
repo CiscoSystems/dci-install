@@ -5,7 +5,7 @@
     source /home/stack/stackrc
     openstack overcloud container image prepare \
     --namespace=registry.access.redhat.com/rhosp13 \
-    --push-destination=192.168.24.1:8787 \
+    --push-destination={{ undercloud_local_ip | ipaddr('address') }}:8787 \
     --prefix=openstack- \
     --tag-from-label {version}-{release} \
     --output-env-file=/home/stack/templates/overcloud_images.yaml \
@@ -49,7 +49,7 @@
         source /home/stack/stackrc
         openstack overcloud container image prepare \
         --namespace=registry.hub.docker.com/bradleyjones \
-        --push-destination=192.168.24.1:8787 \
+        --push-destination={{ undercloud_local_ip | ipaddr('address') }}:8787 \
         --tag latest \
         --output-env-file=/home/stack/templates/overcloud_images_neutron.yaml \
         --output-images-file /home/stack/local_registry_images_neutron.yaml
