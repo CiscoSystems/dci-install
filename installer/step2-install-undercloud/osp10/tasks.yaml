@@ -123,14 +123,14 @@
     path: /home/stack/undercloud.conf
     section: DEFAULT
     option: dhcp_start
-    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('5') }}"
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('5') | ipaddr('address') }}"
 
 - name: Set local network DHCP end in undercloud.conf
   ini_file:
     path: /home/stack/undercloud.conf
     section: DEFAULT
     option: dhcp_end
-    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') }}"
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') | ipaddr('address') }}"
 
 - name: Set undercloud admin password
   ini_file:
