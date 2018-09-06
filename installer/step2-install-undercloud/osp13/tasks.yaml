@@ -55,12 +55,14 @@
     state: latest
     update_cache: true
   become: true
+  register: package_updates
 
 - name: Reboot director to pick up updates
   shell: "sleep 5 && reboot"
   async: 1
   poll: 0
   become: true
+  when: package_updates.changed
 
 - name: Wait for director to finish rebooting
   wait_for_connection:
@@ -68,6 +70,7 @@
     sleep: 5
     delay: 20
     timeout: 600
+  when: package_updates.changed
 
 # 4.4. INSTALLING THE DIRECTOR PACKAGES
 - name: Install director command line tools
@@ -130,7 +133,15 @@
     path: /home/stack/undercloud.conf
     section: ctlplane-subnet
     option: dhcp_end
-    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') | ipaddr('address') }}"
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('99') | ipaddr('address') }}"
+
+- name: Set inspection ip range in undercloud.conf
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: inspection_iprange
+    value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('100') | ipaddr('address') }},\
+      {{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') | ipaddr('address') }}"
 
 - name: Set undercloud admin password
   ini_file:
