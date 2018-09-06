@@ -55,12 +55,14 @@
     state: latest
     update_cache: true
   become: true
+  register: package_updates
 
 - name: Reboot director to pick up updates
   shell: "sleep 5 && reboot"
   async: 1
   poll: 0
   become: true
+  when: package_updates.changed
 
 - name: Wait for director to finish rebooting
   wait_for_connection:
@@ -68,6 +70,7 @@
     sleep: 5
     delay: 20
     timeout: 600
+  when: package_updates.changed
 
 # 4.5. INSTALLING THE DIRECTOR PACKAGES
 - name: Install director command line tools
