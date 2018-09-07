@@ -3,4 +3,21 @@
   vars:
     ansible_user: stack
   tasks:
+    - name: Check if stack already deployed
+      shell: |
+        source /home/stack/stackrc
+        openstack stack show overcloud -c "stack_name" -f json
+      ignore_errors: true
+      register: default_subnet_has_name
+
+    - name: Delete stack that already exists
+      shell: |
+        source /home/stack/stackrc
+        openstack stack delete --wait -y overcloud
+      when: default_subnet_has_name is not failed
+
+- hosts: director
+  vars:
+    ansible_user: stack
+  tasks:
   - include_tasks: "step3-install-overcloud/{{ dci_topic | lower }}/tasks.yaml"
