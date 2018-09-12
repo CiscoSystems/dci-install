@@ -90,21 +90,6 @@ overcloud_nodes:
       pm_user: "cobbler"
 
 
-overcloud_node_nic_mappings_singlenic:
-  control-1:
-    nic1: 06:00:C0:02:00:AA
-  control-2:
-    nic1: 06:00:C0:03:00:AA
-  control-3:
-    nic1: 06:00:C0:04:00:AA
-  compute-1:
-    nic1: 06:00:C0:05:00:AA
-  compute-2:
-    nic1: 06:00:C0:06:00:AA
-  compute-3:
-    nic1: 06:00:C0:07:00:AA
-
-
 # nic1 == PXE Nic
 # nic2 == Bond link 1 (master)
 # nic3 == Bond link 2

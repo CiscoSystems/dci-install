@@ -1,0 +1,153 @@
+---
+cobbler_node_name: bxb12-DIRECTOR
+cobbler_username: cobbler
+cobbler_password: "{{ vault_cobbler_password }}"
+cobbler_api_url: http://10.86.7.58/cobbler_api
+
+undercloud_hostname: "{{ cobbler_node_name }}.bxb.os"
+
+dns_server_1: 171.70.168.183
+
+undercloud_fake_gw_interface: eth1
+undercloud_fake_gw_cidr: 20.0.0.1/24
+
+undercloud_local_ip: 192.0.2.1/24
+undercloud_network_gateway: 192.0.2.1
+
+
+overcloud_nodes:
+  nodes:
+    - arch: x86_64
+      capabilities: "profile:control,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["54:78:1A:86:F1:9E"]
+      memory: "8256"
+      name: "control-1"
+      pm_addr: "10.86.1.177"
+      pm_password: "{{ vault_ipmi_password }}"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+    - arch: "x86_64"
+      capabilities: "profile:compute,boot_option:local"
+      cpu: "2"
+      disk: "1112"
+      mac: ["54:78:1A:87:1D:BB"]
+      memory: "8256"
+      name: "compute-1"
+      pm_addr: "10.86.1.178"
+      pm_password: "{{ vault_ipmi_password }}"
+      pm_type: "pxe_ipmitool"
+      pm_user: "cobbler"
+
+
+# nic1 == PXE Nic
+# nic2 == Bond link 1 (master)
+# nic3 == Bond link 2
+overcloud_node_nic_mappings_bond:
+  control-1:
+    nic1: 54:78:1A:86:F1:9E
+    nic2: 54:78:1A:86:F1:9F
+    nic3: 54:78:1A:86:F1:9B
+  compute-1:
+    nic1: 54:78:1A:87:1D:BB
+    nic2: 54:78:1A:87:1D:BC
+    nic3: 54:78:1A:87:1D:B8
+
+
+overcloud_control_scale: 1
+overcloud_compute_scale: 1
+overcloud_ceph_storage_scale: 0
+overcloud_block_storage_scale: 0
+overcloud_swift_storage_scale: 0
+
+total_overcloud_node_count: >-
+  {{ overcloud_control_scale + overcloud_compute_scale +
+     overcloud_ceph_storage_scale + overcloud_block_storage_scale +
+     overcloud_swift_storage_scale }}
+
+testbed_vlan: 3000
+storage_vlan: 3001
+storage_mgmt_vlan: 3002
+tenant_network_vlan: 3003
+
+overcloud_external_vlan: 1201
+overcloud_external_ip_cidr: 172.17.16.0/20
+overcloud_external_ip_start: 172.17.16.5
+overcloud_external_gateway: 172.17.16.1
+overcloud_external_ip_end: 172.17.16.253
+overcloud_director_ip: 172.17.16.85/20
+overcloud_mask: 255.255.240.0
+
+overcloud_floating_ip_cidr: 20.0.0.0/24
+overcloud_floating_ip_start: 20.0.0.10
+overcloud_floating_ip_end: 20.0.0.200
+overcloud_floating_ip_network_gateway: 20.0.0.1
+
+type_driver: vxlan,vlan,flat,gre
+network_type: vlan
+neutron_flat_networks: datacentre
+neutron_external_bridge: br-ex
+
+# NOTE: There is no UCSM in this set-up
+network_ucsm_ip: ""
+network_ucsm_username: ""
+network_ucsm_password: ""
+network_ucsm_host_list: ""
+network_ucsm_https_verify: False
+
+network_nexus_config:
+  B9-TOR-9K-1:
+    ip_address: "10.86.1.128"
+    username: "admin"
+    password: "{{ vault_nexus_password }}"
+    nve_src_intf: 2
+    ssh_port: 22
+    physnet: "datacentre"
+    servers:
+      54:78:1A:86:F1:9E:
+        ports: "eth 1/15"
+      54:78:1A:87:1D:BB:
+        ports: "eth 1/17"
+
+network_nexus_managed_physical_network: datacentre
+network_nexus_vlan_name_prefix: q-
+network_nexus_svi_round_robin: false
+network_nexus_provider_vlan_name_prefix: p-
+network_nexus_persistent_switch_config: false
+network_nexus_switch_heartbeat_time: 30
+network_nexus_switch_replay_count: 10000
+network_nexus_provider_vlan_auto_create: false
+network_nexus_provider_vlan_auto_trunk: false
+network_nexus_vxlan_global_config: false
+network_nexus_host_key_checks: false
+network_nexus_vlan_range: datacentre:2900:2999
+
+vni_ranges: 0:0
+mcast_ranges: 0.0.0.0:0.0.0.0
+
+network_cntlr_mech_drivers:
+  - openvswitch
+  - cisco_nexus
+
+extra_neutron_config:
+  ml2_cisco_ucsm/ucsm_https_verify:
+    value: False
+  ml2_cisco_ucsm/ucsm_virtio_eth_ports:
+    value: "user,"
+
+extra_neutron_config_osp13:
+#  ml2_cisco_ucsm/ucsm_virtio_eth_ports:
+#    value: "user, eth1"
+
+custom_pre_puppet_script: |
+  #!/bin/bash
+  echo "Insert some bash script here to override things before puppet runs of the overcloud"
+  rpm -q openstack-neutron-cisco || true
+  rpm -q puppet-neutron || true
+
+rh_sub_username: "{{ vault_rh_sub_username }}"
+rh_sub_password: "{{ vault_rh_sub_password }}"
+rh_sub_pool_id: "{{ vault_rh_sub_pool_id }}"
+
