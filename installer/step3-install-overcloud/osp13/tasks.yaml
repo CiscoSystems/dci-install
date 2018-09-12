@@ -170,14 +170,7 @@
         data:
           type: json
 
-      resources:
-        DummyResource:
-          type: OS::Heat::SoftwareConfig
-          properties:
-            group: script
-            config: |
-              #!/bin/bash
-              echo "Dummy"
+      resources: {}
 
       outputs:
         converted:
@@ -241,11 +234,11 @@
             actions: ['CREATE']
 
         ConvertToJson:
-          type: OS::TripleO::JsonConverter
+          type: OS::TripleO::StringToMap
           properties:
             data: {get_attr: [SlurpExistingNetCiscoDataDeploy, net_cisco_data]}
 
-        UCSMHostListConfig:
+        NetworkingCiscoConfig:
           type: OS::Heat::StructuredConfig
           properties:
             group: hiera
@@ -253,11 +246,11 @@
               datafiles:
                 neutron_cisco_data: {get_attr: [ConvertToJson, converted]}
 
-        NetworkCiscoDeployment:
+        NetworkCiscoConfigDeployment:
           type: OS::Heat::StructuredDeployments
           properties:
             name: NetworkCiscoDeployment
-            config: {get_resource: UCSMHostListConfig}
+            config: {get_resource: NetworkingCiscoConfig}
             servers:  {get_param: [servers, Controller]}
             actions: ['CREATE']
 
@@ -300,7 +293,7 @@
         OS::TripleO::ControllerExtraConfigPre: /home/stack/templates/controller_extra_config_prepuppet.yaml
         OS::TripleO::AllNodesExtraConfig: /home/stack/templates/extended_nodes_extra_config.yaml
         OS::TripleO::NetCiscoOriginal: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/all_nodes/neutron-ml2-cisco-nexus-ucsm.yaml
-        OS::TripleO::JsonConverter: /home/stack/templates/json_converter.yaml
+        OS::TripleO::StringToMap: /home/stack/templates/json_converter.yaml
 
       parameter_defaults:
         InternalApiNetworkVlanID: {{ testbed_vlan }}
