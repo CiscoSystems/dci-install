@@ -205,3 +205,19 @@
     ip addr | grep -q {{ overcloud_director_ip }} ||
     ip addr add {{ overcloud_director_ip }} dev usernet
   become: true
+
+# Work around for python-gabbi version being out of date
+
+- name: Install all the tempest plugins
+  yum:
+    name: "openstack-tempest-all"
+    state: present
+  become: true
+
+- name: Install gabbi version from source
+  shell: |
+    curl -O https://files.pythonhosted.org/packages/f3/74/9e062d57db8b17c6d38b8fcd5c6de06e5b91ff263b777d2ddd8bcdb53a63/gabbi-1.42.1.tar.gz
+    tar -zxvf gabbi-1.42.1.tar.gz
+    cd gabbi-1.42.1
+    python setup.py install
+  become: true
