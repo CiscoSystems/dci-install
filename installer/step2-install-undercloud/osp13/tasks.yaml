@@ -188,6 +188,12 @@
 # Non-standard Cisco additions to the installer process from here on:
 
 # Cisco specific addition for fake floating ip address gateway
+- name: Make sure NetworkManager is not running
+  systemd:
+    state: stopped
+    name: NetworkManager
+  become: true
+
 - name: Add fake floating ip network gateway
   shell: >
     ip addr | grep -q {{ undercloud_fake_gw_cidr }} ||
