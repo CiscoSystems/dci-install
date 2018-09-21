@@ -208,16 +208,8 @@
 
 # Work around for python-gabbi version being out of date
 
-- name: Install all the tempest plugins
-  yum:
-    name: "openstack-tempest-all"
-    state: present
-  become: true
-
-- name: Install gabbi version from source
+- name: Work around for BZ1613475
   shell: |
-    curl -O https://files.pythonhosted.org/packages/f3/74/9e062d57db8b17c6d38b8fcd5c6de06e5b91ff263b777d2ddd8bcdb53a63/gabbi-1.42.1.tar.gz
-    tar -zxvf gabbi-1.42.1.tar.gz
-    cd gabbi-1.42.1
-    python setup.py install
+    yum install -y python2-heat-tests-tempest
+    rpm -ql python2-heat-tests-tempest|xargs rm -f || true
   become: true
