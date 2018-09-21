@@ -11,6 +11,19 @@
     --output-env-file=/home/stack/templates/overcloud_images.yaml \
     --output-images-file /home/stack/local_registry_images.yaml \
     --exclude neutron-server
+  when: dci_base_ip is not defined
+
+- name: Create a template to upload the the images to the local registry
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud container image prepare \
+    --namespace={{ dci_base_ip }}:5000/rhosp13 \
+    --push-destination={{ undercloud_local_ip | ipaddr('address') }}:8787 \
+    --prefix=openstack- \
+    --output-env-file=/home/stack/templates/overcloud_images.yaml \
+    --output-images-file /home/stack/local_registry_images.yaml \
+    --exclude neutron-server
+  when: dci_base_ip is defined
 
 - name: Pull the container images to the undercloud
   shell: |
