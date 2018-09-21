@@ -56,8 +56,9 @@
   when: dci_baseurl is not defined
 
 - name: Enable DCI openstack repos
-  shell:
-    yum-config-manager --add-repo {{ dci_baseurl }}/dci_repo/dci_repo.repo
+  get_url:
+    url: '{{ dci_baseurl }}/dci_repo/dci_repo.repo'
+    dest: /etc/yum.repos.d/dci_repo.repo
   become: true
   when: dci_baseurl is defined
 
