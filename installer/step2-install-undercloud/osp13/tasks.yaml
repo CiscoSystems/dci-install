@@ -161,7 +161,7 @@
     path: /home/stack/undercloud.conf
     section: DEFAULT
     option: docker_insecure_registries
-    value: "{{ dci_base_ip }}:5000"
+    value: "{{ undercloud_local_ip | ipaddr('address') }}:8787, {{ dci_base_ip }}:5000"
   when: dci_base_ip is defined
 
 - name: Set undercloud admin password
