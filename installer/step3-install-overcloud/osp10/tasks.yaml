@@ -244,6 +244,7 @@
         NetworkNexusVxlanGlobalConfig: '{{ network_nexus_vxlan_global_config|to_json }}'
         NetworkNexusHostKeyChecks: '{{ network_nexus_host_key_checks|to_json }}'
         NeutronNetworkVLANRanges: '{{ network_nexus_vlan_range }}'
+        NeutronPluginExtensions: "qos,port_security,cisco_providernet_ext"
 
         NetworkNexusVxlanVniRanges: '{{ vni_ranges }}'
         NetworkNexusVxlanMcastRanges: '{{ mcast_ranges }}'

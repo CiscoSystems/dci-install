@@ -37,7 +37,7 @@
     state: disabled
   become: true
 
-- name: Enable required RHEL repos
+- name: Enable required RHEL server repos
   rhsm_repository:
     name: "{{ item }}"
     state: enabled
@@ -46,8 +46,21 @@
     - rhel-7-server-extras-rpms
     - rhel-7-server-rh-common-rpms
     - rhel-ha-for-rhel-7-server-rpms
-    - rhel-7-server-openstack-13-rpms
   become: true
+
+- name: Enable required RHEL openstack repos
+  rhsm_repository:
+    name: rhel-7-server-openstack-13-rpms
+    state: enabled
+  become: true
+  when: dci_baseurl is not defined
+
+- name: Enable DCI openstack repos
+  get_url:
+    url: '{{ dci_baseurl }}/dci_repo/dci_repo.repo'
+    dest: /etc/yum.repos.d/dci_repo.repo
+  become: true
+  when: dci_baseurl is defined
 
 - name: Update all the system packages
   yum:
@@ -143,6 +156,14 @@
     value: "{{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('100') | ipaddr('address') }},\
       {{ undercloud_local_ip | ipaddr('network/prefix') | ipaddr('-2') | ipaddr('address') }}"
 
+- name: Set docker insecure registry for DCI host
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: docker_insecure_registries
+    value: "{{ undercloud_local_ip | ipaddr('address') }}:8787, {{ dci_base_ip }}:5000"
+  when: dci_base_ip is defined
+
 - name: Set undercloud admin password
   ini_file:
     path: /home/stack/undercloud.conf
@@ -188,6 +209,12 @@
 # Non-standard Cisco additions to the installer process from here on:
 
 # Cisco specific addition for fake floating ip address gateway
+- name: Make sure NetworkManager is not running
+  systemd:
+    state: stopped
+    name: NetworkManager
+  become: true
+
 - name: Add fake floating ip network gateway
   shell: >
     ip addr | grep -q {{ undercloud_fake_gw_cidr }} ||
@@ -198,4 +225,12 @@
   shell: >
     ip addr | grep -q {{ overcloud_director_ip }} ||
     ip addr add {{ overcloud_director_ip }} dev usernet
+  become: true
+
+# Work around for python-gabbi version being out of date
+
+- name: Work around for BZ1613475
+  shell: |
+    yum install -y python2-heat-tests-tempest
+    rpm -ql python2-heat-tests-tempest|xargs rm -f || true
   become: true
