@@ -37,7 +37,7 @@
     state: disabled
   become: true
 
-- name: Enable required RHEL repos
+- name: Enable required RHEL server repos
   rhsm_repository:
     name: "{{ item }}"
     state: enabled
@@ -46,8 +46,21 @@
     - rhel-7-server-extras-rpms
     - rhel-7-server-rh-common-rpms
     - rhel-ha-for-rhel-7-server-rpms
-    - rhel-7-server-openstack-10-rpms
   become: true
+
+- name: Enable required RHEL openstack repos
+  rhsm_repository:
+    name: rhel-7-server-openstack-10-rpms
+    state: enabled
+  become: true
+  when: dci_baseurl is not defined
+
+- name: Enable DCI openstack repos
+  get_url:
+    url: '{{ dci_baseurl }}/dci_repo/dci_repo.repo'
+    dest: /etc/yum.repos.d/dci_repo.repo
+  become: true
+  when: dci_baseurl is defined
 
 - name: Update all the system packages
   yum:
@@ -203,6 +216,12 @@
 # Non-standard Cisco additions to the installer process from here on:
 
 # Cisco specific addition for fake floating ip address gateway
+- name: Make sure NetworkManager is not running
+  systemd:
+    state: stopped
+    name: NetworkManager
+  become: true
+
 - name: Add fake floating ip network gateway
   shell: >
     ip addr | grep -q {{ undercloud_fake_gw_cidr }} ||
