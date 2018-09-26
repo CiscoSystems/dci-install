@@ -220,6 +220,7 @@
   systemd:
     state: stopped
     name: NetworkManager
+    enabled: no
   become: true
 
 - name: Add fake floating ip network gateway
