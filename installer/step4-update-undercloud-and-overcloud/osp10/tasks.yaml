@@ -70,5 +70,17 @@
 
     - name: Perform a package update on all overcloud nodes
       shell: |
-        source /home/stack/stackrc
-        openstack overcloud update stack -i overcloud
+        set timeout -1
+        set end 0;
+
+        spawn /bin/bash -c "source /home/stack/stackrc && openstack overcloud update stack -i overcloud"
+
+        while {$end == 0} {
+           expect {
+               "Breakpoint reached" { send -- "\r" }
+               "update finished" { set end [ expr $end + 1 ] }
+           }
+        }
+
+        exit 0
+      executable: /usr/bin/expect
