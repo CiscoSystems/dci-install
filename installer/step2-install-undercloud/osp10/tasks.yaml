@@ -234,4 +234,24 @@
     ip addr add {{ overcloud_director_ip }} dev usernet
   become: true
 
-# TODO(sambetts) Persist the network changes from above so they survive reboot
+- name: Write out network config for usernet interface
+  copy:
+    dest: /etc/sysconfig/network-scripts/ifcfg-usernet
+    content: |
+      DEVICE=usernet
+      TYPE=Ethernet
+      ONBOOT=yes
+      BOOTPROTO=none
+      PREFIX={{ overcloud_director_ip | ipaddr('prefix') }}
+      IPADDR={{ overcloud_director_ip | ipaddr('address') }}
+
+- name: Write out network config for fake floating IP net interface
+  copy:
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ undercloud_fake_gw_interface }}
+    content: |
+      DEVICE={{ undercloud_fake_gw_interface }}
+      TYPE=Ethernet
+      ONBOOT=yes
+      BOOTPROTO=none
+      PREFIX={{ undercloud_fake_gw_cidr | ipaddr('prefix') }}
+      IPADDR={{ undercloud_fake_gw_cidr | ipaddr('address') }}
