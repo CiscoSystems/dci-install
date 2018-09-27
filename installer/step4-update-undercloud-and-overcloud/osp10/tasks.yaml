@@ -65,6 +65,12 @@
         -e /home/stack/environments/networking-cisco-config.yaml \
         --ntp-server 1.ntp.esl.cisco.com
 
+- name: Install expect package
+  yum:
+    name: expect
+    state: latest
+  become: true
+
 - name: Perform a package update on all overcloud nodes
   shell: |
     set timeout -1
