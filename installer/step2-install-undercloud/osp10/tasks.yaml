@@ -245,6 +245,7 @@
       BOOTPROTO=none
       PREFIX={{ overcloud_director_ip | ipaddr('prefix') }}
       IPADDR={{ overcloud_director_ip | ipaddr('address') }}
+  become: true
 
 - name: Write out network config for fake floating IP net interface
   copy:
@@ -256,3 +257,4 @@
       BOOTPROTO=none
       PREFIX={{ undercloud_fake_gw_cidr | ipaddr('prefix') }}
       IPADDR={{ undercloud_fake_gw_cidr | ipaddr('address') }}
+  become: true
