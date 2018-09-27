@@ -1,86 +1,155 @@
 ---
+# 2.4. UPDATING THE CURRENT OVERCLOUD IMAGES FOR OPENSTACK
+# PLATFORM 10.Z
 
-- hosts: director
-  tasks:
-    # 2.4. UPDATING THE CURRENT OVERCLOUD IMAGES FOR OPENSTACK
-    # PLATFORM 10.Z
-    
-    - name: Stop the main OpenStack Platform services
-      systemd:
-        state: stopped
-        name: "{{ item }}"
-      with_items:
-        - 'openstack-*'
-        - 'neutron-*'
-        - httpd
-      become: true
+- name: Stop the main OpenStack Platform services
+  systemd:
+    state: stopped
+    name: "{{ item }}"
+  with_items:
+    - 'openstack-*'
+    - 'neutron-*'
+    - httpd
+  become: true
 
-    - name: Update the python-tripleoclient package and its dependencies
-      yum:
-        name: python-tripleoclient
-        state: latest
-      become: true
+- name: Update the python-tripleoclient package and its dependencies
+  yum:
+    name: python-tripleoclient
+    state: latest
+  become: true
 
-    - name: Run the undercloud upgrade
-      shell: openstack undercloud upgrade
+- name: Run the undercloud upgrade
+  shell: openstack undercloud upgrade
 
-    - name: Reboot director to pick up updates
-      shell: "sleep 5 && reboot"
-      async: 1
-      poll: 0
-      become: true
+- name: Reboot director to pick up updates
+  shell: "sleep 5 && reboot"
+  async: 1
+  poll: 0
+  become: true
 
-    - name: Wait for director to finish rebooting
-      wait_for_connection:
-        connect_timeout: 20
-        sleep: 5
-        delay: 20
-        timeout: 600
+- name: Wait for director to finish rebooting
+  wait_for_connection:
+    connect_timeout: 20
+    sleep: 5
+    delay: 20
+    timeout: 600
 
-    # 2.5. UPDATING THE CURRENT OVERCLOUD IMAGES FOR OPENSTACK
-    # PLATFORM 10.Z
+# 2.5. UPDATING THE CURRENT OVERCLOUD IMAGES FOR OPENSTACK
+# PLATFORM 10.Z
 
-    - name: Unpack the overcloud images into stack
-      unarchive:
-        remote_src: true
-        src: "{{ item }}"
-        dest: /home/stack/images
-      with_items:
-        - /usr/share/rhosp-director-images/overcloud-full-latest-10.0.tar
-        - /usr/share/rhosp-director-images/ironic-python-agent-latest-10.0.tar
+- name: Unpack the overcloud images into stack
+  unarchive:
+    remote_src: true
+    src: "{{ item }}"
+    dest: /home/stack/images
+  with_items:
+    - /usr/share/rhosp-director-images/overcloud-full-latest-10.0.tar
+    - /usr/share/rhosp-director-images/ironic-python-agent-latest-10.0.tar
 
-    - name: Import the latest images into the director and configure nodes to use the new images
-      shell: |
-        source /home/stack/stackrc
-        openstack overcloud image upload --update-existing --image-path /home/stack/images/
-        openstack overcloud node configure $(openstack baremetal node list -c UUID -f csv --quote none | sed "1d" | paste -s -d " ")
+- name: Import the latest images into the director and configure nodes to use the new images
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud image upload --update-existing --image-path /home/stack/images/
+    openstack overcloud node configure $(openstack baremetal node list -c UUID -f csv --quote none | sed "1d" | paste -s -d " ")
 
-    # 2.6. UPDATING THE CURRENT OVERCLOUD PACKAGES FOR
-    # OPENSTACK PLATFORM 10.Z 
-    
-    - name: Update the current plan using your original openstack overcloud deploy command
-      shell: |
-        source /home/stack/stackrc
-        openstack overcloud deploy --update-plan-only --templates \
-            -e /home/stack/environments/overcloud-config.yaml \
-            -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
-            -e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
-            -e /home/stack/environments/networking-cisco-config.yaml \
-            --ntp-server 1.ntp.esl.cisco.com
+# 2.6. UPDATING THE CURRENT OVERCLOUD PACKAGES FOR
+# OPENSTACK PLATFORM 10.Z 
 
-    - name: Perform a package update on all overcloud nodes
-      shell: |
-        set timeout -1
-        set end 0;
+- name: Update the current plan using your original openstack overcloud deploy command
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud deploy --update-plan-only --templates \
+        -e /home/stack/environments/overcloud-config.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
+        -e /home/stack/environments/networking-cisco-config.yaml \
+        --ntp-server 1.ntp.esl.cisco.com
 
-        spawn /bin/bash -c "source /home/stack/stackrc && openstack overcloud update stack -i overcloud"
+- name: Perform a package update on all overcloud nodes
+  shell: |
+    set timeout -1
+    set end 0;
 
-        while {$end == 0} {
-           expect {
-               "Breakpoint reached" { send -- "\r" }
-               "update finished" { set end [ expr $end + 1 ] }
-           }
-        }
+    spawn /bin/bash -c "source /home/stack/stackrc && openstack overcloud update stack -i overcloud"
 
-        exit 0
-      executable: /usr/bin/expect
+    while {$end == 0} {
+       expect {
+           "Breakpoint reached" { send -- "\r" }
+           "update finished" { set end [ expr $end + 1 ] }
+       }
+    }
+
+    exit 0
+  executable: /usr/bin/expect
+
+# 2.7. REBOOTING CONTROLLER AND COMPOSABLE NODES
+
+- name: Write out playbook for rebooting a controller
+  copy:
+    dest: /home/stack/reboot_controller.yaml
+    content: |
+      ---
+      - hosts: all
+        tasks:
+          - name: Stop the pacemaker cluster
+            shell: |
+              pcs cluster stop
+            become: true
+
+          - name: Reboot controller to pick up updates
+            shell: "sleep 5 && reboot"
+            async: 1
+            poll: 0
+            become: true
+
+          - name: Wait for controller to finish rebooting
+            wait_for_connection:
+              connect_timeout: 20
+              sleep: 5
+              delay: 20
+              timeout: 600
+
+          - name: Restart the pacemaker cluster
+            shell: |
+              pcs cluster start
+            become: true
+
+- name: Discover all the controller nodes and IPs
+  shell: |
+    source stackrc
+    openstack server list --name controller -f json -c Name -c Networks
+  register: controlserverlist
+
+- name: Parse the controller nodes into a usable fact
+  set_fact:
+    controller_nodes: "{{ controlserverlist.stdout | from_json }}"
+
+- name: Reboot all the controller nodes
+  shell: |
+    ansible-playbook -i "{{ item.Networks.split('=')[1] }}, " -e ansible_user=heat-admin /home/stack/reboot_controller.yaml
+  with_items: "{{ controller_nodes }}"
+
+# 2.9. REBOOTING COMPUTE NODES
+
+- name: Discover all the compute nodes and IPs
+  shell: |
+    source stackrc
+    openstack server list --name compute -f json -c Name -c Networks
+  register: computeserverlist
+
+- name: Parse the compute nodes into a usable fact
+  set_fact:
+    compute_nodes: "{{ computeserverlist.stdout | from_json }}"
+
+- name: Reboot the compute node
+  shell: |
+    source overcloudrc
+    openstack compute service set {{ item.Name }}.localdomain nova-compute --disable
+    nova host-evacuate-live {{ item.Name }}.localdomain
+
+    source stackrc
+    openstack server reboot {{ item.Name }}
+    ansible all -i "{{ item.Networks.split('=')[1] }}," -e ansible_user=heat-admin -m "wait_for_connection" -a "connect_timeout=20 sleep=5 delay=20 timeout=600"
+
+    source overcloudrc
+    openstack compute service set {{ item.Name }}.localdomain nova-compute --enable
