@@ -80,7 +80,8 @@
     }
 
     exit 0
-  executable: /usr/bin/expect
+  args:
+    executable: /usr/bin/expect
 
 # 2.7. REBOOTING CONTROLLER AND COMPOSABLE NODES
 
