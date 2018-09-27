@@ -1,0 +1,255 @@
+---
+# 3.1. UPGRADING THE UNDERCLOUD TO OPENSTACK PLATFORM 11
+
+- name: Disable the OSP10 repo
+  rhsm_repository:
+    name: rhel-7-server-openstack-10-rpms
+    state: disabled
+  become: true
+
+- name: Enable the OSP11 repo
+  rhsm_repository:
+    name: rhel-7-server-openstack-11-rpms
+    state: disabled
+  become: true
+
+- name: Stop the main OpenStack Platform services
+  systemd:
+    state: stopped
+    name: "{{ item }}"
+  with_items:
+    - 'openstack-*'
+    - 'neutron-*'
+    - httpd
+  become: true
+
+- name: Upgrade the director’s main packages
+  yum:
+    name: '{{ item }}'
+    state: latest
+    update_cache: true
+  with_items:
+    - instack-undercloud
+    - openstack-puppet-modules
+    - openstack-tripleo-common
+    - python-tripleoclient
+  become: true
+
+- name: Upgrade the undercloud
+  shell:  openstack undercloud upgrade
+
+# 3.2. UPGRADING THE UNDERCLOUD TO OPENSTACK PLATFORM 12
+
+- name: Disable the OSP11 repo
+  rhsm_repository:
+    name: rhel-7-server-openstack-11-rpms
+    state: disabled
+  become: true
+
+- name: Enable the OSP12 repo
+  rhsm_repository:
+    name: rhel-7-server-openstack-12-rpms
+    state: disabled
+  become: true
+
+- name: Upgrade the director’s main packages
+  yum:
+    name: python-tripleoclient
+    state: latest
+    update_cache: true
+  become: true
+
+- name: Upgrade the undercloud
+  shell:  openstack undercloud upgrade
+
+# 3.3. UPGRADING THE UNDERCLOUD TO OPENSTACK PLATFORM 13
+
+- name: Disable the OSP12 repo
+  rhsm_repository:
+    name: rhel-7-server-openstack-12-rpms
+    state: disabled
+  become: true
+
+- name: Enable the OSP13 repo
+  rhsm_repository:
+    name: rhel-7-server-openstack-13-rpms
+    state: disabled
+  become: true
+
+- name: Upgrade the director’s main packages
+  yum:
+    name: python-tripleoclient
+    state: latest
+    update_cache: true
+  become: true
+
+- name: Upgrade the undercloud
+  shell:  openstack undercloud upgrade
+
+- name: Reboot the undercloud to update the system
+  shell: "sleep 5 && reboot"
+  async: 1
+  poll: 0
+  become: true
+
+- name: Wait for director to finish rebooting
+  wait_for_connection:
+    connect_timeout: 20
+    sleep: 5
+    delay: 20
+    timeout: 600
+
+# 4.5. USING THE UNDERCLOUD AS A LOCAL REGISTRY
+
+- name: Create a template to upload the the images to the local registry
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud container image prepare \
+    --namespace=registry.access.redhat.com/rhosp13 \
+    --push-destination={{ undercloud_local_ip | ipaddr('address') }}:8787 \
+    --prefix=openstack- \
+    --tag-from-label {version}-{release} \
+    --output-env-file=/home/stack/templates/overcloud_images.yaml \
+    --output-images-file /home/stack/local_registry_images.yaml \
+    --exclude neutron-server
+  when: dci_base_ip is not defined
+
+- name: Create a template to upload the the images to the local registry
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud container image prepare \
+    --namespace={{ dci_base_ip }}:5000/rhosp13 \
+    --push-destination={{ undercloud_local_ip | ipaddr('address') }}:8787 \
+    --prefix=openstack- \
+    --output-env-file=/home/stack/templates/overcloud_images.yaml \
+    --output-images-file /home/stack/local_registry_images.yaml \
+    --exclude neutron-server
+  when: dci_base_ip is defined
+
+- name: Pull the container images to the undercloud
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud container image upload \
+    --config-file /home/stack/local_registry_images.yaml \
+    --verbose
+  become: true
+
+# Custom for getting networking-cisco into the neutron-server container
+
+- name: Create the template for the neutron server images
+  copy:
+    dest: /usr/share/tripleo-common/container-images/overcloud_containers.yaml.j2
+    backup: true
+    content: |
+      {% raw %}
+      container_images_template:
+
+      - imagename: "{{namespace}}/openstack-neutron-server-networking-cisco-plugin:{{tag}}"
+        params:
+        - DockerNeutronApiImage
+        - DockerNeutronConfigImage
+        services:
+        - OS::TripleO::Services::NeutronApi
+        - OS::TripleO::Services::NeutronDhcpAgent
+        - OS::TripleO::Services::NeutronMetadataAgent
+        - OS::TripleO::Services::NeutronServer
+      {% endraw %}
+  register: overcloud_containers
+  become: true
+
+- block:
+    - name: Create a template to upload the neutron images to the local registry
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud container image prepare \
+        --namespace=registry.hub.docker.com/bradleyjones \
+        --push-destination={{ undercloud_local_ip | ipaddr('address') }}:8787 \
+        --tag latest \
+        --output-env-file=/home/stack/templates/overcloud_images_neutron.yaml \
+        --output-images-file /home/stack/local_registry_images_neutron.yaml
+
+    - name: Pull the neutron container images to the undercloud
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud container image upload \
+        --config-file /home/stack/local_registry_images_neutron.yaml \
+        --verbose
+      become: true
+  always:
+    - name: Restore the orignal overcloud_containers template
+      copy:
+        dest: /usr/share/tripleo-common/container-images/overcloud_containers.yaml.j2
+        src: "{{ overcloud_containers.backup_file }}"
+        remote_src: true
+      become: true
+
+# CHAPTER 6. UPGRADING THE OVERCLOUD
+
+# 6.1. PERFORMING THE FAST FORWARD UPGRADE OF THE
+# OVERCLOUD
+
+- name: Run the fast forward upgrade preparation command
+  shell: |
+    source stackrc
+    openstack overcloud ffwd-upgrade prepare --yes --templates \
+        -e /home/stack/environments/node-info.yaml \
+        -e /home/stack/templates/overcloud_images.yaml \
+        -e /home/stack/templates/overcloud_images_neutron.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/net-bond-with-vlans.yaml \
+        -e /home/stack/environments/networking-cisco-config.yaml \
+        -e /home/stack/environments/rhel_sub_config.yaml \
+        --ntp-server 1.ntp.esl.cisco.com
+
+- name: Run the fast forward upgrade command
+  shell: |
+    source stackrc
+    openstack overcloud ffwd-upgrade run --yes
+
+# 6.2. UPGRADING ALL CONTROLLER NODES
+
+- name: Run the upgrade command
+  shell: |
+    source stackrc
+    openstack overcloud upgrade run --roles Controller --skip-tags validation
+
+# 6.4. UPGRADING ALL COMPUTE NODES
+
+- name: Run the upgrade command
+  shell: |
+    source ~/stackrc
+    openstack overcloud upgrade run --roles Compute --skip-tags validation
+
+# 6.6. FINALIZING THE FAST FORWARD UPGRADE
+
+- name: Run the fast forward upgrade finalization command
+  shell: |
+    source stackrc
+    openstack overcloud ffwd-upgrade converge --yes --templates \
+        -e /home/stack/environments/node-info.yaml \
+        -e /home/stack/templates/overcloud_images.yaml \
+        -e /home/stack/templates/overcloud_images_neutron.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/net-bond-with-vlans.yaml \
+        -e /home/stack/environments/networking-cisco-config.yaml \
+        -e /home/stack/environments/rhel_sub_config.yaml \
+        --ntp-server 1.ntp.esl.cisco.com
+
+# CHAPTER 7. EXECUTING POST UPGRADE STEPS
+
+# 7.3. UPGRADING THE OVERCLOUD IMAGES
+
+- name: Unpack the overcloud images into stack
+  unarchive:
+    remote_src: true
+    src: "{{ item }}"
+    dest: /home/stack/images
+  with_items:
+    - /usr/share/rhosp-director-images/overcloud-full-latest-13.0.tar
+    - /usr/share/rhosp-director-images/ironic-python-agent-latest-13.0.tar
+
+- name: Upload overcloud images to the undercloud
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud image upload --update-existing --image-path /home/stack/images/
+    openstack overcloud node configure $(openstack baremetal node list -c UUID -f value)
