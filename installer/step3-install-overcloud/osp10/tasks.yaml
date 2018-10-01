@@ -269,6 +269,7 @@
     dest: /home/stack/environments/rhel_sub_config.yaml
     content: |
       parameter_defaults:
+        DeleteOnRHELUnregistration: true
         rhel_reg_auto_attach: ""
         rhel_reg_activation_key: ""
         rhel_reg_org: ""
