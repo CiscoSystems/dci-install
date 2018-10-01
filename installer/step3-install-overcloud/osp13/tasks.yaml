@@ -371,6 +371,12 @@
 
         NetConfigDataLookup: {{ overcloud_node_nic_mappings_bond | to_nice_json }}
 
+        # Format for node hostnames Note %index% is translated into the index
+        # of the node, e.g 0/1/2 etc and %stackname% is replaced with the stack
+        # name e.g overcloud
+        ComputeHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-compute-%index%'
+        ControllerHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-controller-%index%'
+
 - name: Write out RHEL subscription manager environment file
   copy:
     dest: /home/stack/environments/rhel_sub_config.yaml
