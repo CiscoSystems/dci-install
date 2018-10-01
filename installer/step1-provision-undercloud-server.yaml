@@ -26,7 +26,7 @@
         - name: Delete stack that already exists
           shell: |
             source /home/stack/stackrc
-            openstack stack delete --wait -y overcloud
+            openstack stack delete --wait --yes overcloud
           when: default_subnet_has_name is not failed
       when: connect_test is not failed
 
