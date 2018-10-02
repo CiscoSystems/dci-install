@@ -104,7 +104,7 @@
     path: /home/stack/undercloud.conf
     section: DEFAULT
     option: local_interface
-    value: pxe-int
+    value: "{{ undercloud_local_interface }}"
 
 - name: Set local_ip in undercloud.conf
   ini_file:
@@ -182,8 +182,7 @@
             "type": "interface",
             "name": "{{LOCAL_INTERFACE}}",
             "primary": "true",
-            "mtu": {{LOCAL_MTU}},
-            "persist_mapping": "true"
+            "mtu": {{LOCAL_MTU}}
            }
           ],
           "addresses": [
@@ -196,8 +195,7 @@
       {% endraw %}
         {
           "type": "interface",
-          "name": "usernet",
-          "persist_mapping": "true",
+          "name": "{{ undercloud_overcloud_interface }}",
           "addresses": [
             {
               "ip_netmask": "{{ overcloud_director_ip }}"
@@ -207,7 +205,6 @@
         {
           "type": "interface",
           "name": "{{ undercloud_fake_gw_interface }}",
-          "persist_mapping": "true",
           "addresses": [
             {
               "ip_netmask": "{{ undercloud_fake_gw_cidr }}"

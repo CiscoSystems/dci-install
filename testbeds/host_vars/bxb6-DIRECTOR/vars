@@ -9,9 +9,12 @@ overcloud_node_prefix: "bxb6"
 
 dns_server_1: 171.70.168.183
 
-undercloud_fake_gw_interface: eth1
+undercloud_overcloud_interface: enp7s0
+
+undercloud_fake_gw_interface: enp8s0
 undercloud_fake_gw_cidr: 20.0.0.1/24
 
+undercloud_local_interface: enp10s0
 undercloud_local_ip: 192.0.2.1/24
 undercloud_network_gateway: 192.0.2.1
 

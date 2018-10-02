@@ -104,7 +104,7 @@
     path: /home/stack/undercloud.conf
     section: DEFAULT
     option: local_interface
-    value: pxe-int
+    value: "{{ undercloud_local_interface }}"
 
 - name: Set local_ip in undercloud.conf
   ini_file:
