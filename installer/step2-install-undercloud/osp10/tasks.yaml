@@ -183,10 +183,8 @@
             "name": "{{LOCAL_INTERFACE}}",
             "primary": "true",
             "mtu": {{LOCAL_MTU}},
-      {% endraw %}
-            "hwaddr": "{{ ansible_facts['pxe_int']['macaddress'] }}"
+            "persist_mapping": "true"
            }
-      {% raw %}
           ],
           "addresses": [
             {
@@ -199,7 +197,7 @@
         {
           "type": "interface",
           "name": "usernet",
-          "hwaddr": "{{ ansible_facts['usernet']['macaddress'] }}",
+          "persist_mapping": "true",
           "addresses": [
             {
               "ip_netmask": "{{ overcloud_director_ip }}"
@@ -209,7 +207,7 @@
         {
           "type": "interface",
           "name": "{{ undercloud_fake_gw_interface }}",
-          "hwaddr": "{{ ansible_facts[(undercloud_fake_gw_interface | replace('-', '_'))]['macaddress'] }}",
+          "persist_mapping": "true",
           "addresses": [
             {
               "ip_netmask": "{{ undercloud_fake_gw_cidr }}"
