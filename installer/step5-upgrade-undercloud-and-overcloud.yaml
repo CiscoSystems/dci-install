@@ -3,4 +3,5 @@
   vars:
     ansible_user: stack
   tasks:
-  - include_tasks: "step5-upgrade-undercloud-and-overcloud/{{ dci_topic | lower }}_{{ next_topic_name | lower }}/tasks.yaml"
+    - name: Include tasks for OSP version
+      include_tasks: "step5-upgrade-undercloud-and-overcloud/{{ dci_topic | lower }}_{{ next_topic_name | lower }}/tasks.yaml"

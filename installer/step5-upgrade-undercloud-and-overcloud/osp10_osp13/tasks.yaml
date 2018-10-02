@@ -23,7 +23,7 @@
     - httpd
   become: true
 
-- name: Upgrade the director’s main packages
+- name: Upgrade the director's main packages
   yum:
     name: '{{ item }}'
     state: latest
@@ -36,7 +36,7 @@
   become: true
 
 - name: Upgrade the undercloud
-  shell:  openstack undercloud upgrade
+  shell: openstack undercloud upgrade
 
 # 3.2. UPGRADING THE UNDERCLOUD TO OPENSTACK PLATFORM 12
 
@@ -52,7 +52,7 @@
     state: disabled
   become: true
 
-- name: Upgrade the director’s main packages
+- name: Upgrade the director's main packages
   yum:
     name: python-tripleoclient
     state: latest
@@ -60,7 +60,7 @@
   become: true
 
 - name: Upgrade the undercloud
-  shell:  openstack undercloud upgrade
+  shell: openstack undercloud upgrade
 
 # 3.3. UPGRADING THE UNDERCLOUD TO OPENSTACK PLATFORM 13
 
@@ -76,7 +76,7 @@
     state: disabled
   become: true
 
-- name: Upgrade the director’s main packages
+- name: Upgrade the director's main packages
   yum:
     name: python-tripleoclient
     state: latest
@@ -84,7 +84,7 @@
   become: true
 
 - name: Upgrade the undercloud
-  shell:  openstack undercloud upgrade
+  shell: openstack undercloud upgrade
 
 - name: Reboot the undercloud to update the system
   shell: "sleep 5 && reboot"

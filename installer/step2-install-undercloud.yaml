@@ -49,4 +49,5 @@
   vars:
     ansible_user: stack
   tasks:
-  - include_tasks: "step2-install-undercloud/{{ dci_topic | lower }}/tasks.yaml"
+    - name: Include tasks for OSP version
+      include_tasks: "step2-install-undercloud/{{ dci_topic | lower }}/tasks.yaml"

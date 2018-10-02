@@ -53,7 +53,7 @@
     openstack overcloud node configure $(openstack baremetal node list -c UUID -f csv --quote none | sed "1d" | paste -s -d " ")
 
 # 2.6. UPDATING THE CURRENT OVERCLOUD PACKAGES FOR
-# OPENSTACK PLATFORM 10.Z 
+# OPENSTACK PLATFORM 10.Z
 
 - name: Update the current plan using your original openstack overcloud deploy command
   shell: |
