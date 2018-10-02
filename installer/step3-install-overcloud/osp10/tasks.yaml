@@ -258,6 +258,42 @@
 
         NetConfigDataLookup: {{ overcloud_node_nic_mappings_bond | to_nice_json }}
 
+        # Format for node hostnames Note %index% is translated into the index
+        # of the node, e.g 0/1/2 etc and %stackname% is replaced with the stack
+        # name e.g overcloud
+        ComputeHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-compute-%index%'
+        ControllerHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-controller-%index%'
+
+- name: Write out RHEL subscription manager environment file
+  copy:
+    dest: /home/stack/environments/rhel_sub_config.yaml
+    content: |
+      parameter_defaults:
+        DeleteOnRHELUnregistration: true
+        rhel_reg_auto_attach: ""
+        rhel_reg_activation_key: ""
+        rhel_reg_org: ""
+        rhel_reg_pool_id: "{{ rh_sub_pool_id }}"
+        rhel_reg_repos: "rhel-7-server-rpms,rhel-7-server-extras-rpms,rhel-7-server-rh-common-rpms,\
+        rhel-ha-for-rhel-7-server-rpms,rhel-7-server-openstack-10-rpms"
+        rhel_reg_method: "portal"
+        rhel_reg_sat_repo: ""
+        rhel_reg_base_url: ""
+        rhel_reg_environment: ""
+        rhel_reg_force: ""
+        rhel_reg_machine_name: ""
+        rhel_reg_password: "{{ rh_sub_password }}"
+        rhel_reg_release: ""
+        rhel_reg_sat_url: ""
+        rhel_reg_server_url: ""
+        rhel_reg_service_level: ""
+        rhel_reg_user: "{{ rh_sub_username }}"
+        rhel_reg_type: ""
+        rhel_reg_http_proxy_host: ""
+        rhel_reg_http_proxy_port: ""
+        rhel_reg_http_proxy_username: ""
+        rhel_reg_http_proxy_password: ""
+
 # 5.6. CREATING THE OVERCLOUD WITH THE CLI TOOLS
 - name: Deploy the overcloud using the CLI
   shell: |
@@ -267,4 +303,6 @@
         -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/net-bond-with-vlans.yaml \
         -e /home/stack/environments/networking-cisco-config.yaml \
+        -e /home/stack/environments/rhel_sub_config.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/extraconfig/pre_deploy/rhel-registration/rhel-registration-resource-registry.yaml \
         --ntp-server 1.ntp.esl.cisco.com

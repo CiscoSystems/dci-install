@@ -5,6 +5,7 @@ cobbler_password: "{{ vault_cobbler_password }}"
 cobbler_api_url: http://10.86.7.58/cobbler_api
 
 undercloud_hostname: "{{ cobbler_node_name }}.bxb.os"
+overcloud_node_prefix: "bxb6"
 
 dns_server_1: 171.70.168.183
 

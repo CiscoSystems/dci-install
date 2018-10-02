@@ -5,14 +5,29 @@
       register: connect_test
       ignore_errors: true
 
-    - name: Unregister system from RH if its online still
-      redhat_subscription:
-        state: absent
-        username: "{{ rh_sub_username }}"
-        password: "{{ rh_sub_password }}"
-        pool_ids:
-          - "{{ rh_sub_pool_id }}"
-      become: true
+    - name: Pre-reinstall cleanup tasks
+      block:
+        - name: Unregister system from RH if its online still
+          redhat_subscription:
+            state: absent
+            username: "{{ rh_sub_username }}"
+            password: "{{ rh_sub_password }}"
+            pool_ids:
+              - "{{ rh_sub_pool_id }}"
+          become: true
+
+        - name: Check if stack already deployed
+          shell: |
+            source /home/stack/stackrc
+            openstack stack show overcloud -c "stack_name" -f json
+          ignore_errors: true
+          register: default_subnet_has_name
+
+        - name: Delete stack that already exists
+          shell: |
+            source /home/stack/stackrc
+            openstack stack delete --wait --yes overcloud
+          when: default_subnet_has_name is not failed
       when: connect_test is not failed
 
 - hosts: director
