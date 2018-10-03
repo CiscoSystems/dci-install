@@ -134,6 +134,19 @@
   set_fact:
     controller_nodes: "{{ controlserverlist.stdout | from_json }}"
 
+- name: SSH Key scan all the controller nodes
+  shell: |
+    ssh-keyscan -t rsa {{ item.Networks.split('=')[1] }}
+  with_items: "{{ controller_nodes }}"
+  register: controller_ssh_keys
+
+- name: Add known host for controller nodes
+  known_hosts:
+    state: present
+    name: "{{ item.item.Networks.split('=')[1] }}"
+    key: "{{ item.stdout }}"
+  with_items: "{{ controller_ssh_keys.results }}"
+
 - name: Reboot all the controller nodes
   shell: |
     ansible-playbook -i "{{ item.Networks.split('=')[1] }}, " -e ansible_user=heat-admin /home/stack/reboot_controller.yaml
@@ -150,6 +163,19 @@
 - name: Parse the compute nodes into a usable fact
   set_fact:
     compute_nodes: "{{ computeserverlist.stdout | from_json }}"
+
+- name: SSH Key scan all the compute nodes
+  shell: |
+    ssh-keyscan -t rsa {{ item.Networks.split('=')[1] }}
+  with_items: "{{ compute_nodes }}"
+  register: compute_ssh_keys
+
+- name: Add known host for compute nodes
+  known_hosts:
+    state: present
+    name: "{{ item.item.Networks.split('=')[1] }}"
+    key: "{{ item.stdout }}"
+  with_items: "{{ compute_ssh_keys.results }}"
 
 - name: Reboot the compute node
   shell: |
