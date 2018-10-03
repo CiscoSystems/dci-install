@@ -123,7 +123,7 @@
 
 - name: Discover all the controller nodes and IPs
   shell: |
-    source stackrc
+    source /home/stack/stackrc
     openstack server list --name controller -f json -c Name -c Networks
   register: controlserverlist
 
@@ -140,7 +140,7 @@
 
 - name: Discover all the compute nodes and IPs
   shell: |
-    source stackrc
+    source /home/stack/stackrc
     openstack server list --name compute -f json -c Name -c Networks
   register: computeserverlist
 
@@ -150,13 +150,13 @@
 
 - name: Reboot the compute node
   shell: |
-    source overcloudrc
+    source /home/stack/overcloudrc
     openstack compute service set {{ item.Name }}.localdomain nova-compute --disable
     nova host-evacuate-live {{ item.Name }}.localdomain
 
-    source stackrc
+    source /home/stack/stackrc
     openstack server reboot {{ item.Name }}
     ansible all -i "{{ item.Networks.split('=')[1] }}," -e ansible_user=heat-admin -m "wait_for_connection" -a "connect_timeout=20 sleep=5 delay=20 timeout=600"
 
-    source overcloudrc
+    source /home/stack/overcloudrc
     openstack compute service set {{ item.Name }}.localdomain nova-compute --enable
