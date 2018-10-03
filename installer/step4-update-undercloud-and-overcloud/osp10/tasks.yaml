@@ -63,6 +63,8 @@
         -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
         -e /home/stack/environments/networking-cisco-config.yaml \
+        -e /home/stack/environments/rhel_sub_config.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/extraconfig/pre_deploy/rhel-registration/rhel-registration-resource-registry.yaml \
         --ntp-server 1.ntp.esl.cisco.com
 
 - name: Install expect package
