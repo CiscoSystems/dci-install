@@ -171,6 +171,63 @@
     option: undercloud_admin_password
     value: password
 
+# Based on https://github.com/openstack/instack-undercloud/blob/newton-eol/templates/net-config.json.template
+# adds Cisco environment specific interfaces that need configuring
+- name: Write out the undercloud net config override
+  copy:
+    dest: /home/stack/undercloud_net_config.json.template
+    content: |
+      {% raw -%}
+      "network_config": [
+         {
+          "type": "ovs_bridge",
+          "name": "br-ctlplane",
+          "ovs_extra": [
+           "br-set-external-id br-ctlplane bridge-id br-ctlplane"
+          ],
+          "members": [
+           {
+            "type": "interface",
+            "name": "{{LOCAL_INTERFACE}}",
+            "primary": "true",
+            "mtu": {{LOCAL_MTU}}
+           }
+          ],
+          "addresses": [
+            {
+              "ip_netmask": "{{PUBLIC_INTERFACE_IP}}"
+            }
+          ],
+          "mtu": {{LOCAL_MTU}}
+        },
+      {% endraw %}
+        {
+          "type": "interface",
+          "name": "{{ undercloud_overcloud_interface }}",
+          "addresses": [
+            {
+              "ip_netmask": "{{ overcloud_director_ip }}"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "{{ undercloud_fake_gw_interface }}",
+          "addresses": [
+            {
+              "ip_netmask": "{{ undercloud_fake_gw_cidr }}"
+            }
+          ]
+        }
+      ]
+
+- name: Set net config override in undercloud config
+  ini_file:
+    path: /home/stack/undercloud.conf
+    section: DEFAULT
+    option: net_config_override
+    value: "/home/stack/undercloud_net_config.json.template"
+
 # 4.7. INSTALLING THE DIRECTOR
 - name: Run the undercloud installation
   shell: openstack undercloud install
@@ -207,25 +264,6 @@
     openstack subnet set --dns-nameserver {{ dns_server_1 }} ctlplane-subnet
 
 # Non-standard Cisco additions to the installer process from here on:
-
-# Cisco specific addition for fake floating ip address gateway
-- name: Make sure NetworkManager is not running
-  systemd:
-    state: stopped
-    name: NetworkManager
-  become: true
-
-- name: Add fake floating ip network gateway
-  shell: >
-    ip addr | grep -q {{ undercloud_fake_gw_cidr }} ||
-    ip addr add {{ undercloud_fake_gw_cidr }} dev {{ undercloud_fake_gw_interface }}
-  become: true
-
-- name: Add IP in overcloud routable network
-  shell: >
-    ip addr | grep -q {{ overcloud_director_ip }} ||
-    ip addr add {{ overcloud_director_ip }} dev usernet
-  become: true
 
 # Work around for python-gabbi version being out of date
 
