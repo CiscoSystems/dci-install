@@ -1,4 +1,75 @@
 ---
+# Pre upgrade step required by this automation to disable unsubscription from
+# RHEL during the upgrade.
+
+- name: Write out environment file to disable rhel registration deletion
+  copy:
+    dest: /home/stack/environments/no_delete_rhelsub.yaml
+    content: |
+      parameter_defaults:
+        DeleteOnRHELUnregistration: false
+        rhel_reg_auto_attach: ""
+        rhel_reg_activation_key: ""
+        rhel_reg_org: ""
+        rhel_reg_pool_id: "{{ rh_sub_pool_id }}"
+        rhel_reg_repos: "rhel-7-server-rpms,rhel-7-server-extras-rpms,rhel-7-server-rh-common-rpms,\
+        rhel-ha-for-rhel-7-server-rpms,rhel-7-server-openstack-10-rpms"
+        rhel_reg_method: "portal"
+        rhel_reg_sat_repo: ""
+        rhel_reg_base_url: ""
+        rhel_reg_environment: ""
+        rhel_reg_force: ""
+        rhel_reg_machine_name: ""
+        rhel_reg_password: "{{ rh_sub_password }}"
+        rhel_reg_release: ""
+        rhel_reg_sat_url: ""
+        rhel_reg_server_url: ""
+        rhel_reg_service_level: ""
+        rhel_reg_user: "{{ rh_sub_username }}"
+        rhel_reg_type: ""
+        rhel_reg_http_proxy_host: ""
+        rhel_reg_http_proxy_port: ""
+        rhel_reg_http_proxy_username: ""
+        rhel_reg_http_proxy_password: ""
+
+- name: Update the current plan using your original openstack overcloud deploy command
+  shell: |
+    source /home/stack/stackrc
+    openstack overcloud deploy --update-plan-only --templates \
+        -e /home/stack/environments/overcloud-config.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
+        -e /home/stack/environments/networking-cisco-config.yaml \
+        -e /home/stack/environments/no_delete_rhelsub.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/extraconfig/pre_deploy/rhel-registration/rhel-registration-resource-registry.yaml \
+        --ntp-server 1.ntp.esl.cisco.com
+
+- name: Install expect package
+  yum:
+    name: expect
+    state: latest
+  become: true
+
+- name: Perform a stack update to ensure that the rhelsub changes are picked up
+  shell: |
+    set timeout -1
+    set end -1;
+
+    spawn /bin/bash -c "source /home/stack/stackrc && openstack overcloud update stack -i overcloud"
+
+    while {$end == -1} {
+       expect {
+           "Breakpoint reached" { send -- "\r" }
+           "update finished with status COMPLETE" { set end [ expr $end + 1 ] }
+           "update finished with status FAILED" { set end [ expr $end + 2 ] }
+       }
+    }
+
+    exit $end
+  args:
+    executable: /usr/bin/expect
+
+
 # 3.1. UPGRADING THE UNDERCLOUD TO OPENSTACK PLATFORM 11
 
 - name: Disable the OSP10 repo
@@ -266,3 +337,6 @@
     source /home/stack/stackrc
     openstack overcloud image upload --update-existing --image-path /home/stack/images/
     openstack overcloud node configure $(openstack baremetal node list -c UUID -f value)
+
+
+# TODO(sambetts) Add code to reenable unsubscription from RHEL on delete
