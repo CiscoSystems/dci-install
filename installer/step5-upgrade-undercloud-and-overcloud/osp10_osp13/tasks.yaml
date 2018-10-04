@@ -10,7 +10,7 @@
 - name: Enable the OSP11 repo
   rhsm_repository:
     name: rhel-7-server-openstack-11-rpms
-    state: disabled
+    state: present
   become: true
 
 - name: Stop the main OpenStack Platform services
@@ -49,7 +49,7 @@
 - name: Enable the OSP12 repo
   rhsm_repository:
     name: rhel-7-server-openstack-12-rpms
-    state: disabled
+    state: present
   become: true
 
 - name: Upgrade the director's main packages
@@ -73,7 +73,7 @@
 - name: Enable the OSP13 repo
   rhsm_repository:
     name: rhel-7-server-openstack-13-rpms
-    state: disabled
+    state: present
   become: true
 
 - name: Upgrade the director's main packages
