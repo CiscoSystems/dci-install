@@ -183,6 +183,21 @@
         remote_src: true
       become: true
 
+# CHAPTER 5. PREPARING FOR THE OVERCLOUD UPGRADE
+
+# 5.6. DEPRECATED CLI OPTIONS
+
+- name: Write out overcloud misc overcloud config changes
+  copy:
+    dest: /home/stack/environments/node-info.yaml
+    content: |
+      parameter_defaults:
+        ControllerCount: {{ overcloud_control_scale }}
+        ComputeCount: {{ overcloud_compute_scale }}
+        CephStorageCount: {{ overcloud_ceph_storage_scale }}
+        BlockStorageCount: {{ overcloud_block_storage_scale }}
+        ObjectStorageCount: {{ overcloud_swift_storage_scale }}
+
 # CHAPTER 6. UPGRADING THE OVERCLOUD
 
 # 6.1. PERFORMING THE FAST FORWARD UPGRADE OF THE
