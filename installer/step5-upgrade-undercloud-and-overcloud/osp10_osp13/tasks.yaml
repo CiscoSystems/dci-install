@@ -190,7 +190,7 @@
 
 - name: Run the fast forward upgrade preparation command
   shell: |
-    source stackrc
+    source /home/stack/stackrc
     openstack overcloud ffwd-upgrade prepare --yes --templates \
         -e /home/stack/environments/node-info.yaml \
         -e /home/stack/templates/overcloud_images.yaml \
@@ -203,28 +203,28 @@
 
 - name: Run the fast forward upgrade command
   shell: |
-    source stackrc
+    source /home/stack/stackrc
     openstack overcloud ffwd-upgrade run --yes
 
 # 6.2. UPGRADING ALL CONTROLLER NODES
 
 - name: Run the upgrade command
   shell: |
-    source stackrc
+    source /home/stack/stackrc
     openstack overcloud upgrade run --roles Controller --skip-tags validation
 
 # 6.4. UPGRADING ALL COMPUTE NODES
 
 - name: Run the upgrade command
   shell: |
-    source ~/stackrc
+    source /home/stack/stackrc
     openstack overcloud upgrade run --roles Compute --skip-tags validation
 
 # 6.6. FINALIZING THE FAST FORWARD UPGRADE
 
 - name: Run the fast forward upgrade finalization command
   shell: |
-    source stackrc
+    source /home/stack/stackrc
     openstack overcloud ffwd-upgrade converge --yes --templates \
         -e /home/stack/environments/node-info.yaml \
         -e /home/stack/templates/overcloud_images.yaml \
