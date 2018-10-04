@@ -189,3 +189,4 @@
 
     source /home/stack/overcloudrc
     openstack compute service set {{ item.Name }}.localdomain nova-compute --enable
+  with_items: "{{ compute_nodes }}"
