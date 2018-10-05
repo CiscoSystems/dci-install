@@ -1,12 +1,18 @@
 ---
 - hosts: director
+  gather_facts: false
   tasks:
-    - ping:
-      register: connect_test
+    - name: Check connection to director
+      wait_for_connection:
+        timeout: 10
       ignore_errors: true
+      register: connect_test
 
     - name: Pre-reinstall cleanup tasks
       block:
+        - name: Gather Facts
+          setup:
+
         - name: Unregister system from RH if its online still
           redhat_subscription:
             state: absent
@@ -31,6 +37,7 @@
       when: connect_test is not failed
 
 - hosts: director
+  gather_facts: false
   tasks:
     - name: Trigger cobbler to reinstall the server
       shell: >
