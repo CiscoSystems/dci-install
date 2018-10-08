@@ -235,13 +235,16 @@
 
               # Remove domains from the ucsm host list
               existing_ucsm_config = oldconfig["neutron::plugins::ml2::cisco::ucsm::ucsm_host_list"]
-              new_ucsm_hosts = []
-              for oldhost in existing_ucsm_config.split(","):
-                oldhost = oldhost.strip()
-                host, sp = oldhost.split(":")
-                host = host.split(".")[0]
-                new_ucsm_hosts.append("%s:%s" % (host, sp))
-              oldconfig["neutron::plugins::ml2::cisco::ucsm::ucsm_host_list"] = ",".join(new_ucsm_hosts)
+              existing_ucsm_config = existing_ucsm_config.strip()
+
+              if existing_ucsm_config:
+                  new_ucsm_hosts = []
+                  for oldhost in existing_ucsm_config.split(","):
+                      oldhost = oldhost.strip()
+                      host, sp = oldhost.split(":")
+                      host = host.split(".")[0]
+                      new_ucsm_hosts.append("%s:%s" % (host, sp))
+                  oldconfig["neutron::plugins::ml2::cisco::ucsm::ucsm_host_list"] = ",".join(new_ucsm_hosts)
 
               # Write json to outputs directory
               with open('%s.%s' % (heat_outputs_path, output_name), 'w') as out:
