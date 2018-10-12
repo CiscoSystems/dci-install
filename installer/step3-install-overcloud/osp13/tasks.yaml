@@ -35,15 +35,22 @@
 
 # Custom for getting networking-cisco into the neutron-server container
 
+- name: Login into the RH dev repo
+  docker_login:
+    registry: scan.connect.redhat.com
+    username: unused
+    password: "{{ rh_dev_registry_key }}"
+  when: rh_neutron_container_registry_namespace is search("scan.connect.redhat.com")
+  become: true
+
 - name: Create the template for the neutron server images
   copy:
     dest: /usr/share/tripleo-common/container-images/overcloud_containers.yaml.j2
     backup: true
     content: |
-      {% raw %}
       container_images_template:
 
-      - imagename: "{{namespace}}/openstack-neutron-server-networking-cisco-plugin:{{tag}}"
+      - imagename: "{% raw %}{{namespace}}{% endraw %}/{{ rh_neutron_container_name }}:{% raw %}{{tag}}{% endraw %}"
         params:
         - DockerNeutronApiImage
         - DockerNeutronConfigImage
@@ -52,7 +59,6 @@
         - OS::TripleO::Services::NeutronDhcpAgent
         - OS::TripleO::Services::NeutronMetadataAgent
         - OS::TripleO::Services::NeutronServer
-      {% endraw %}
   register: overcloud_containers
   become: true
 
@@ -61,9 +67,9 @@
       shell: |
         source /home/stack/stackrc
         openstack overcloud container image prepare \
-        --namespace=registry.hub.docker.com/bradleyjones \
+        --namespace={{ rh_neutron_container_registry_namespace }} \
         --push-destination={{ undercloud_local_ip | ipaddr('address') }}:8787 \
-        --tag latest \
+        --tag {{ rh_neutron_container_tag }} \
         --output-env-file=/home/stack/templates/overcloud_images_neutron.yaml \
         --output-images-file /home/stack/local_registry_images_neutron.yaml
 

@@ -254,3 +254,8 @@ custom_pre_puppet_script: |
 rh_sub_username: "{{ vault_rh_sub_username }}"
 rh_sub_password: "{{ vault_rh_sub_password }}"
 rh_sub_pool_id: "{{ vault_rh_sub_pool_id }}"
+rh_dev_registry_key: "{{ vault_rh_dev_registry_key }}"
+rh_neutron_container_registry_namespace: "scan.connect.redhat.com/ospid-f1c22692-c965-4881-951f-62dee92268bf"
+rh_neutron_container_tag: "6.1.1"
+# rh_neutron_container_name: "openstack-neutron-server-networking-cisco-plugin"
+rh_neutron_container_name: "partner-build-service"
