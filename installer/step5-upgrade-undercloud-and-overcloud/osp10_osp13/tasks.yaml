@@ -8,29 +8,235 @@
     content: |
       parameter_defaults:
         DeleteOnRHELUnregistration: false
-        rhel_reg_auto_attach: ""
-        rhel_reg_activation_key: ""
-        rhel_reg_org: ""
-        rhel_reg_pool_id: "{{ rh_sub_pool_id }}"
-        rhel_reg_repos: "rhel-7-server-rpms,rhel-7-server-extras-rpms,rhel-7-server-rh-common-rpms,\
-        rhel-ha-for-rhel-7-server-rpms,rhel-7-server-openstack-10-rpms"
-        rhel_reg_method: "portal"
-        rhel_reg_sat_repo: ""
-        rhel_reg_base_url: ""
-        rhel_reg_environment: ""
-        rhel_reg_force: ""
-        rhel_reg_machine_name: ""
-        rhel_reg_password: "{{ rh_sub_password }}"
-        rhel_reg_release: ""
-        rhel_reg_sat_url: ""
-        rhel_reg_server_url: ""
-        rhel_reg_service_level: ""
-        rhel_reg_user: "{{ rh_sub_username }}"
-        rhel_reg_type: ""
-        rhel_reg_http_proxy_host: ""
-        rhel_reg_http_proxy_port: ""
-        rhel_reg_http_proxy_username: ""
-        rhel_reg_http_proxy_password: ""
+
+- name: Write out json converter template
+  copy:
+    dest: /home/stack/templates/json_converter.yaml
+    content: |
+      heat_template_version: 2015-04-30
+
+      parameters:
+        data:
+          type: json
+
+      resources: {}
+
+      outputs:
+        converted:
+          description: Json data
+          value: { get_param: data }
+
+- name: Write out replacement node extra config template for nexus/ucsm ml2
+  copy:
+    dest: /home/stack/templates/new_nexus_ucsm_extra_config.yaml
+    content: |
+      heat_template_version: 2015-04-30
+
+      description: Configure hieradata for Network Cisco configuration
+
+      parameters:
+        # Parameters passed from the parent template
+        servers:
+          type: json
+
+        # extra parameters passed via parameter_defaults
+        NetworkUCSMIp:
+          type: string
+          description: Cisco UCSM IP
+          default: 127.0.0.1
+        NetworkUCSMUsername:
+          type: string
+          description: Cisco UCSM username
+          default: admin
+        NetworkUCSMPassword:
+          type: string
+          description: Cisco UCSM password
+          default: ''
+          hidden: true
+        NetworkUCSMHostList:
+          type: string
+          description: >
+            Mac address to service profile mapping for UCSM-controlled hosts
+            The format is
+            '<host1-mac>:<profile>, <host2-mac>:<profile>, ...'
+          default: ''
+        NetworkUCSMSupportedPciDevs:
+          type: string
+          description: Cisco UCSM SR-IOV and VM-FEX vendors supported
+          default: ''
+        NetworkUCSMHttpsVerify:
+          type: boolean
+          description: >
+            Enabling/disabling UCS Manager SSL certificate verification
+          default: true
+        NetworkUCSMSpTemplateList:
+          type: string
+          description: Host to Service Profile Template mapping with its path
+          default: ''
+        NetworkUCSMVnicTemplateList:
+          type: string
+          description: >
+              Neutron physical network to vNIC Template mapping with its path
+          default: ''
+        NetworkNexusConfig:
+          type: json
+          description: Nexus switch configuration
+          default: {}
+        NetworkNexusManagedPhysicalNetwork:
+          type: string
+          description: The name of the physical_network
+          default: ''
+        NetworkNexusVlanNamePrefix:
+          type: string
+          description:  >
+            This configuration item is OBSOLETE.
+            A short prefix to prepend to the VLAN name
+          default: 'q-'
+        NetworkNexusSviRoundRobin:
+          type: boolean
+          description:  >
+            This configuration item is OBSOLETE.
+            A flag to enable round robin scheduling
+          default: false
+        NetworkNexusProviderVlanNamePrefix:
+          type: string
+          description:  >
+            This configuration item is OBSOLETE.
+            A short prefix to prepend to the VLAN name.
+          default: 'p-'
+        NetworkNexusPersistentSwitchConfig:
+          type: string
+          description: >
+            This config item will be deprecated.
+            To make Nexus device persistent.
+          default: false
+        NetworkNexusNeverCacheSshConnection:
+          type: string
+          description: >
+            This config item will be deprecated.
+            Prevent Cache of ssh connection
+          default: false
+        NetworkNexusSwitchHeartbeatTime:
+          type: number
+          description: >
+            Time interval to check the state of the Nexus device. The units of this
+            object are seconds.  Setting this object to a value of 0 disables the
+            replay feature.
+          default: 30
+        NetworkNexusSwitchReplayCount:
+          type: number
+          description: >
+            This configuration item is OBSOLETE.  The Nexus driver replay behavior
+            is to continue to attempt to connect to the down Nexus device with a
+            period equal to the heartbeat time interval.  This was previously the
+            Number of times to attempt config replay.
+          default: 3
+        NetworkNexusCfgDriver:
+          type: string
+          description: >
+            This will be deprecated.  Lower-level configuration driver which sends
+            commands to the Nexus Device.  Choices are 'restapi' or 'ncclient'
+            where the latter is being deprecated. So there is no longer a need for
+            this variable.
+          default: 'restapi'
+        NetworkNexusProviderVlanAutoCreate:
+          type: boolean
+          description: A flag whether to manage the creation and removal of VLANs
+          default: true
+        NetworkNexusProviderVlanAutoTrunk:
+          type: boolean
+          description: A flag whether to manage the trunk ports on the Nexus
+          default: true
+        NetworkNexusVxlanGlobalConfig:
+          type: boolean
+          description: A flag whether to manage the VXLAN global settings
+          default: true
+        NetworkNexusHostKeyChecks:
+          type: boolean
+          description: >
+            This config item will be deprecated.  It enables strict host key
+            checks when connecting to Nexus switches
+          default: false
+        NetworkNexusVxlanVniRanges:
+          type: string
+          description: VXLAN Network IDs that are available for tenant network
+          default: ''
+        NetworkNexusVxlanMcastRanges:
+          type: string
+          description: Multicast groups for the VXLAN interface.
+          default: ''
+
+      resources:
+        CollectMacHostnames:
+          type: OS::TripleO::MacHostname
+          properties:
+            servers: {get_param: servers}
+
+        ProcessNexusAndUCSMMappings:
+          type: OS::Heat::SoftwareConfig
+          properties:
+            group: script
+            inputs:
+              - name: controller_mappings
+              - name: compute_mappings
+              - name: orig_nexus_mapping
+              - name: orig_ucsm_mapping
+            config: |
+              #!/bin/python
+              import json
+              import os
+              import ast
+
+              heat_outputs_path = os.environ.get("heat_outputs_path")
+              controller_mappings = os.environ.get("controller_mappings")
+              compute_mappings = os.environ.get("compute_mappings")
+              orig_nexus_mapping = os.environ.get("orig_nexus_mapping")
+              orig_ucsm_mapping = os.environ.get("orig_ucsm_mapping")
+
+              controller_mappings = ast.literal_eval(controller_mappings)
+              compute_mappings = ast.literal_eval(compute_mappings)
+
+              if orig_nexus_mapping:
+                  orig_nexus_mapping = ast.literal_eval(orig_nexus_mapping)
+
+              # Take mapping of host to macs and convert them to a mac to host
+              # mapping
+              mac2host = {}
+              for mappings in [controller_mappings, compute_mappings]:
+                  for host, data in mappings.items():
+                      host_macs = data.strip().split()
+                      for mac in host_macs[1:]:
+                          mac2host[mac] = host_macs[0]
+
+              for nexus in orig_nexus_mapping:
+                  server_mapping = {}
+                  for mac, switchports in nexus['servers']:
+                      mac = mac.lower()
+                      if mac not in mac2host:
+                          continue
+                      server = mac2host[mac]
+                      if server in server_mapping:
+                          server_mapping[server]['ports'] += "," + switchports['ports']
+                      else:
+                          server_mapping[server]['ports'] = switchports
+                  nexus['servers'] = server_mapping
+
+              with open('%s.%s' % (heat_outputs_path, "nexus_mappings"), 'w') as out:
+                  out.write(json.dumps(orig_nexus_mappings))
+              with open('%s.%s' % (heat_outputs_path, "ucsm_mappings"), 'w') as out:
+                  out.write(json.dumps(ucsm_mappings))
+
+
+- name: Write out networking-cisco specific config environment resources
+  copy:
+    dest: /home/stack/environments/networking-cisco-config-resources-preupgrade.yaml
+    content: |
+      resource_registry:
+        OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
+        OS::TripleO::ControllerExtraConfigPre: /home/stack/templates/controller_extra_config_prepuppet.yaml
+        OS::TripleO::AllNodesExtraConfig:  OS::Heat::None
+        OS::TripleO::MacHostname: /usr/share/openstack-tripleo-heat-templates/extraconfig/all_nodes/mac_hostname.yaml
+        OS::TripleO::StringToMap: /home/stack/templates/json_converter.yaml
 
 - name: Update the current plan using your original openstack overcloud deploy command
   shell: |
@@ -39,8 +245,10 @@
         -e /home/stack/environments/overcloud-config.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
-        -e /home/stack/environments/networking-cisco-config.yaml \
+        -e /home/stack/environments/networking-cisco-config-resources-preupgrade.yaml \
+        -e /home/stack/environments/networking-cisco-config-params.yaml \
         -e /home/stack/environments/no_delete_rhelsub.yaml \
+        -e /home/stack/environments/rhel_sub_config.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/extraconfig/pre_deploy/rhel-registration/rhel-registration-resource-registry.yaml \
         --ntp-server 1.ntp.esl.cisco.com
 

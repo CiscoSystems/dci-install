@@ -195,9 +195,9 @@
         deploy_stdout:
           value: {get_attr: [InstallOverrideDefaultPackagesController, deploy_stdout]}
 
-- name: Write out networking-cisco specific config environment
+- name: Write out networking-cisco specific config environment resources
   copy:
-    dest: /home/stack/environments/networking-cisco-config.yaml
+    dest: /home/stack/environments/networking-cisco-config-resources.yaml
     content: |
       resource_registry:
         OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
@@ -205,6 +205,10 @@
         OS::TripleO::AllNodesExtraConfig: /home/stack/templates/extended_nodes_extra_config.yaml
         OS::TripleO::NetCiscoOriginal: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/all_nodes/neutron-ml2-cisco-nexus-ucsm.yaml
 
+- name: Write out networking-cisco specific config environment params
+  copy:
+    dest: /home/stack/environments/networking-cisco-config-params.yaml
+    content: |
       parameter_defaults:
         InternalApiNetworkVlanID: {{ testbed_vlan }}
         StorageNetworkVlanID: {{ storage_vlan }}
@@ -264,12 +268,18 @@
         ComputeHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-compute-%index%'
         ControllerHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-controller-%index%'
 
-- name: Write out RHEL subscription manager environment file
+- name: Write out RHEL subscription manager environment file delete sub
+  copy:
+    dest: /home/stack/environments/delete_rhelsub.yaml
+    content: |
+      parameter_defaults:
+        DeleteOnRHELUnregistration: true
+
+- name: Write out RHEL subscription manager environment file parameters
   copy:
     dest: /home/stack/environments/rhel_sub_config.yaml
     content: |
       parameter_defaults:
-        DeleteOnRHELUnregistration: true
         rhel_reg_auto_attach: ""
         rhel_reg_activation_key: ""
         rhel_reg_org: ""
@@ -302,7 +312,9 @@
         -e /home/stack/environments/overcloud-config.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/net-bond-with-vlans.yaml \
-        -e /home/stack/environments/networking-cisco-config.yaml \
+        -e /home/stack/environments/networking-cisco-config-resources.yaml \
+        -e /home/stack/environments/networking-cisco-config-params.yaml \
+        -e /home/stack/environments/delete_rhelsub.yaml \
         -e /home/stack/environments/rhel_sub_config.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/extraconfig/pre_deploy/rhel-registration/rhel-registration-resource-registry.yaml \
         --ntp-server 1.ntp.esl.cisco.com
