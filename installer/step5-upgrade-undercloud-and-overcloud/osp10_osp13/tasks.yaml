@@ -16,8 +16,6 @@
       resource_registry:
         OS::TripleO::NodeUserData: /usr/share/openstack-tripleo-heat-templates/firstboot/os-net-config-mappings.yaml
         OS::TripleO::ControllerExtraConfigPre: /home/stack/templates/controller_extra_config_prepuppet.yaml
-        OS::TripleO::MacHostname: /usr/share/openstack-tripleo-heat-templates/extraconfig/all_nodes/mac_hostname.yaml
-        OS::TripleO::StringToMap: /home/stack/templates/json_converter.yaml
 
 - name: Update the current plan using your original openstack overcloud deploy command
   shell: |
