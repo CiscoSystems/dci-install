@@ -354,6 +354,15 @@
         ComputeHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-compute-%index%'
         ControllerHostnameFormat: '{{ overcloud_node_prefix }}-%stackname%-controller-%index%'
 
+- name: Write out config to disable our drivers during the upgrade process
+  copy:
+    dest: /home/stack/environments/networking-cisco-disable-drivers.yaml
+    content: |
+      parameter_defaults:
+        ControllerExtraConfig:
+          neutron::plugins::ml2::mechanism_drivers: ['openvswitch']
+          neutron::config::plugin_ml2_config: {{ extra_neutron_config_osp13 | to_json }}
+
 - name: Create extended AllNodesExtraConfig to remove domain names
   copy:
     dest: /home/stack/templates/extended_nodes_extra_config.yaml
@@ -470,6 +479,7 @@
         -e /usr/share/openstack-tripleo-heat-templates/environments/net-bond-with-vlans.yaml \
         -e /home/stack/environments/networking-cisco-config-resources-preupgrade.yaml \
         -e /home/stack/environments/networking-cisco-config-params.yaml \
+        -e /home/stack/environments/networking-cisco-disable-drivers.yaml \
         -e /home/stack/environments/custom_repositories_script.yaml \
         --ntp-server 1.ntp.esl.cisco.com
 
