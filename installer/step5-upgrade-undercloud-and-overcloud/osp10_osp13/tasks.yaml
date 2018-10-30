@@ -453,6 +453,23 @@
             servers:  {get_param: [servers, Controller]}
             actions: ['CREATE']
 
+- name: Write out json converter template
+  copy:
+    dest: /home/stack/templates/json_converter.yaml
+    content: |
+      heat_template_version: 2015-04-30
+
+      parameters:
+        data:
+          type: json
+
+      resources: {}
+
+      outputs:
+        converted:
+          description: Json data
+          value: { get_param: data }
+
 - name: Write out networking-cisco specific config environment resources
   copy:
     dest: /home/stack/environments/networking-cisco-config-resources.yaml
