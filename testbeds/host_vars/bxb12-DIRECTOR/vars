@@ -9,9 +9,12 @@ overcloud_node_prefix: "bxb12"
 
 dns_server_1: 171.70.168.183
 
+undercloud_overcloud_interface: usernet
+
 undercloud_fake_gw_interface: eth1
 undercloud_fake_gw_cidr: 20.0.0.1/24
 
+undercloud_local_interface: pxe-int
 undercloud_local_ip: 192.0.2.1/24
 undercloud_network_gateway: 192.0.2.1
 
@@ -151,4 +154,3 @@ custom_pre_puppet_script: |
 rh_sub_username: "{{ vault_rh_sub_username }}"
 rh_sub_password: "{{ vault_rh_sub_password }}"
 rh_sub_pool_id: "{{ vault_rh_sub_pool_id }}"
-
