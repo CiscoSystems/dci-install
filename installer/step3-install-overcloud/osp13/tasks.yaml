@@ -391,7 +391,7 @@
         rhel_reg_org: ""
         rhel_reg_pool_id: "{{ rh_sub_pool_id }}"
         rhel_reg_repos: "rhel-7-server-rpms,rhel-7-server-extras-rpms,rhel-7-server-rh-common-rpms,\
-        rhel-ha-for-rhel-7-server-rpms,rhel-7-server-openstack-10-rpms"
+        rhel-ha-for-rhel-7-server-rpms,rhel-7-server-openstack-13-rpms"
         rhel_reg_method: "portal"
         rhel_reg_sat_repo: ""
         rhel_reg_base_url: ""
