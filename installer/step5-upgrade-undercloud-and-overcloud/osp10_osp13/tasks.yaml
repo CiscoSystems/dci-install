@@ -583,3 +583,11 @@
     source /home/stack/stackrc
     openstack overcloud image upload --update-existing --image-path /home/stack/images/
     openstack overcloud node configure $(openstack baremetal node list -c UUID -f value)
+
+# Work around for python-gabbi version being out of date
+
+- name: Work around for BZ1613475
+  shell: |
+    yum install -y python2-heat-tests-tempest
+    rpm -ql python2-heat-tests-tempest|xargs rm -f || true
+  become: true
