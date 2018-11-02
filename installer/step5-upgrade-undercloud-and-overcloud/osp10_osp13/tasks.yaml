@@ -65,6 +65,12 @@
     state: disabled
   become: true
 
+- name: Disable DCI openstack repos
+  file:
+    path: /etc/yum.repos.d/dci_repo.repo
+    state: absent
+  become: true
+
 - name: Enable the OSP11 repo
   rhsm_repository:
     name: rhel-7-server-openstack-11-rpms
@@ -133,6 +139,14 @@
     name: rhel-7-server-openstack-13-rpms
     state: present
   become: true
+  when: dci_baseurl is not defined
+
+- name: Enable DCI openstack repos
+  get_url:
+    url: '{{ dci_baseurl }}/dci_repo/dci_repo.repo'
+    dest: /etc/yum.repos.d/dci_repo.repo
+  become: true
+  when: dci_baseurl is defined
 
 - name: Upgrade the director's main packages
   yum:
