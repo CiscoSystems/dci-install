@@ -1,0 +1,22 @@
+---
+- hosts: director
+  vars:
+    ansible_user: stack
+  tasks:
+    - name: Download tempest-setup script
+      get_url:
+        url: https://raw.githubusercontent.com/CiscoSystems/dci-install/master/tools/tempest-setup-newton.sh
+        dest: /home/stack/tempest-setup.sh
+        mode: "u+rwx"
+        force: true
+
+    - name: Write out the tempest whitelist
+      copy:
+        dest: /home/stack/whitelist_file.conf
+        content: |
+          tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_network_basic_ops
+
+    - name: Run tempest
+      shell: |
+        cd /home/stack
+        ./tempest-setup.sh
